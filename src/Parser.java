@@ -37,19 +37,19 @@ public class Parser extends Lang{
         QT = new ArrayList<QT>();
 
         grammar.addVN(new HashSet<>(Arrays.asList(new String[]{"E", "T", "E1", "T1", "F"})));
-        grammar.addVT(new HashSet<>(Arrays.asList(new String[]{"w0", "w1", "i", "(", ")"})));
+        grammar.addVT(new HashSet<>(Arrays.asList(new String[]{"+", "-", "*", "/", "i", "(", ")"})));
 
         grammar.setStartVN("E");
 
         grammar.addDeriver(new Deriver("E", new String[]{"T", "E1"}));
-        grammar.addDeriver(new Deriver("E1", new String[]{"+", "T", "GEQ+", "E1"}));
-        grammar.addDeriver(new Deriver("E1", new String[]{"-", "T", "GEQ-", "E1"}));
+        grammar.addDeriver(new Deriver("E1", new String[]{"+", "T", "_AC_GEQ_+_", "E1"}));
+        grammar.addDeriver(new Deriver("E1", new String[]{"-", "T", "_AC_GEQ_-_", "E1"}));
         grammar.addDeriver(new Deriver("E1", new String[]{}));
         grammar.addDeriver(new Deriver("T", new String[]{"F", "T1"}));
-        grammar.addDeriver(new Deriver("T1", new String[]{"*", "F", "GEQ*", "T1"}));
-        grammar.addDeriver(new Deriver("T1", new String[]{"/", "F", "GEQ/", "T1"}));
+        grammar.addDeriver(new Deriver("T1", new String[]{"*", "F", "_AC_GEQ_*_", "T1"}));
+        grammar.addDeriver(new Deriver("T1", new String[]{"/", "F", "_AC_GEQ_/_", "T1"}));
         grammar.addDeriver(new Deriver("T1", new String[]{}));
-        grammar.addDeriver(new Deriver("F", new String[]{"i", "PUSHi"}));
+        grammar.addDeriver(new Deriver("F", new String[]{"i", "_AC_PUSH_i_"}));
         grammar.addDeriver(new Deriver("F", new String[]{"(", "E", ")"}));
 
         /*grammar.addVN(new HashSet<String>(Arrays.asList(new String[]{"S", "A", "B"})));
@@ -64,8 +64,13 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("B", new String[]{"b", "B"}));
         grammar.addDeriver(new Deriver("B", new String[]{"d"}));*/
 
-        /*grammar.generateAnalyzeTable();
-        analyseTable = grammar.getAnalyseTable();*/
+        try {
+            grammar.generateLL1AnalyzeTable();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+        analyseTable = grammar.getLL1AnalyseTable();
 
         HashMap<String, Integer> row1 = new HashMap<String, Integer>();
         row1.put("i", 1);
@@ -221,7 +226,7 @@ public class Parser extends Lang{
                 if (index == null){
                     return false;
                 }
-                analyseStack.addAll(reverse(grammar.getDeriver(index - 1).getDestination()));
+                analyseStack.addAll(reverse(grammar.getDeriver(index).getDestination()));
             }
         }
         if (w == null || !w.token.equals("#")){
