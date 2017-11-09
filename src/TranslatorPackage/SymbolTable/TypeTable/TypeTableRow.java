@@ -1,29 +1,30 @@
 package TranslatorPackage.SymbolTable.TypeTable;
 
-import TranslatorPackage.SymbolTable.VariableTable.VariableTable;
-import TranslatorPackage.SymbolTable.VariableTable.VariableTableRow;
 
 public class TypeTableRow {
     private String name;
-    private int offset;//  for store
-    private VariableTable fields;
+    //类型名
+    private int offset;
+    //  类型的偏移
+    private FieldTable fields;
+
 
     public TypeTableRow(String name){
-        //type 中命名空间的定义不支持嵌套
-        fields = new VariableTable(null);
+        this.name = name;
+        fields = new FieldTable();
         offset = 0;
     }
 
-    public boolean addField(String field_name,int field_offset,String field_type){
-        boolean res = fields.addVariable(field_type,field_name,field_offset);
-        if (res)
-            offset += field_offset;
-        return res;
+
+    // 已在上层进行过重复检查
+    public void addField(String field_name, int field_offset, String field_type) {
+        fields.addField(field_name, field_offset, field_type);
+        offset += field_offset;
 
     }
 
-    public VariableTableRow getField(String field_name){
-        return fields.getVariable(field_name);
+    public FieldTableRow getField(String field_name) {
+        return fields.getField(field_name);
     }
 
     public int getOffset() {
