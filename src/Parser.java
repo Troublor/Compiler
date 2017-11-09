@@ -10,6 +10,10 @@ import javax.script.ScriptEngine;
  * Created by troub on 2017/10/10.
  */
 public class Parser extends Lang{
+    /**
+     * 词法分析器
+     */
+    private Lexer lexer;
 
     /**
      * LL1分析表
@@ -26,13 +30,15 @@ public class Parser extends Lang{
     private ArrayList<QT> QT;
 
     /**
-     * 输入表达式
+     * 输入表达式,当前正在处理的就是input的最后一个
+     * 也就是处理一个读一个，读一个放进来一个
      */
     private ArrayList<Token> input;
     private int i = 0;
 
     public Parser(){
         super();
+        lexer = new Lexer();
         analyseTable = new HashMap<>();
         analyseStack = new Stack<>();
         SEM = new Stack<>();
@@ -68,51 +74,14 @@ public class Parser extends Lang{
     }
 
 
-
     /**
-     * 设置输入串
-     * @param i 输入串
+     * 设置源代码串
+     *
+     * @param s 源代码串
      */
-    public void input(ArrayList<Token> i){
-        input = i;
+    public void setSourceCode(String s) {
+        lexer.setSourceCode(s);
     }
-
-    /*public boolean LL1AnalyzeToken(){
-
-        for (int i = 0; i < input.size(); i++){
-            Token s = input.get(i);
-            if (s.getToken().equals("<00>") || s.getToken().equals("<03>")){
-                s.getToken() = "i";
-                input.remove(i);
-                input.add(i, s);
-            }else if (s.getToken().equals("<24>")){
-                s.getToken() = "(";
-                input.remove(i);
-                input.add(i, s);
-            }else if (s.getToken().equals("<25>")){
-                s.getToken() = ")";
-                input.remove(i);
-                input.add(i, s);
-            }else if (s.getToken().equals("<16>")){
-                s.getToken() = "+";
-                input.remove(i);
-                input.add(i, s);
-            }else if (s.getToken().equals("<17>")){
-                s.getToken() = "-";
-                input.remove(i);
-                input.add(i, s);
-            }else if (s.getToken().equals("<18>")){
-                s.getToken() = "*";
-                input.remove(i);
-                input.add(i, s);
-            }else if (s.getToken().equals("<19>")){
-                s.getToken() = "/";
-                input.remove(i);
-                input.add(i, s);
-            }
-        }
-        return LL1Analyze();
-    }*/
 
     public boolean LL1Analyze() throws InvalidLabelException{
         SEM.clear();

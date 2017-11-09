@@ -2,6 +2,7 @@
  * Created by troub on 2017/9/12.
  */
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * 语言类
@@ -27,6 +28,25 @@ public class Lang {
         keyWordTable=new ArrayList<>();
         delimiterTable=new ArrayList<>();
         grammar = new Grammar();
+
+        //添加关键字
+        keyWordTable.add("int");
+        keyWordTable.add("main");
+        keyWordTable.add("void");
+        keyWordTable.add("double");
+        keyWordTable.add("char");
+        keyWordTable.add("struct");
+        keyWordTable.add("func");
+        keyWordTable.add("return");
+        keyWordTable.add("if");
+        keyWordTable.add("else");
+        keyWordTable.add("while");
+        keyWordTable.add("var");
+
+        //添加界符
+        String[] ds = {">=", "<=", "==", "=", ">", "<", "+", "-", "*", "/", "{", "}", ",", ";", "(",
+            ")", "\"", "\'", "[", "]", "//", "&&", "||", "+=", "-=", "%", "!=", "."};
+        delimiterTable.addAll(Arrays.asList(ds));
     }
 
     /**
