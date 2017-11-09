@@ -187,7 +187,7 @@ public class Lexer extends Lang{
                 type=0;
                 if (isKeyWord(word)){
 //                    System.out.println(word+"  (keyWord, "+(keyWordTable.indexOf(word)+4)+")");
-                    output.add(new Word(word, "<" + (keyWordTable.indexOf(word)+4) + ">"));
+                    output.add(new Token(word, "<" + (keyWordTable.indexOf(word)+4) + ">"));
                 }else {
                     int index=identifierTable.indexOf(word);
                     if (index<0){
@@ -195,7 +195,7 @@ public class Lexer extends Lang{
                         index=identifierTable.indexOf(word);
                     }
 //                    System.out.println(word+"  (identifier, "+"00"+")");
-                    output.add(new Word(word, "<00>"));
+                    output.add(new Token(word, "<00>"));
                 }
                 word="";
                 return true;
@@ -227,7 +227,7 @@ public class Lexer extends Lang{
                     index=constTable.indexOf(number);
                 }
 //                System.out.println(number+"  (Const, "+"03"+")");
-                output.add(new Word(Double.toString(number), "<03>"));
+                output.add(new Token(Double.toString(number), "<03>"));
                 num_n=0;
                 num_p=0;
                 num_m=0;
@@ -240,7 +240,7 @@ public class Lexer extends Lang{
             }else if (currState.equals("q1")&&type==3){
                 type=0;
 //                System.out.println(delimiter+"  (p, "+(delimiterTable.indexOf(delimiter)+10)+")");
-                output.add(new Word(delimiter, "<" + (delimiterTable.indexOf(delimiter)+10) + ">"));
+                output.add(new Token(delimiter, "<" + (delimiterTable.indexOf(delimiter)+10) + ">"));
                 delimiter="";
                 return true;
             }else if (currState.equals("q10")){
@@ -254,7 +254,7 @@ public class Lexer extends Lang{
                 type=0;
                 stringTable.add(string);
 //                System.out.println(string+"  (sT, "+"02"+")");
-                output.add(new Word(string, "<02>"));
+                output.add(new Token(string, "<02>"));
                 string="";
                 return true;
             }else if (currState.equals("q12")){
@@ -264,14 +264,14 @@ public class Lexer extends Lang{
             }else if (currState.equals("q14")||type==5){
                 characterTable.add(character);
 //                System.out.println(character+"  (cT, "+"01"+")");
-                output.add(new Word(Character.toString(character), "<01>"));
+                output.add(new Token(Character.toString(character), "<01>"));
                 type=0;
                 character=0;
                 return true;
             }else if (currState.equals("q18")){
                 type=0;
 //                System.out.println("//"+"  (p, "+(delimiterTable.indexOf("//")+10)+")");
-                output.add(new Word("//", "<" + (delimiterTable.indexOf("//")+10) + ">"));
+                output.add(new Token("//", "<" + (delimiterTable.indexOf("//")+10) + ">"));
                 delimiter="";
                 annotation=true;
             }else if (currState.equals("q17")){
@@ -293,7 +293,7 @@ public class Lexer extends Lang{
 
     private LexerDFA dfa;
 
-    private ArrayList<Word> output;
+    private ArrayList<Token> output;
 
 
     public Lexer(){
@@ -371,7 +371,7 @@ public class Lexer extends Lang{
     }
 
 
-    public ArrayList<Word> getOutput() {
+    public ArrayList<Token> getOutput() {
         return output;
     }
 }
