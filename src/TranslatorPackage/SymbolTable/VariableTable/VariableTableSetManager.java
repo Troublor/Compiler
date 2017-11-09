@@ -1,6 +1,8 @@
 package TranslatorPackage.SymbolTable.VariableTable;
 
+import TranslatorPackage.SymbolTable.SemanticExcption;
 import TranslatorPackage.SymbolTable.TypeTable.TypeTable;
+import TranslatorPackage.SymbolTable.TypeTable.TypeTableRow;
 
 import java.util.Map;
 
@@ -48,6 +50,14 @@ public class VariableTableSetManager {
                 return currActiveTable.getTable_id();
         }
         return -1;
+    }
+
+    public void addVariable(String name_id, String type_name) throws SemanticExcption {
+        TypeTableRow typeRes = typeTable.getTypeInfo(type_name);
+        if (typeRes == null)
+            throw new SemanticExcption("type : " + type_name + "has not declared");
+
+        currActiveTable.addVariable(type_name, name_id, typeRes.getOffset());
     }
 
 

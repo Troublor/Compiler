@@ -1,24 +1,30 @@
 package TranslatorPackage.SymbolTable.TypeTable;
 
-import TranslatorPackage.SymbolTable.VariableTable.VariableTable;
+
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
- * 数据类型以及元素\动作都相同 从VariableTable集成
- * 重新封装了接口
  */
-public class FieldTable extends VariableTable {
+public class FieldTable {
+    private Map<String, FieldTableRow> fieldsMap;
+    private int length;
     public FieldTable() {
-        //独立的表 parent用不上 直接为null
-        // offset仅保存相对量
-        super(null, 0, 0);
+        fieldsMap = new HashMap<>();
+        length = 0;
     }
 
     public boolean addField(String field_name, int field_offset, String field_type) {
-        return super.addVariable(field_type, field_name, field_offset);
+        FieldTableRow res = getField(field_name);
+        if (res == null)
+            return false;
+        fieldsMap.put(field_name, new FieldTableRow(field_name, field_type, length));
+        length += field_offset;
+        return true;
     }
 
     public FieldTableRow getField(String field_name) {
-        return (FieldTableRow) super.getVariable(field_name);
+        return fieldsMap.get(field_name);
     }
 }

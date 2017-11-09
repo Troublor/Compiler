@@ -1,5 +1,7 @@
 package TranslatorPackage.SymbolTable.TypeTable;
 
+import TranslatorPackage.SymbolTable.SemanticExcption;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,13 +38,12 @@ public class TypeTable {
      * 新增类型 一开始只能定义类型名 必须要先添加属性 类型才有效
      *
      * @param type_name 类型
-     * @return 是否添加成功 重复添加报错
+     *  是否添加成功 重复添加类型会抛exception
      */
-    public boolean addType(String type_name) {
+    public void addType(String type_name) throws SemanticExcption {
         if (tableRowMap.get(type_name) != null || !type_name.equals("basic"))
-            return false;
+            throw new SemanticExcption("repeating type occurred");
         tableRowMap.put(type_name,new TypeTableRow(type_name));
-        return true;
     }
 
 
@@ -52,20 +53,48 @@ public class TypeTable {
      * @param type_name  要被添加的类型名
      * @param field_type 要添加进去域类型
      * @param field_name 域的名字 也不能重
-     * @return 是否成功
      */
-    public boolean addFieldOnType(String type_name, String field_type, String field_name) {
+    public void addFieldOnType(String type_name, String field_type, String field_name) throws SemanticExcption {
         TypeTableRow selectedType = tableRowMap.get(type_name);
-        if(selectedType == null)
-            return false;
         if(selectedType.getField(field_name) != null)
-            return false;
+            throw new SemanticExcption("field name : " + field_name + " has already exist");
 
         TypeTableRow addFieldType = tableRowMap.get(field_type);
 
         if(addFieldType == null)
-            return false;
+            throw new SemanticExcption("no such type : " + field_type + " which add as a field");
 
-        return selectedType.addField(field_name,addFieldType.getOffset(),field_type);
+        selectedType.addField(field_name, addFieldType.getOffset(), field_type);
+    }
+
+    /**
+     * 新建数组类型的实时会调用这个方法
+     *
+     * @param arr_elem_type_name 添加的数组内元素类型
+     * @param array_len          数组长度
+     * @throws SemanticExcption 数组元素类型未声明直接抛出异常
+     */
+
+    public void addFieldOnArrayType(String arr_elem_type_name, int array_len) throws SemanticExcption {
+        String array_type_name = "array_" + arr_elem_type_name + "_" + array_len;
+        //数组类型的类型名有这样的格式 ： array_元素类型_长度
+        TypeTableRow selectedType = tableRowMap.get(array_type_name);
+        if (selectedType != null)
+            return;
+        //如果这个数组之前声明过（类型被创建过） 那么直接拿来用就好
+
+        TypeTableRow arr_elem_type = tableRowMap.get(arr_elem_type_name);
+        //检查数组类型是否存在
+        if (arr_elem_type == null)
+            throw new SemanticExcption("type : " + arr_elem_type_name + " has not declared before .");
+
+        //添加数组类型表项
+        addType(array_type_name);
+        selectedType = tableRowMap.get(array_type_name);
+
+        //向表项中填域 以数字作为域名 便于数组的循秩访问
+        for (int i = 0; i < array_len; i++)
+            selectedType.addField(String.valueOf(i), arr_elem_type.getOffset(), arr_elem_type.getName());
+
     }
 }

@@ -10,21 +10,21 @@ public class TypeTableRow {
 
 
     public TypeTableRow(String name){
-        //type 中命名空间的定义不支持嵌套 所以直接null了
+        this.name = name;
         fields = new FieldTable();
         offset = 0;
     }
 
-    public boolean addField(String field_name,int field_offset,String field_type){
-        boolean res = fields.addField(field_name, field_offset, field_type);
-        if (res)
-            offset += field_offset;
-        return res;
+
+    // 已在上层进行过重复检查
+    public void addField(String field_name, int field_offset, String field_type) {
+        fields.addField(field_name, field_offset, field_type);
+        offset += field_offset;
 
     }
 
     public FieldTableRow getField(String field_name) {
-        return (FieldTableRow) fields.getField(field_name);
+        return fields.getField(field_name);
     }
 
     public int getOffset() {

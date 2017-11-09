@@ -1,5 +1,7 @@
 package TranslatorPackage.SymbolTable.VariableTable;
 
+import TranslatorPackage.SymbolTable.SemanticExcption;
+
 import java.util.HashMap;
 
 /**
@@ -45,17 +47,15 @@ public class VariableTable{
      * @param type    变量类型 变量类型的具体信息由manager查找 表项里以string保存即可
      * @param name_id 唯一标示名
      * @param offset  变量类型的长度
-     * @return 是否添加成功 (有重复就添加失败)
      */
     //对符号表添加变量 如果没有重复return true
-    public boolean addVariable(String type, String name_id, int offset) {
+    public void addVariable(String type, String name_id, int offset) throws SemanticExcption {
         //查重
         if (variables.get(name_id)!= null)
-            return false;
+            throw new SemanticExcption("variable: " + name_id + " has already existed");
         //type 的合法性已由Manager的typetable查过了 这里直接添加就ok
         variables.put(name_id, new VariableTableRow(name_id, type, currVarOffset));
         currVarOffset += offset;
-        return true;
     }
 
     public VariableTableRow getVariable(String name_id) {
@@ -63,7 +63,7 @@ public class VariableTable{
     }
 
     public int getTableOffset() {
-        return currVarOffset;
+        return startOffset;
     }
 
     public int getTable_id() {

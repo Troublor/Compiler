@@ -3,5 +3,5 @@ package TranslatorPackage;
 import java.util.Stack;
 
 public class Translator {
-    Stack<String> acctionStack;
+    Stack<String> actionStack;
 }

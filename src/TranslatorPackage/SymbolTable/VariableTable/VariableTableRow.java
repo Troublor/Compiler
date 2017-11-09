@@ -13,7 +13,7 @@ public class VariableTableRow{
     //相对于表头的偏移量 在生成目标语言是需要用它进行基址寻址
     private String name_id;
     //标识符名字 需要用它来在变量表中找寻该变量
-    //必须是唯一的 在插入时  变量表会进行检查
+    //必须是唯一的 在插入时变量表会进行检查
 
     public VariableTableRow(String name_id, String type, int offset) {
         this.type = type;
