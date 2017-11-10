@@ -1,7 +1,5 @@
 out/
 src/META-INFO/
 /src/test.java
-/src/input.txt
 .idea/inspectionProfiles/
-.idea/uiDesigner.xml
 .idea/workspace.xml

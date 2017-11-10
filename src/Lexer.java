@@ -222,8 +222,8 @@ public class Lexer extends Lang{
             } else if (currState.equals("q1") && type == Token.WordType.NUMBER) {
                 //数字分支结束
                 double number = num_n * Math.pow(10, num_e * num_p - num_m);
-                Pattern pattern = Pattern.compile("[0-9]*");
-                if (pattern.matcher(Double.toString(number)).matches()) {
+                double eps = 1e-10;  // 精度范围
+                if (number-Math.floor(number) < eps) {
                     //如果是整数
                     output = new Token(Double.toString(number), "const int");
                 } else {

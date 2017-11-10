@@ -30,11 +30,6 @@ public class Lang {
         grammar = new Grammar();
 
         //添加关键字
-        keyWordTable.add("int");
-        keyWordTable.add("main");
-        keyWordTable.add("void");
-        keyWordTable.add("double");
-        keyWordTable.add("char");
         keyWordTable.add("struct");
         keyWordTable.add("func");
         keyWordTable.add("return");

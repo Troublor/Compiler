@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Stack;
-import javax.script.ScriptEngine;
 
 /**
  * Created by troub on 2017/10/10.
@@ -48,16 +47,78 @@ public class Parser extends Lang{
 
         grammar.addVN(new HashSet<>(Arrays.asList(
             new String[]{"bool", "join", "BOOL", "equality", "JOIN", "EQUALITY", "rel", "expr",
-                "expr1", "EXPR", "term", "TERM", "unary", "值", "常量"}
+                "expr1", "EXPR", "term", "TERM", "unary", "值", "值成分", "常量", "S", "P", "S", "F",
+                "structure", "function", "L", "形参列表", "形参列表1", "类型", "proc", "形参",
+                "形参类型", "类型标识符", "复合语句", "声明语句", "标识符表", "类型", "循环", "条件",
+                "顺序", "语句成分", "赋值", "函数", "条件其他", "数组下标", "非负整数", "值列表",
+                "值列表1"}
         )));
+
         grammar.addVT(new HashSet<>(Arrays.asList(
-            new String[]{"||", "&&", "==", "!=", "<", ">", "<=", ">=", "+", "-", "*", "/", "!", "I", "[",
-                "]", "(", ")", "const int", "const double", "const char"}
+            new String[]{"||", "&&", "==", "!=", "<", ">", "<=", ">=", "+", "-", "*", "/", "=", "!", "I",
+                "[", "]", "(", ")", "const int", "const double", "const char", "struct", "{", "}",
+                "func", ";", ",", ".", "var", "return", "while", "if", "else"}
         )));
 
-        grammar.setStartVN("bool");
+        grammar.setStartVN("P");
 
-
+        grammar.addDeriver(new Deriver("P", new String[]{"S", "F"}));
+        grammar.addDeriver(new Deriver("S", new String[]{"structure", "S"}));
+        grammar.addDeriver(new Deriver("S", new String[]{}));
+        grammar.addDeriver(new Deriver("F", new String[]{"function", "F"}));
+        grammar.addDeriver(new Deriver("F", new String[]{}));
+        grammar.addDeriver(new Deriver("structure", new String[]{"struct", "I", "{", "L", "}"}));
+        grammar.addDeriver(new Deriver("function",
+            new String[]{"func", "I", "(", "形参列表", ")", "类型", "{", "proc", "}"}));
+        grammar.addDeriver(new Deriver("形参列表", new String[]{"形参", "形参列表1"}));
+        grammar.addDeriver(new Deriver("形参列表", new String[]{}));
+        grammar.addDeriver(new Deriver("形参列表1", new String[]{",", "形参", "形参列表1"}));
+        grammar.addDeriver(new Deriver("形参列表1", new String[]{}));
+        grammar.addDeriver(new Deriver("形参", new String[]{"I", "形参类型"}));
+        grammar.addDeriver(new Deriver("形参类型", new String[]{"I"}));
+        grammar.addDeriver(new Deriver("形参类型", new String[]{"[", "]", "I"}));
+        grammar.addDeriver(new Deriver("proc", new String[]{"L", "复合语句"}));
+        grammar.addDeriver(new Deriver("L", new String[]{"声明语句", ";", "L"}));
+        grammar.addDeriver(new Deriver("L", new String[]{}));
+        grammar.addDeriver(new Deriver("声明语句", new String[]{"var", "I", "标识符表", "类型"}));
+        grammar.addDeriver(new Deriver("标识符表", new String[]{",", "I", "标识符表"}));
+        grammar.addDeriver(new Deriver("标识符表", new String[]{}));
+        grammar.addDeriver(new Deriver("复合语句", new String[]{"循环", "复合语句"}));
+        grammar.addDeriver(new Deriver("复合语句", new String[]{"条件", "复合语句"}));
+        grammar.addDeriver(new Deriver("复合语句", new String[]{"顺序", "复合语句"}));
+        grammar.addDeriver(new Deriver("复合语句", new String[]{}));
+        grammar.addDeriver(new Deriver("顺序", new String[]{"I", "语句成分", ";"}));
+        grammar.addDeriver(new Deriver("语句成分", new String[]{"赋值"}));
+        grammar.addDeriver(new Deriver("语句成分", new String[]{"函数"}));
+        grammar.addDeriver(new Deriver("顺序", new String[]{"return", "bool", ";"}));
+        grammar.addDeriver(new Deriver("类型", new String[]{"I"}));
+        grammar.addDeriver(new Deriver("类型", new String[]{"[", "const int", "]", "I"}));
+        grammar.addDeriver(
+            new Deriver("循环", new String[]{"while", "(", "bool", ")", "{", "复合语句", "}"}));
+        grammar
+            .addDeriver(new Deriver("条件", new String[]{"if", "(", "bool", ")", "{", "复合语句",
+                "}", "条件其他"}));
+        grammar.addDeriver(new Deriver("条件其他", new String[]{"else", "{", "复合语句", "}"}));
+        grammar.addDeriver(new Deriver("条件其他", new String[]{}));
+        grammar.addDeriver(new Deriver("值成分", new String[]{"函数"}));
+        grammar.addDeriver(new Deriver("值成分", new String[]{"[", "非负整数", "]"}));
+        grammar.addDeriver(new Deriver("值成分", new String[]{".", "I"}));
+        grammar.addDeriver(new Deriver("值成分", new String[]{}));
+        grammar.addDeriver(new Deriver("值", new String[]{"I", "值成分"}));
+        grammar.addDeriver(new Deriver("值", new String[]{"常量"}));
+        grammar.addDeriver(new Deriver("数组下标", new String[]{"[", "非负整数", "]"}));
+        grammar.addDeriver(new Deriver("数组下标", new String[]{}));
+        grammar.addDeriver(new Deriver("非负整数", new String[]{"const int"}));
+        grammar.addDeriver(new Deriver("非负整数", new String[]{"I"}));
+        grammar.addDeriver(new Deriver("赋值", new String[]{"数组下标", "=", "bool"}));
+        grammar.addDeriver(new Deriver("常量", new String[]{"const int"}));
+        grammar.addDeriver(new Deriver("常量", new String[]{"const double"}));
+        grammar.addDeriver(new Deriver("常量", new String[]{"const char"}));
+        grammar.addDeriver(new Deriver("函数", new String[]{"(", "值列表", ")"}));
+        grammar.addDeriver(new Deriver("值列表", new String[]{"值", "值列表1"}));
+        grammar.addDeriver(new Deriver("值列表", new String[]{}));
+        grammar.addDeriver(new Deriver("值列表1", new String[]{",", "值", "值列表1"}));
+        grammar.addDeriver(new Deriver("值列表1", new String[]{}));
         //表达式文法
         grammar.addDeriver(new Deriver("bool", new String[]{"join", "BOOL"}));
         grammar.addDeriver(new Deriver("BOOL", new String[]{"||", "join", "BOOL"}));
@@ -87,11 +148,6 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("unary", new String[]{"-", "unary"}));
         grammar.addDeriver(new Deriver("unary", new String[]{"值"}));
         grammar.addDeriver(new Deriver("unary", new String[]{"(", "bool", ")"}));
-        grammar.addDeriver(new Deriver("值", new String[]{"I"}));
-        grammar.addDeriver(new Deriver("值", new String[]{"常量"}));
-        grammar.addDeriver(new Deriver("常量", new String[]{"const int"}));
-        grammar.addDeriver(new Deriver("常量", new String[]{"const double"}));
-        grammar.addDeriver(new Deriver("常量", new String[]{"const char"}));
 
         try {
             grammar.generateLL1AnalyzeTable();
@@ -125,7 +181,7 @@ public class Parser extends Lang{
         Token y;
         i=0;
         //analyseStack.push(new Token("#","#"));
-        analyseStack.push(new Token(null,"bool"));
+        analyseStack.push(new Token(null,"P"));
         //input.add(new Token("#","#"));
         w = next();
         if (w == null) {

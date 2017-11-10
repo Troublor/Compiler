@@ -538,8 +538,8 @@ public class Grammar {
         }
 
         //循环找到第一个不是动作的标号（终结符或非终结符）
-        int i = this.getIndexOfFirst(a);
-        String s = (String) this.getFirst(a);
+
+        String s = this.getFirst(a);
         if (s == null) {
             //如果没有第一个（为空）
             return firstCollection;
@@ -560,9 +560,14 @@ public class Grammar {
                     //如果当前已经是最后一个
                     break;
                 }
-                while (this.isVT(s)) {
+                while (!this.isVN(s)) {
                     //循环找到下一个非终结符
-                    s = (String) this.getNext(a, s);
+                    if (this.isVT(s)) {
+                        //如果在找到下一个非终结符之前，碰到了一个终结符
+                        firstCollection.add(s);
+                        break outer;
+                    }
+                    s = this.getNext(a, s);
                     if (s == null) {
                         //如果当前已经是最后一个非终结符
                         break outer;
