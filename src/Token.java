@@ -29,6 +29,11 @@ public class Token{
         this.word = word;
     }
 
+    @Override
+    public String toString() {
+        return label + ": " + word;
+    }
+
     public class WordType {
         public static final int NONE = 0;
         public static final int IDENTITY = 1;

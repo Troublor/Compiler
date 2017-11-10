@@ -1,3 +1,4 @@
+import DFA.LexicalErrorException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,26 +40,58 @@ public class Parser extends Lang{
     public Parser(){
         super();
         lexer = new Lexer();
+        input = new ArrayList<>();
         analyseTable = new HashMap<>();
         analyseStack = new Stack<>();
         SEM = new Stack<>();
         QT = new ArrayList<QT>();
 
-        grammar.addVN(new HashSet<>(Arrays.asList(new String[]{"E", "T", "E1", "T1", "F"})));
-        grammar.addVT(new HashSet<>(Arrays.asList(new String[]{"+", "-", "*", "/", "i", "(", ")"})));
+        grammar.addVN(new HashSet<>(Arrays.asList(
+            new String[]{"bool", "join", "BOOL", "equality", "JOIN", "EQUALITY", "rel", "expr",
+                "expr1", "EXPR", "term", "TERM", "unary", "值", "常量"}
+        )));
+        grammar.addVT(new HashSet<>(Arrays.asList(
+            new String[]{"||", "&&", "==", "!=", "<", ">", "<=", ">=", "+", "-", "*", "/", "!", "I", "[",
+                "]", "(", ")", "const int", "const double", "const char"}
+        )));
 
-        grammar.setStartVN("E");
+        grammar.setStartVN("bool");
 
-        grammar.addDeriver(new Deriver("E", new String[]{"T", "E1"}));
-        grammar.addDeriver(new Deriver("E1", new String[]{"+", "T", "_AC_GEQ_+_", "E1"}));
-        grammar.addDeriver(new Deriver("E1", new String[]{"-", "T", "_AC_GEQ_-_", "E1"}));
-        grammar.addDeriver(new Deriver("E1", new String[]{}));
-        grammar.addDeriver(new Deriver("T", new String[]{"F", "T1"}));
-        grammar.addDeriver(new Deriver("T1", new String[]{"*", "F", "_AC_GEQ_*_", "T1"}));
-        grammar.addDeriver(new Deriver("T1", new String[]{"/", "F", "_AC_GEQ_/_", "T1"}));
-        grammar.addDeriver(new Deriver("T1", new String[]{}));
-        grammar.addDeriver(new Deriver("F", new String[]{"i", "_AC_PUSH_"}));
-        grammar.addDeriver(new Deriver("F", new String[]{"(", "E", ")"}));
+
+        //表达式文法
+        grammar.addDeriver(new Deriver("bool", new String[]{"join", "BOOL"}));
+        grammar.addDeriver(new Deriver("BOOL", new String[]{"||", "join", "BOOL"}));
+        grammar.addDeriver(new Deriver("BOOL", new String[]{}));
+        grammar.addDeriver(new Deriver("join", new String[]{"equality", "JOIN"}));
+        grammar.addDeriver(new Deriver("JOIN", new String[]{"&&", "equality", "JOIN"}));
+        grammar.addDeriver(new Deriver("JOIN", new String[]{}));
+        grammar.addDeriver(new Deriver("equality", new String[]{"rel", "EQUALITY"}));
+        grammar.addDeriver(new Deriver("EQUALITY", new String[]{"==", "rel", "EQUALITY"}));
+        grammar.addDeriver(new Deriver("EQUALITY", new String[]{"!=", "rel", "EQUALITY"}));
+        grammar.addDeriver(new Deriver("EQUALITY", new String[]{}));
+        grammar.addDeriver(new Deriver("rel", new String[]{"expr", "expr1"}));
+        grammar.addDeriver(new Deriver("expr1", new String[]{"<=", "expr"}));
+        grammar.addDeriver(new Deriver("expr1", new String[]{">=", "expr"}));
+        grammar.addDeriver(new Deriver("expr1", new String[]{">", "expr"}));
+        grammar.addDeriver(new Deriver("expr1", new String[]{"<", "expr"}));
+        grammar.addDeriver(new Deriver("expr1", new String[]{}));
+        grammar.addDeriver(new Deriver("expr", new String[]{"term", "EXPR"}));
+        grammar.addDeriver(new Deriver("EXPR", new String[]{"+", "term", "EXPR"}));
+        grammar.addDeriver(new Deriver("EXPR", new String[]{"-", "term", "EXPR"}));
+        grammar.addDeriver(new Deriver("EXPR", new String[]{}));
+        grammar.addDeriver(new Deriver("term", new String[]{"unary", "TERM"}));
+        grammar.addDeriver(new Deriver("TERM", new String[]{"*", "unary", "TERM"}));
+        grammar.addDeriver(new Deriver("TERM", new String[]{"/", "unary", "TERM"}));
+        grammar.addDeriver(new Deriver("TERM", new String[]{}));
+        grammar.addDeriver(new Deriver("unary", new String[]{"!", "unary"}));
+        grammar.addDeriver(new Deriver("unary", new String[]{"-", "unary"}));
+        grammar.addDeriver(new Deriver("unary", new String[]{"值"}));
+        grammar.addDeriver(new Deriver("unary", new String[]{"(", "bool", ")"}));
+        grammar.addDeriver(new Deriver("值", new String[]{"I"}));
+        grammar.addDeriver(new Deriver("值", new String[]{"常量"}));
+        grammar.addDeriver(new Deriver("常量", new String[]{"const int"}));
+        grammar.addDeriver(new Deriver("常量", new String[]{"const double"}));
+        grammar.addDeriver(new Deriver("常量", new String[]{"const char"}));
 
         try {
             grammar.generateLL1AnalyzeTable();
@@ -83,7 +116,7 @@ public class Parser extends Lang{
         lexer.setSourceCode(s);
     }
 
-    public boolean LL1Analyze() throws InvalidLabelException{
+    public boolean LL1Analyze() throws InvalidLabelException, LexicalErrorException{
         SEM.clear();
         QT.clear();
         analyseStack.clear();
@@ -91,9 +124,9 @@ public class Parser extends Lang{
         Token x;//从栈里取来的token
         Token y;
         i=0;
-        analyseStack.push(new Token("#","#"));
-        analyseStack.push(new Token(null,"E"));
-        input.add(new Token("#","#"));
+        //analyseStack.push(new Token("#","#"));
+        analyseStack.push(new Token(null,"bool"));
+        //input.add(new Token("#","#"));
         w = next();
         if (w == null) {
             return false;
@@ -127,6 +160,11 @@ public class Parser extends Lang{
                 //如果栈顶是动作
                 this.action(x.getLabel());
             }
+        }
+        if (!w.getLabel().equals("#")) {
+            //如果栈空了，符号串还没读完
+            //错误
+            return false;
         }
 
         analyseStack.clear();
@@ -185,11 +223,11 @@ public class Parser extends Lang{
      * 获取下一个单词
      * @return 单词
      */
-    private Token next(){
-        if (i >= input.size()){
-            return null;
-        }
-        return input.get(i++);
+    private Token next() throws LexicalErrorException{
+        Token next = lexer.getOneWord();
+        input.add(next);
+        i = input.size() - 1;
+        return next;
     }
 
     /**
@@ -200,7 +238,7 @@ public class Parser extends Lang{
         if (i == 0) {
             return null;
         }
-        return input.get(i - 2);
+        return input.get(i - 1);
     }
 
     /**

@@ -4,6 +4,7 @@
 
 import DFA.*;
 import java.util.ArrayList;
+import java.util.regex.Pattern;
 
 /**
  * 词法分析器
@@ -189,7 +190,12 @@ public class Lexer extends Lang{
                 word=word.concat(input);
             } else if (currState.equals("q1") && type == Token.WordType.IDENTITY) {
                 //标识符分支结束
-                output = new Token(word, "I");
+                if (isKeyWord(word)) {
+                    //如果是关键字
+                    output = new Token(word, word);
+                } else {
+                    output = new Token(word, "I");
+                }
                 //辅助参数归零
                 word = "";
                 type = Token.WordType.NONE;
@@ -215,9 +221,14 @@ public class Lexer extends Lang{
                 num_p = 10 * num_p + val(input);
             } else if (currState.equals("q1") && type == Token.WordType.NUMBER) {
                 //数字分支结束
-
                 double number = num_n * Math.pow(10, num_e * num_p - num_m);
-                output = new Token(Double.toString(number), "数字");
+                Pattern pattern = Pattern.compile("[0-9]*");
+                if (pattern.matcher(Double.toString(number)).matches()) {
+                    //如果是整数
+                    output = new Token(Double.toString(number), "const int");
+                } else {
+                    output = new Token(Double.toString(number), "const double");
+                }
                 //辅助参数归零
                 type = Token.WordType.NONE;
                 num_n = 0;
@@ -228,11 +239,11 @@ public class Lexer extends Lang{
                 return true;
             } else if (currState.equals("q9") || currState.equals("q10") || currState
                 .equals("q11")) {
-                //进入非连用界符分支
+                //进入界符分支
                 type = Token.WordType.DELIMITER;
                 delimiter += input;
             } else if (currState.equals("q1") && type == Token.WordType.DELIMITER) {
-                //非连用分支结束
+                //界符分支结束
                 if (!isDelimiter(delimiter)) {
                     throw new LexicalErrorException(
                         "DFA.LexicalErrorException: " + delimiter + " is not a delimiter\n");
@@ -251,7 +262,7 @@ public class Lexer extends Lang{
                 }
             } else if (currState.equals("q1") && type == Token.WordType.STRING) {
                 //字符串分支结束
-                output= new Token(string, "常量");
+                output= new Token(string, "字符串常量");
                 //辅助参数归零
                 type = Token.WordType.NONE;
                 string = "";
@@ -263,7 +274,7 @@ public class Lexer extends Lang{
                 character = input.charAt(0);
             } else if (currState.equals("q1") && type == Token.WordType.CHARACTER) {
                 //字符分支结束
-                output = new Token(Character.toString(character), "常量");
+                output = new Token(Character.toString(character), "const char");
                 //辅助参数归零
                 type = Token.WordType.NONE;
                 character = 0;
@@ -307,7 +318,7 @@ public class Lexer extends Lang{
     /**
      * 获取一个单词
      * 调用一次DFA
-     * 读到末尾了就返回null
+     * 读到末尾了就返回#的Token
      *
      * @return 单词
      * @throws LexicalErrorException 词法错误异常
@@ -315,7 +326,8 @@ public class Lexer extends Lang{
     public Token getOneWord() throws LexicalErrorException {
         output = null;
         if (!dfa.checkString(true)){
-            return null;
+            //如果读完了，到末尾了
+            return new Token("", "#");
         }else {
             if (output == null) {
                 //如果当前读啥也没读到，可能有空格，注释
