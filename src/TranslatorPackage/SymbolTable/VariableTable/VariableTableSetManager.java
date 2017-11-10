@@ -4,6 +4,7 @@ import TranslatorPackage.SymbolTable.SemanticExcption;
 import TranslatorPackage.SymbolTable.TypeTable.TypeTable;
 import TranslatorPackage.SymbolTable.TypeTable.TypeTableRow;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -12,7 +13,7 @@ import java.util.Map;
  */
 public class VariableTableSetManager {
     //多叉树结构 Manager 在中间语言翻译的时候，需要维护一个当前活跃
-    private VariableTable root,currActiveTable;
+    private VariableTable currActiveTable;
     private TypeTable typeTable;
     //维护一个类型表 查询类型的工作由Manager承包
     private int offsetTotal;
@@ -22,12 +23,12 @@ public class VariableTableSetManager {
     //一个自增的表id记录 可以拿来当表的计数
     private Map<Integer,VariableTable>  idVariableTableMap;
 
-    public VariableTableSetManager(){
-        typeTable = new TypeTable();
+    public VariableTableSetManager(TypeTable typeTable) {
+        this.typeTable = typeTable;
         offsetTotal = 0;
         idTotal = 1;
-        root = new VariableTable(null,idTotal,offsetTotal);
-        currActiveTable = root;
+        idVariableTableMap = new HashMap<>();
+        currActiveTable = new VariableTable(null, idTotal, offsetTotal);
         idVariableTableMap.put(idTotal,currActiveTable);
         idTotal ++;
     }
@@ -36,28 +37,32 @@ public class VariableTableSetManager {
      * 查询变量  返回表的id  加入到四元式中
      *
      * @param name_id 名字表示符
-     * @return 所在表的id  不成功返回-1
+     *
      */
-    public int requestVariable(String name_id) {
+
+    public VariableTableRow requestVariable(String name_id) {
         VariableTableRow res = currActiveTable.getVariable(name_id);
         if (res != null) {
-            return currActiveTable.getTable_id();
+            return res;
         }
+        VariableTable currActiveTableStore = currActiveTable;
         while (currActiveTable != null) {
-            currActiveTable = currActiveTable.getParent();
+            traceBackToParentBlock();
             res = currActiveTable.getVariable(name_id);
-            if (res != null)
-                return currActiveTable.getTable_id();
+            if (res != null) {
+                currActiveTable = currActiveTableStore;
+                return res;
+            }
         }
-        return -1;
+        return null;
     }
 
-    public void addVariable(String name_id, String type_name) throws SemanticExcption {
+    public VariableTableRow addVariable(String name_id, String type_name) throws SemanticExcption {
         TypeTableRow typeRes = typeTable.getTypeInfo(type_name);
         if (typeRes == null)
             throw new SemanticExcption("type : " + type_name + "has not declared");
 
-        currActiveTable.addVariable(type_name, name_id, typeRes.getOffset());
+        return currActiveTable.addVariable(type_name, name_id, typeRes.getLength(), currActiveTable.getTable_id());
     }
 
 
@@ -70,6 +75,20 @@ public class VariableTableSetManager {
         idVariableTableMap.put(idTotal,currActiveTable);
         idTotal ++;
     }
+
+    public void traceBackToParentBlock() {
+        currActiveTable = currActiveTable.getParent();
+    }
+
+
+    public VariableTableRow accessVariableByTableId(String name_id, int table_id) {
+        VariableTable variableTable = idVariableTableMap.get(table_id);
+        return variableTable.getVariable(name_id);
+
+    }
+
+
+
 
 
 }

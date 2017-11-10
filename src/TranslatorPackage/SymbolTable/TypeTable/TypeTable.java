@@ -30,7 +30,10 @@ public class TypeTable {
     }
 
     //从类型名获取类型info
-    public TypeTableRow getTypeInfo(String type_name) {
+    public TypeTableRow getTypeInfo(String type_name) throws SemanticExcption {
+        TypeTableRow res = tableRowMap.get(type_name);
+        if (res == null)
+            throw new SemanticExcption("type :" + type_name + "has not declare");
         return tableRowMap.get(type_name);
     }
 
@@ -40,10 +43,12 @@ public class TypeTable {
      * @param type_name 类型
      *  是否添加成功 重复添加类型会抛exception
      */
-    public void addType(String type_name) throws SemanticExcption {
-        if (tableRowMap.get(type_name) != null || !type_name.equals("basic"))
-            throw new SemanticExcption("repeating type occurred");
-        tableRowMap.put(type_name,new TypeTableRow(type_name));
+    public String declareType(String type_name) throws SemanticExcption {
+        if (tableRowMap.get(type_name) != null)
+            throw new SemanticExcption("repeating declare type, type name : " + type_name + " has occurred");
+        if (!type_name.equals("basic"))
+            tableRowMap.put(type_name, new TypeTableRow(type_name));
+        return type_name;
     }
 
 
@@ -54,7 +59,7 @@ public class TypeTable {
      * @param field_type 要添加进去域类型
      * @param field_name 域的名字 也不能重
      */
-    public void addFieldOnType(String type_name, String field_type, String field_name) throws SemanticExcption {
+    public String addFieldOnType(String type_name, String field_type, String field_name) throws SemanticExcption {
         TypeTableRow selectedType = tableRowMap.get(type_name);
         if(selectedType.getField(field_name) != null)
             throw new SemanticExcption("field name : " + field_name + " has already exist");
@@ -64,23 +69,23 @@ public class TypeTable {
         if(addFieldType == null)
             throw new SemanticExcption("no such type : " + field_type + " which add as a field");
 
-        selectedType.addField(field_name, addFieldType.getOffset(), field_type);
+        selectedType.addField(field_name, addFieldType.getLength(), field_type);
+        return selectedType.getName();
     }
 
     /**
      * 新建数组类型的实时会调用这个方法
-     *
      * @param arr_elem_type_name 添加的数组内元素类型
      * @param array_len          数组长度
      * @throws SemanticExcption 数组元素类型未声明直接抛出异常
      */
 
-    public void addFieldOnArrayType(String arr_elem_type_name, int array_len) throws SemanticExcption {
+    public String declareArrayType(String arr_elem_type_name, int array_len) throws SemanticExcption {
         String array_type_name = "array_" + arr_elem_type_name + "_" + array_len;
         //数组类型的类型名有这样的格式 ： array_元素类型_长度
         TypeTableRow selectedType = tableRowMap.get(array_type_name);
         if (selectedType != null)
-            return;
+            return selectedType.getName();
         //如果这个数组之前声明过（类型被创建过） 那么直接拿来用就好
 
         TypeTableRow arr_elem_type = tableRowMap.get(arr_elem_type_name);
@@ -89,12 +94,22 @@ public class TypeTable {
             throw new SemanticExcption("type : " + arr_elem_type_name + " has not declared before .");
 
         //添加数组类型表项
-        addType(array_type_name);
+        declareType(array_type_name);
         selectedType = tableRowMap.get(array_type_name);
 
         //向表项中填域 以数字作为域名 便于数组的循秩访问
         for (int i = 0; i < array_len; i++)
-            selectedType.addField(String.valueOf(i), arr_elem_type.getOffset(), arr_elem_type.getName());
+            selectedType.addField(String.valueOf(i), arr_elem_type.getLength(), arr_elem_type.getName());
 
+        return selectedType.getName();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (TypeTableRow eachRow : tableRowMap.values()) {
+            stringBuilder.append("type name: " + eachRow.getName() + "offset" + eachRow.getLength() + "\n");
+        }
+        return stringBuilder.toString();
     }
 }
