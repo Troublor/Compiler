@@ -12,8 +12,12 @@ func main() int {
   if(a>c){
     return aa.a;
   }else{
+    while(a+3>c){
+      array[0] = a;
+    }
     return array[a];
   }
+
 }
 
 func b(a int , b int) int {
