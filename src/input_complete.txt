@@ -1,0 +1,25 @@
+struct A {
+  var a int;
+  var b char;
+}
+
+func main() int {
+  var a,c int;
+  var aa A;
+  var array [10]char;
+  a=1;
+  c=b(1,1);
+  if(a>c){
+    return aa.a;
+  }else{
+    while(a+3>c){
+      array[0] = a;
+    }
+    return array[a];
+  }
+
+}
+
+func b(a int , b int) int {
+  return a>b;
+}

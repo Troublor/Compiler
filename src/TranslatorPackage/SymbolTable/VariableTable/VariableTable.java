@@ -13,7 +13,7 @@ public class VariableTable{
     //父节点 回溯查找时需要用到
     private HashMap<String,VariableTableRow> variables;
     // 以变量名作为key的map  变量名到变量具体信息的映射
-    private int startOffset,currVarOffset;
+    private int startOffset, currLen;
     // 表的相对于所有表的位移
     // 和当前最后一个变量末尾位置的相对于表头的位移
     //    寻址方式:  变量存储空间基址 + 当前表所在位置位移 + 当前表中变量相对于表头位置位移
@@ -37,7 +37,7 @@ public class VariableTable{
         variables = new HashMap<>();
         this.parent = parent;
         this.startOffset = startOffset;
-        this.currVarOffset = 0;
+        this.currLen = 0;
         this.table_id = id;
     }
 
@@ -54,9 +54,9 @@ public class VariableTable{
         if (variables.get(name_id)!= null)
             throw new SemanticException("variable: " + name_id + " has already existed");
         //type 的合法性已由Manager的typetable查过了 这里直接添加就ok
-        VariableTableRow newVariable = new VariableTableRow(name_id, type, currVarOffset, table_id);
+        VariableTableRow newVariable = new VariableTableRow(name_id, type, currLen, table_id);
         variables.put(name_id, newVariable);
-        currVarOffset += offset;
+        currLen += offset;
         return newVariable;
     }
 
@@ -64,8 +64,8 @@ public class VariableTable{
         return variables.get(name_id);
     }
 
-    public int getTableOffset() {
-        return startOffset;
+    public int getTableLength() {
+        return currLen;
     }
 
     public int getTable_id() {

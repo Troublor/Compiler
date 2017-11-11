@@ -105,6 +105,9 @@ public class SymbolTableManager {
     //在目前作用域查询一个变量的类型 用于表达式求值时进行类型判断
     public String lookupVariableType(String name_id) throws SemanticException {
         String format_[] = name_id.split(".");
+        //第一次进入符号表系统查询 没有之前的附加后缀时
+        if (format_.length == 0)
+            format_ = new String[]{name_id};
         VariableTableRow result = variableTableSetManager.requestVariable(format_[0]);
         if (result == null)
             throw new SemanticException("variable: " + name_id + "has not declare");

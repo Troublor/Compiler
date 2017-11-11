@@ -18,10 +18,10 @@ public class QT {
         operator = o;
         operand_left = left;
         operand_right = right;
-        result = result;
+        this.result = result;
     }
 
     public String toString(){
-        return "";
+        return "(optr :" + operator + ",opnd_l: " + operand_left + " ,opnd_r: " + operand_right + ",res: " + result + ")";
     }
 }
