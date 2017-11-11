@@ -63,6 +63,9 @@ public class Parser extends Lang{
 
         grammar.setStartVN("P");
 
+        //TODO
+        //需要修改，以支持结构体多层访问与数组多层访问
+
         grammar.addDeriver(new Deriver("P", new String[]{"S", "F"}));
         grammar.addDeriver(new Deriver("S", new String[]{"structure", "S"}));
         grammar.addDeriver(new Deriver("S", new String[]{}));

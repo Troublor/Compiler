@@ -1,9 +1,9 @@
 package OptimizePackage;
 
+import TranslatorPackage.QT;
 import java.util.HashSet;
 
 public class Node {
-    private String id;
     private String main_label;
     private HashSet<String> extra_labels;
     private String operator;
@@ -11,20 +11,45 @@ public class Node {
     private Node middle_child;
     private Node right_child;
 
-    public Node(String id, String main_label, HashSet<String> extra_labels, String operator,
+    /**
+     * 有三个子节点的
+     * 构造方法
+     *
+     * @param main_label 主标记
+     * @param operator 操作符(如果是常数这一项为null)
+     * @param left_child 左子节点
+     * @param middle_child 中子节点
+     * @param right_child 右子节点
+     */
+    public Node(String main_label, String operator,
         Node left_child, Node middle_child, Node right_child) {
-        this.id = id;
+        this.extra_labels = new HashSet<>();
         this.main_label = main_label;
-        this.extra_labels = extra_labels;
         this.operator = operator;
         this.left_child = left_child;
         this.middle_child = middle_child;
         this.right_child = right_child;
     }
 
-    public String getId() {
-        return id;
+    /**
+     * 只有两个子节点的
+     * 构造方法
+     *
+     * @param main_label 主标记
+     * @param operator 操作符(如果是常数这一项为null)
+     * @param left_child 左子节点
+     * @param right_child 右子节点
+     */
+    public Node(String main_label, String operator,
+        Node left_child, Node right_child) {
+        this.extra_labels = new HashSet<>();
+        this.main_label = main_label;
+        this.operator = operator;
+        this.left_child = left_child;
+        this.middle_child = null;
+        this.right_child = right_child;
     }
+
 
     public String getMain_label() {
         return main_label;
@@ -51,35 +76,27 @@ public class Node {
     }
 
     /**
-     * 格式化标记，调整优先级，将主标记变为用户定义变量，临时变量放入附加标记中
+     * 格式化标记，调整优先级，常数 > 用户定义变量> 临时变量
      * （如果有用户定义变量在主标记中的话）
      */
-    public void formatLabels() {
-        if (this.isTemporaryVariable(main_label)) {
-            extra_labels.add(main_label);
-            for (String label : extra_labels) {
-                if (!this.isTemporaryVariable(label)) {
-                    main_label = label;
-                    break;
-                }
+    public void formatLabels() throws QtException{
+        String temp = null;
+        for (String label : extra_labels) {
+            if (QT.isTemporaryVariable(label)) {
+                continue;
             }
-            extra_labels.remove(main_label);
+            if (QT.isConstVariable(label)) {
+                temp = main_label;
+                main_label = label;
+            } else if ( !QT.isConstVariable(main_label)){
+                temp = main_label;
+                main_label = label;
+            }
         }
+        extra_labels.add(temp);
     }
 
-    /**
-     * 判断是否是临时变量
-     *
-     * TODO
-     * 根据临时变量符号表，写判断是否是临时变量的逻辑
-     *
-     * @param s 要判断的变量
-     * @return boolean
-     */
-    private boolean isTemporaryVariable(String s) {
 
-        return false;
-    }
 
     /**
      * 判断是否包含一个标号
@@ -87,7 +104,7 @@ public class Node {
      * @param s 标号
      * @return boolean
      */
-    public boolean isContainLabel(String s) {
+    public boolean containLabel(String s) {
         if (main_label.equals(s)) {
             return true;
         }
