@@ -1,6 +1,6 @@
 package TranslatorPackage.SymbolTable.VariableTable;
 
-import TranslatorPackage.SymbolTable.SemanticExcption;
+import TranslatorPackage.SymbolTable.SemanticException;
 import TranslatorPackage.SymbolTable.TypeTable.TypeTable;
 import TranslatorPackage.SymbolTable.TypeTable.TypeTableRow;
 
@@ -19,6 +19,8 @@ public class VariableTableSetManager {
     private int offsetTotal;
     //总的offset 再插入新表时需要用到
 
+    private TempVariableTable tempVariableTable;
+
     private int idTotal;
     //一个自增的表id记录 可以拿来当表的计数
     private Map<Integer,VariableTable>  idVariableTableMap;
@@ -28,6 +30,11 @@ public class VariableTableSetManager {
         offsetTotal = 0;
         idTotal = 1;
         idVariableTableMap = new HashMap<>();
+
+        tempVariableTable = new TempVariableTable();
+        idVariableTableMap.put(-1, tempVariableTable);
+        //临时变量表号为-1  放在VariableTableManager里统一管理
+        //生成四元式的时候也是-1
         currActiveTable = new VariableTable(null, idTotal, offsetTotal);
         idVariableTableMap.put(idTotal,currActiveTable);
         idTotal ++;
@@ -57,15 +64,18 @@ public class VariableTableSetManager {
         return null;
     }
 
-    public VariableTableRow addVariable(String name_id, String type_name) throws SemanticExcption {
+    public void addVariable(String name_id, String type_name) throws SemanticException {
         TypeTableRow typeRes = typeTable.getTypeInfo(type_name);
         if (typeRes == null)
-            throw new SemanticExcption("type : " + type_name + "has not declared");
+            throw new SemanticException("type : " + type_name + "has not declared");
 
-        return currActiveTable.addVariable(type_name, name_id, typeRes.getLength(), currActiveTable.getTable_id());
+        currActiveTable.addVariable(type_name, name_id, typeRes.getLength(), currActiveTable.getTable_id());
     }
 
 
+    public VariableTableRow addTempVariable(String type_name) throws SemanticException {
+        return tempVariableTable.addTempVariable(type_name);
+    }
     /**
      * 有新块产生的 需要添加一个表
      */
@@ -87,6 +97,10 @@ public class VariableTableSetManager {
 
     }
 
+
+    public void assignTempVarPos() {
+        tempVariableTable.setStartOffset(this.offsetTotal);
+    }
 
 
 
