@@ -311,4 +311,26 @@ public class Parser extends Lang{
         }
         return n;
     }
+
+    //一下都是动作函数的定义
+
+//    private void PUSH() {
+//        SEM.push(this.last());
+//    }
+//
+//    private void GEQ(String w) {
+//        Token n1, n2;
+//        n1 = SEM.pop();
+//        n2 = SEM.pop();
+//        QT qt=new QT(w, n2.getWord(), n1.getWord());
+//        QT.add(qt);
+//        SEM.push(new Token(qt.getResult(), "i"));
+//    }
+//
+//
+//    public void printQT(){
+//        for (QT qt : QT) {
+//            System.out.println(qt.toString());
+//        }
+//    }
 }

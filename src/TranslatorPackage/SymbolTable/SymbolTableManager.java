@@ -102,7 +102,7 @@ public class SymbolTableManager {
     }
 
 
-    //查询一个变量的类型 用于表达式求值时进行类型判断
+    //在目前作用域查询一个变量的类型 用于表达式求值时进行类型判断
     public String lookupVariableType(String name_id) throws SemanticException {
         String format_[] = name_id.split(".");
         VariableTableRow result = variableTableSetManager.requestVariable(format_[0]);
