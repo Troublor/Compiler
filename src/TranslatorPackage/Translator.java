@@ -17,8 +17,9 @@ public class Translator {
     Stack<String> semanticStack = new Stack<String>();
     ArrayList<QT> QTs = new ArrayList<QT>();
     SymbolTableManager symbolTableManager = new SymbolTableManager();
-    // todo: push 需要parser为它传递上一次匹配的符号
 
+
+    // todo: push 需要parser为它传递上一次匹配的符号
     public void push(String name) {
         semanticStack.push(name);
     }
@@ -132,9 +133,11 @@ public class Translator {
     // for constant: "const int.1" -> "const int"
     // for id: "a" -> a's type
     // for array a: "a.3" -> type of a's element
+    //               "a" -> "array_xx_length"
+    //                 "a.x" x is numeric
     // for struct array: "a.3" -> Point
     //                  "a.3.X" -> int
-    //                                  // "a.X.3" -> int
+    // for struct contain array: "a.X.3" -> int
     private String lookUpType(String item) throws SemanticException , TypeError{
         String may_const = item.split(".")[0];
         // for constant
@@ -144,14 +147,12 @@ public class Translator {
         String []parts = item.split(".");
         String id = parts[0];
         String type = symbolTableManager.lookupVariableType(id);
-        if (isBasicType(type) && parts.length == 1) return type;
-//        else if (isBasicType(type)) throw new TypeError(id, type, "array");
         int i = 1;
         while (i < parts.length) {
             // array index
-            if (isInteger(parts[i])) {
-                if (type.startsWith("array")) type = type.split("_")[1];
-                else throw new TypeError(id, type, "array");
+            if (type.startsWith("array") && (isInteger(parts[i]) ||
+                    symbolTableManager.lookupVariableType(parts[i]).equals("int"))) {
+                type =  type.split("_")[1];
             }
             // struct field
             else {
