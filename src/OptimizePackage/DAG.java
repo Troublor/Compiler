@@ -22,10 +22,15 @@ public class DAG {
      * 根据qts中的四元式序列生成DAG图
      * 存储在nodes中
      */
-    private void generateDAG() throws QtException{
+    public void generateDAG() throws QtException{
         for (QT qt : qts) {
             if (qt.getOperator().equals("=")) {
                 //1. 若是赋值四元式: A=B  (=, B, _, A)
+                // 查找之前定义的A（作为附加标号的）并删除， 如果是主标记，则不删除
+                ArrayList<Node> find_nodes = this.getAllDefineNodesAsExtraLabel(qt.getResult());
+                for (Node node : find_nodes) {
+                    node.getExtra_labels().remove(qt.getResult());
+                }
                 Node defined = this.getFirstDefindNode(qt.getOperand_left());
                 if (defined == null) {
                     //如果赋值右边没有定义
@@ -35,15 +40,15 @@ public class DAG {
                 }
                 defined.getExtra_labels().add(qt.getResult());
                 defined.formatLabels();
-                //查找之前定义的A（作为附加标号的）并删除， 如果是主标记，则不删除
+
+            } else if (QT.isConstVariable(qt.getOperand_left()) && (qt.getOperand_right() == null
+                || QT.isConstVariable(qt.getOperand_right()))) {
+                //如果是常值表达式
+                // 查找之前定义的A（作为附加标号的）并删除， 如果是主标记，则不删除
                 ArrayList<Node> find_nodes = this.getAllDefineNodesAsExtraLabel(qt.getResult());
                 for (Node node : find_nodes) {
                     node.getExtra_labels().remove(qt.getResult());
                 }
-            }
-            if (QT.isConstVariable(qt.getOperand_left()) && (qt.getOperand_right() == null || QT
-                .isConstVariable(qt.getOperand_right()))) {
-                //如果是常值表达式
                 //计算常值
                 String const_result = this
                     .calculateConstExpression(qt.getOperator(), qt.getOperand_left(),
@@ -56,12 +61,13 @@ public class DAG {
                 }
                 defined.getExtra_labels().add(qt.getResult());
                 defined.formatLabels();
+
+            } else {
                 //查找之前定义的A（作为附加标号的）并删除， 如果是主标记，则不删除
                 ArrayList<Node> find_nodes = this.getAllDefineNodesAsExtraLabel(qt.getResult());
                 for (Node node : find_nodes) {
                     node.getExtra_labels().remove(qt.getResult());
                 }
-            } else {
                 Node public_expression = getExpression(qt);
                 if (public_expression == null) {
                     Node left_node = null;
@@ -85,12 +91,9 @@ public class DAG {
                     nodes.add(new_node);
                 } else {
                     public_expression.getExtra_labels().add(qt.getResult());
+                    public_expression.formatLabels();
                 }
-                //查找之前定义的A（作为附加标号的）并删除， 如果是主标记，则不删除
-                ArrayList<Node> find_nodes = this.getAllDefineNodesAsExtraLabel(qt.getResult());
-                for (Node node : find_nodes) {
-                    node.getExtra_labels().remove(qt.getResult());
-                }
+
             }
         }
     }
@@ -143,6 +146,9 @@ public class DAG {
         Node node;
         for (int i = nodes.size() - 1; i >= 0; i--) {
             node = nodes.get(i);
+            if (node.getOperator() == null) {
+                continue;
+            }
             if (node.getOperator().equals(qt.getOperator())) {
                 //先看左子节点是否匹配
                 if (node.getLeft_child() == null) {
@@ -184,8 +190,8 @@ public class DAG {
             return operand_left;
         }
         StringBuilder result = new StringBuilder("");
-        String left_type = operand_left.split(".")[0].split(" ")[1];
-        String right_type = operand_left.split(".")[0].split(" ")[1];
+        String left_type = operand_left.split("\\.")[0].split(" ")[1];
+        String right_type = operand_right.split("\\.")[0].split(" ")[1];
         if (left_type.equals("double") || right_type.equals("double")) {
             result.append("const double").append(".");
             double r = calculate(operator, operand_left, operand_right);
@@ -212,7 +218,7 @@ public class DAG {
      * @return 转换完成的数字
      */
     private double toNumber(String label) throws QtException{
-        String[] split = label.split(".");
+        String[] split = label.split("\\.");
         if (split.length != 2) {
             throw new QtException("QtException: " + label + " is not a valid const\n");
         }

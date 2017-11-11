@@ -93,7 +93,10 @@ public class Node {
                 main_label = label;
             }
         }
-        extra_labels.add(temp);
+        if (temp != null) {
+            extra_labels.add(temp);
+            extra_labels.remove(main_label);
+        }
     }
 
 
