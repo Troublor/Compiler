@@ -41,7 +41,39 @@ public class Translator {
             String toDefineVariableNameId = semanticStack.pop();
             symbolTableManager.defineVariable(toDefineVariableNameId, varType);
         }
-
     }
+
+    public void addWhileStartQT() {
+        symbolTableManager.stepIntoNewBlock();
+        QTs.add(new QT("while_start", "", "", ""));
+    }
+
+    public void addWhileEndQT() {
+        symbolTableManager.stepBackBlock();
+        QTs.add(new QT("while_end", "", "", ""));
+    }
+
+    public void addIfStartQt() {
+        symbolTableManager.stepBackBlock();
+        QTs.add(new QT("if_start", "", "", ""));
+    }
+
+    public void StepOutBlock() {
+        symbolTableManager.stepBackBlock();
+    }
+
+    public void addelseStartQt() {
+        symbolTableManager.stepBackBlock();
+        QTs.add(new QT("else_start", "", "", ""));
+    }
+
+    public void addIfElseEndQt() {
+        symbolTableManager.stepBackBlock();
+        QTs.add(new QT("if_else_end", "", "", ""));
+    }
+
+
+
+
 
 }
