@@ -11,7 +11,7 @@ public class QT {
     private String operand_right;
     private String result;
 
-    QT(String o, String left, String right, String r) {
+    public QT(String o, String left, String right, String r) {
         operator = o;
         operand_left = left;
         operand_right = right;
@@ -59,7 +59,10 @@ public class QT {
      * @return boolean
      */
     public static boolean isConstVariable(String label) throws QtException {
-        String[] split = label.split(".");
+        String[] split = label.split("\\.");
+        if (split[0].length() < 5) {
+            return false;
+        }
         if (split[0].substring(0, 5).equals("const")) {
             if (split.length != 2) {
                 throw new QtException("QtException: " + label + " is invalid const value");
