@@ -1,4 +1,5 @@
 import DFA.LexicalErrorException;
+import TranslatorPackage.QT;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,7 +28,7 @@ public class Parser extends Lang{
 
     private Stack<Token> SEM;
 
-    private ArrayList<QT> QT;
+    private ArrayList<TranslatorPackage.QT> QT;
 
     /**
      * 输入表达式,当前正在处理的就是input的最后一个
@@ -106,7 +107,7 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("值成分", new String[]{}));
         grammar.addDeriver(new Deriver("值", new String[]{"I", "值成分"}));
         grammar.addDeriver(new Deriver("值", new String[]{"常量"}));
-        grammar.addDeriver(new Deriver("数组下标", new String[]{"[", "非负整数", "]"}));
+        grammar.addDeriver(new Deriver("数组下标", new String[]{"[", "bool", "]"}));
         grammar.addDeriver(new Deriver("数组下标", new String[]{}));
         grammar.addDeriver(new Deriver("非负整数", new String[]{"const int"}));
         grammar.addDeriver(new Deriver("非负整数", new String[]{"I"}));
@@ -239,7 +240,7 @@ public class Parser extends Lang{
         }
         //反射调用方法
         try {
-            Class cls = Class.forName(this.getClass().getName());
+            Class cls = Class.forName("Translator");
             Method method;
             switch (split.length - 3) {
                 case 0:
@@ -308,27 +309,5 @@ public class Parser extends Lang{
             n.add(new Token(null,arrayList.get(i)));
         }
         return n;
-    }
-
-    //一下都是动作函数的定义
-
-    private void PUSH() {
-        SEM.push(this.last());
-    }
-
-    private void GEQ(String w) {
-        Token n1, n2;
-        n1 = SEM.pop();
-        n2 = SEM.pop();
-        QT qt=new QT(w, n2.getWord(), n1.getWord());
-        QT.add(qt);
-        SEM.push(new Token(qt.getResult(), "i"));
-    }
-
-
-    public void printQT(){
-        for (QT qt : QT) {
-            System.out.println(qt.toString());
-        }
     }
 }
