@@ -11,7 +11,6 @@ import TranslatorPackage.SymbolTable.TypeError;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import java.util.ArrayList;
 import java.util.Stack;
 
 public class Translator {
@@ -156,8 +155,9 @@ public class Translator {
             }
             // struct field
             else {
-                type = symbolTableManager.lookupStructFieldType(parts[i]);
+                type = symbolTableManager.lookupStructFieldType(type,parts[i]);
             }
+            i++;
         }
         return type;
     }
