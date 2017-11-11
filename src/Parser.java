@@ -108,7 +108,7 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("值成分", new String[]{}));
         grammar.addDeriver(new Deriver("值", new String[]{"I", "值成分"}));
         grammar.addDeriver(new Deriver("值", new String[]{"常量"}));
-        grammar.addDeriver(new Deriver("数组下标", new String[]{"[", "非负整数", "]"}));
+        grammar.addDeriver(new Deriver("数组下标", new String[]{"[", "bool", "]"}));
         grammar.addDeriver(new Deriver("数组下标", new String[]{}));
         grammar.addDeriver(new Deriver("非负整数", new String[]{"const int"}));
         grammar.addDeriver(new Deriver("非负整数", new String[]{"I"}));
@@ -241,7 +241,7 @@ public class Parser extends Lang{
         }
         //反射调用方法
         try {
-            Class cls = Class.forName(this.getClass().getName());
+            Class cls = Class.forName("Translator");
             Method method;
             switch (split.length - 3) {
                 case 0:

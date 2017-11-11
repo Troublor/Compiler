@@ -1,8 +1,8 @@
 package TranslatorPackage;
 
-import TranslatorPackage.SymbolTable.VariableTable.VariableTableRow;
 
 /**
+ *
  * Created by troub on 2017/10/23.
  */
 public class QT {

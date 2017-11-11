@@ -1,39 +1,37 @@
 package TranslatorPackage;
 
 import TranslatorPackage.SymbolTable.OptNotSupportError;
-import TranslatorPackage.SymbolTable.SemanticExcption;
+import TranslatorPackage.SymbolTable.SemanticException;
 import TranslatorPackage.SymbolTable.SymbolTableManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+
 import java.util.Stack;
 
 public class Translator {
     Stack<String> semanticStack;
     ArrayList<QT> QTs;
 
-    SymbolTableManager  symbolsManager;
+    SymbolTableManager symbolTableManager = new SymbolTableManager();
 
     int i = 0;
 
 
-    public Translator(SymbolTableManager symbolsManager) {
-        this.symbolsManager = symbolsManager;
-    }
 
     // todo: push 需要parser为它传递上一次匹配的符号
     public void push(String name) {
         semanticStack.push(name);
     }
 
-    public void afterUnary() throws OptNotSupportError, SemanticExcption{
+    public void afterUnary() throws OptNotSupportError, SemanticException{
         String operand = semanticStack.pop();
         String opt = semanticStack.pop();
-        String type = symbolsManager.lookupVariableType(operand);
+        String type = symbolTableManager.lookupVariableType(operand);
         String return_type = getUnaryReturnType(type, opt);
         // 生成临时量
         String tmp = "t" + i++;
-        symbolsManager.defineVariable(tmp, return_type);
+        symbolTableManager.defineVariable(tmp, return_type);
         QTs.add(new QT(opt, operand, "_", tmp));
         semanticStack.push(tmp);
     }
@@ -41,13 +39,13 @@ public class Translator {
 
 
     // 目前生成四元式时操作数不进行类型转换
-    public void afterDual() throws SemanticExcption{
+    public void afterDual() throws SemanticException{
         String left_operand = semanticStack.pop();
         String opt = semanticStack.pop();
         String right_operand = semanticStack.pop();
         String return_type = getDualReturnType(opt, left_operand, right_operand);
         String tmp = "t" + i++;
-        symbolsManager.defineVariable(tmp, return_type);
+        symbolTableManager.defineVariable(tmp, return_type);
         QTs.add(new QT(opt, left_operand, right_operand, tmp));
         semanticStack.push(tmp);
     }
@@ -89,3 +87,4 @@ public class Translator {
 
 
 }
+
