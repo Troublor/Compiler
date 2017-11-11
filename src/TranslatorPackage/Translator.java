@@ -1,6 +1,9 @@
 package TranslatorPackage;
 
+
+
 import TranslatorPackage.SymbolTable.OptNotSupportError;
+
 import TranslatorPackage.SymbolTable.SemanticException;
 import TranslatorPackage.SymbolTable.SymbolTableManager;
 import TranslatorPackage.SymbolTable.TypeError;
@@ -8,17 +11,13 @@ import TranslatorPackage.SymbolTable.TypeError;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import java.util.ArrayList;
 import java.util.Stack;
 
 public class Translator {
-    Stack<String> semanticStack;
-    ArrayList<QT> QTs;
-
+    Stack<String> semanticStack = new Stack<String>();
+    ArrayList<QT> QTs = new ArrayList<QT>();
     SymbolTableManager symbolTableManager = new SymbolTableManager();
-
-
-
-
     // todo: push 需要parser为它传递上一次匹配的符号
 
     public void push(String name) {
@@ -191,5 +190,67 @@ public class Translator {
         return name;
     }
 
-}
 
+    public void pushFlagDefineVariableStart() {
+        semanticStack.push("flag_defineVarStart");
+    }
+
+    public void pushToDefineVariable(String variable_id) {
+        semanticStack.push(variable_id);
+    }
+
+    public void chechTypeExist() throws SemanticException {
+        String varType = semanticStack.peek();
+        symbolTableManager.lookupType(varType);
+    }
+
+    public void defineArrayType() throws SemanticException {
+        chechTypeExist();
+        String array_elem_type = semanticStack.pop();
+        String[] array_size_raw_format = semanticStack.pop().split(".");
+        if (!array_size_raw_format[0].equals("const_int")) {
+            throw new SemanticException("must use const int to define array length");
+        }
+        symbolTableManager.defineArrayType(array_elem_type, Integer.valueOf(array_size_raw_format[1]));
+    }
+
+    public void defineStashedVariables() throws SemanticException {
+        String varType = semanticStack.pop();
+        while (semanticStack.peek().equals("flag_defineVarStart")) {
+            String toDefineVariableNameId = semanticStack.pop();
+            symbolTableManager.defineVariable(toDefineVariableNameId, varType);
+        }
+    }
+
+    public void addWhileStartQT() {
+        symbolTableManager.stepIntoNewBlock();
+        QTs.add(new QT("while_start", "", "", ""));
+    }
+
+    public void addWhileEndQT() {
+        symbolTableManager.stepBackBlock();
+        QTs.add(new QT("while_end", "", "", ""));
+    }
+
+    public void addIfStartQt() {
+        symbolTableManager.stepBackBlock();
+        QTs.add(new QT("if_start", "", "", ""));
+    }
+
+    public void StepOutBlock() {
+        symbolTableManager.stepBackBlock();
+    }
+
+    public void addelseStartQt() {
+        symbolTableManager.stepBackBlock();
+        QTs.add(new QT("else_start", "", "", ""));
+    }
+
+    public void addIfElseEndQt() {
+        symbolTableManager.stepBackBlock();
+        QTs.add(new QT("if_else_end", "", "", ""));
+    }
+
+
+
+}

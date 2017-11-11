@@ -24,7 +24,7 @@ public class FieldTableRow {
         return offset;
     }
 
-    public String getType() {
+    public String getTypeName() {
         return type;
     }
 
