@@ -1,6 +1,4 @@
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -64,7 +62,8 @@ public class Grammar {
         if (s.length() <= 4) {
             return false;
         }
-        return s.substring(0, 4).equals("_AC_");
+        String t = s.substring(0, 4);
+        return t.equals("_AC_");
     }
 
     /**
@@ -583,52 +582,4 @@ public class Grammar {
         return firstCollection;
     }
 
-}
-
-class Deriver{
-    /**
-     * 源符号
-     */
-    private String source;
-
-    /**
-     * 生成式
-     */
-    private ArrayList<String> destination;
-
-    Deriver(String s, String[] d){
-        source = s;
-        destination = new ArrayList<>(Arrays.asList(d));
-    }
-
-    Deriver(String s, ArrayList<String> d){
-        source = s;
-        destination = new ArrayList<>(d);
-    }
-
-    /**
-     * source访问器
-     * @return source
-     */
-    public String getSource(){
-        return source;
-    }
-
-    /**
-     * destination访问器
-     * @return destination
-     */
-    public ArrayList<String> getDestination(){
-        return destination;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder s = new StringBuilder(source);
-        s.append(" -> ");
-        for (String ss : destination) {
-            s.append(ss).append(" ");
-        }
-        return s.toString();
-    }
 }
