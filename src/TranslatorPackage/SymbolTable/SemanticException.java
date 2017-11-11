@@ -1,9 +1,9 @@
 package TranslatorPackage.SymbolTable;
 
-public class SemanticExcption extends Exception {
+public class SemanticException extends Exception {
     String message;
 
-    public SemanticExcption(String msg) {
+    public SemanticException(String msg) {
         message = msg;
     }
 
