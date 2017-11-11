@@ -1,3 +1,7 @@
+import DFA.LexicalErrorException;
+import TranslatorPackage.QT;
+
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -8,6 +12,10 @@ import java.util.Stack;
  * Created by troub on 2017/10/10.
  */
 public class Parser extends Lang{
+    /**
+     * 词法分析器
+     */
+    private Lexer lexer;
 
     /**
      * LL1分析表
@@ -17,234 +25,280 @@ public class Parser extends Lang{
     /**
      * 分析栈
      */
-    private Stack<Word> analyseStack;
+    private Stack<Token> analyseStack;
 
-    private Stack<Word> SEM;
+    private Stack<Token> SEM;
 
-    private ArrayList<QT> QT;
+    private ArrayList<TranslatorPackage.QT> QT;
 
     /**
-     * 输入表达式
+     * 输入表达式,当前正在处理的就是input的最后一个
+     * 也就是处理一个读一个，读一个放进来一个
      */
-    private ArrayList<Word> input;
+    private ArrayList<Token> input;
     private int i = 0;
 
     public Parser(){
         super();
+        lexer = new Lexer();
+        input = new ArrayList<>();
         analyseTable = new HashMap<>();
         analyseStack = new Stack<>();
         SEM = new Stack<>();
         QT = new ArrayList<QT>();
 
-        grammar.addVN(new HashSet<>(Arrays.asList(new String[]{"E", "T", "E1", "T1", "F"})));
-        grammar.addVT(new HashSet<>(Arrays.asList(new String[]{"+", "-", "*", "/", "i", "(", ")"})));
+        grammar.addVN(new HashSet<>(Arrays.asList(
+                new String[]{"bool", "join", "BOOL", "equality", "JOIN", "EQUALITY", "rel", "expr",
+                        "expr1", "EXPR", "term", "TERM", "unary", "值", "值成分", "常量", "S", "P", "S", "F",
+                        "structure", "function", "L", "形参列表", "形参列表1", "类型", "proc", "形参",
+                        "形参类型", "类型标识符", "复合语句", "声明语句", "标识符表", "类型", "循环", "条件",
+                        "顺序", "语句成分", "赋值", "函数", "条件其他", "数组下标", "非负整数", "值列表",
+                        "值列表1"}
+        )));
 
-        grammar.setStartVN("E");
+        grammar.addVT(new HashSet<>(Arrays.asList(
+                new String[]{"||", "&&", "==", "!=", "<", ">", "<=", ">=", "+", "-", "*", "/", "=", "!", "I",
+                        "[", "]", "(", ")", "const int", "const double", "const char", "struct", "{", "}",
+                        "func", ";", ",", ".", "var", "return", "while", "if", "else"}
+        )));
 
-        grammar.addDeriver(new Deriver("E", new String[]{"T", "E1"}));
-        grammar.addDeriver(new Deriver("E1", new String[]{"+", "T", "_AC_GEQ_+_", "E1"}));
-        grammar.addDeriver(new Deriver("E1", new String[]{"-", "T", "_AC_GEQ_-_", "E1"}));
-        grammar.addDeriver(new Deriver("E1", new String[]{}));
-        grammar.addDeriver(new Deriver("T", new String[]{"F", "T1"}));
-        grammar.addDeriver(new Deriver("T1", new String[]{"*", "F", "_AC_GEQ_*_", "T1"}));
-        grammar.addDeriver(new Deriver("T1", new String[]{"/", "F", "_AC_GEQ_/_", "T1"}));
-        grammar.addDeriver(new Deriver("T1", new String[]{}));
-        grammar.addDeriver(new Deriver("F", new String[]{"i", "_AC_PUSH_i_"}));
-        grammar.addDeriver(new Deriver("F", new String[]{"(", "E", ")"}));
+        grammar.setStartVN("P");
 
-        /*grammar.addVN(new HashSet<String>(Arrays.asList(new String[]{"S", "A", "B"})));
-        grammar.addVT(new HashSet<String>(Arrays.asList(new String[]{"a", "b", "c", "d"})));
-
-        grammar.setStartVN("S");
-
-        grammar.addDeriver(new Deriver("S", new String[]{"a", "A", "S", "b"}));
-        grammar.addDeriver(new Deriver("S", new String[]{"B", "d"}));
-        grammar.addDeriver(new Deriver("A", new String[]{"c", "S"}));
-        grammar.addDeriver(new Deriver("A", new String[]{}));
-        grammar.addDeriver(new Deriver("B", new String[]{"b", "B"}));
-        grammar.addDeriver(new Deriver("B", new String[]{"d"}));*/
+        grammar.addDeriver(new Deriver("P", new String[]{"S", "F"}));
+        grammar.addDeriver(new Deriver("S", new String[]{"structure", "S"}));
+        grammar.addDeriver(new Deriver("S", new String[]{}));
+        grammar.addDeriver(new Deriver("F", new String[]{"function", "F"}));
+        grammar.addDeriver(new Deriver("F", new String[]{}));
+        grammar.addDeriver(new Deriver("structure", new String[]{"struct", "I", "{", "L", "}"}));
+        grammar.addDeriver(new Deriver("function",
+                new String[]{"func", "I", "(", "形参列表", ")", "类型", "{", "proc", "}"}));
+        grammar.addDeriver(new Deriver("形参列表", new String[]{"形参", "形参列表1"}));
+        grammar.addDeriver(new Deriver("形参列表", new String[]{}));
+        grammar.addDeriver(new Deriver("形参列表1", new String[]{",", "形参", "形参列表1"}));
+        grammar.addDeriver(new Deriver("形参列表1", new String[]{}));
+        grammar.addDeriver(new Deriver("形参", new String[]{"I", "形参类型"}));
+        grammar.addDeriver(new Deriver("形参类型", new String[]{"I"}));
+        grammar.addDeriver(new Deriver("形参类型", new String[]{"[", "]", "I"}));
+        grammar.addDeriver(new Deriver("proc", new String[]{"L", "复合语句"}));
+        grammar.addDeriver(new Deriver("L", new String[]{"声明语句", ";", "L"}));
+        grammar.addDeriver(new Deriver("L", new String[]{}));
+        grammar.addDeriver(new Deriver("声明语句", new String[]{"var", "I", "标识符表", "类型"}));
+        grammar.addDeriver(new Deriver("标识符表", new String[]{",", "I", "标识符表"}));
+        grammar.addDeriver(new Deriver("标识符表", new String[]{}));
+        grammar.addDeriver(new Deriver("复合语句", new String[]{"循环", "复合语句"}));
+        grammar.addDeriver(new Deriver("复合语句", new String[]{"条件", "复合语句"}));
+        grammar.addDeriver(new Deriver("复合语句", new String[]{"顺序", "复合语句"}));
+        grammar.addDeriver(new Deriver("复合语句", new String[]{}));
+        grammar.addDeriver(new Deriver("顺序", new String[]{"I", "语句成分", ";"}));
+        grammar.addDeriver(new Deriver("语句成分", new String[]{"赋值"}));
+        grammar.addDeriver(new Deriver("语句成分", new String[]{"函数"}));
+        grammar.addDeriver(new Deriver("顺序", new String[]{"return", "bool", ";"}));
+        grammar.addDeriver(new Deriver("类型", new String[]{"I"}));
+        grammar.addDeriver(new Deriver("类型", new String[]{"[", "const int", "]", "I"}));
+        grammar.addDeriver(
+                new Deriver("循环", new String[]{"while", "(", "bool", ")", "{", "复合语句", "}"}));
+        grammar
+                .addDeriver(new Deriver("条件", new String[]{"if", "(", "bool", ")", "{", "复合语句",
+                        "}", "条件其他"}));
+        grammar.addDeriver(new Deriver("条件其他", new String[]{"else", "{", "复合语句", "}"}));
+        grammar.addDeriver(new Deriver("条件其他", new String[]{}));
+        grammar.addDeriver(new Deriver("值成分", new String[]{"函数"}));
+        grammar.addDeriver(new Deriver("值成分", new String[]{"[", "非负整数", "]"}));
+        grammar.addDeriver(new Deriver("值成分", new String[]{".", "I"}));
+        grammar.addDeriver(new Deriver("值成分", new String[]{}));
+        grammar.addDeriver(new Deriver("值", new String[]{"I", "值成分"}));
+        grammar.addDeriver(new Deriver("值", new String[]{"常量"}));
+        grammar.addDeriver(new Deriver("数组下标", new String[]{"[", "bool", "]"}));
+        grammar.addDeriver(new Deriver("数组下标", new String[]{}));
+        grammar.addDeriver(new Deriver("非负整数", new String[]{"const int"}));
+        grammar.addDeriver(new Deriver("非负整数", new String[]{"I"}));
+        grammar.addDeriver(new Deriver("赋值", new String[]{"数组下标", "=", "bool"}));
+        grammar.addDeriver(new Deriver("常量", new String[]{"const int"}));
+        grammar.addDeriver(new Deriver("常量", new String[]{"const double"}));
+        grammar.addDeriver(new Deriver("常量", new String[]{"const char"}));
+        grammar.addDeriver(new Deriver("函数", new String[]{"(", "值列表", ")"}));
+        grammar.addDeriver(new Deriver("值列表", new String[]{"值", "值列表1"}));
+        grammar.addDeriver(new Deriver("值列表", new String[]{}));
+        grammar.addDeriver(new Deriver("值列表1", new String[]{",", "值", "值列表1"}));
+        grammar.addDeriver(new Deriver("值列表1", new String[]{}));
+        //表达式文法
+        grammar.addDeriver(new Deriver("bool", new String[]{"join", "BOOL"}));
+        grammar.addDeriver(new Deriver("BOOL", new String[]{"||", "join", "BOOL"}));
+        grammar.addDeriver(new Deriver("BOOL", new String[]{}));
+        grammar.addDeriver(new Deriver("join", new String[]{"equality", "JOIN"}));
+        grammar.addDeriver(new Deriver("JOIN", new String[]{"&&", "equality", "JOIN"}));
+        grammar.addDeriver(new Deriver("JOIN", new String[]{}));
+        grammar.addDeriver(new Deriver("equality", new String[]{"rel", "EQUALITY"}));
+        grammar.addDeriver(new Deriver("EQUALITY", new String[]{"==", "rel", "EQUALITY"}));
+        grammar.addDeriver(new Deriver("EQUALITY", new String[]{"!=", "rel", "EQUALITY"}));
+        grammar.addDeriver(new Deriver("EQUALITY", new String[]{}));
+        grammar.addDeriver(new Deriver("rel", new String[]{"expr", "expr1"}));
+        grammar.addDeriver(new Deriver("expr1", new String[]{"<=", "expr"}));
+        grammar.addDeriver(new Deriver("expr1", new String[]{">=", "expr"}));
+        grammar.addDeriver(new Deriver("expr1", new String[]{">", "expr"}));
+        grammar.addDeriver(new Deriver("expr1", new String[]{"<", "expr"}));
+        grammar.addDeriver(new Deriver("expr1", new String[]{}));
+        grammar.addDeriver(new Deriver("expr", new String[]{"term", "EXPR"}));
+        grammar.addDeriver(new Deriver("EXPR", new String[]{"+", "term", "EXPR"}));
+        grammar.addDeriver(new Deriver("EXPR", new String[]{"-", "term", "EXPR"}));
+        grammar.addDeriver(new Deriver("EXPR", new String[]{}));
+        grammar.addDeriver(new Deriver("term", new String[]{"unary", "TERM"}));
+        grammar.addDeriver(new Deriver("TERM", new String[]{"*", "unary", "TERM"}));
+        grammar.addDeriver(new Deriver("TERM", new String[]{"/", "unary", "TERM"}));
+        grammar.addDeriver(new Deriver("TERM", new String[]{}));
+        grammar.addDeriver(new Deriver("unary", new String[]{"!", "unary"}));
+        grammar.addDeriver(new Deriver("unary", new String[]{"-", "unary"}));
+        grammar.addDeriver(new Deriver("unary", new String[]{"值"}));
+        grammar.addDeriver(new Deriver("unary", new String[]{"(", "bool", ")"}));
 
         try {
             grammar.generateLL1AnalyzeTable();
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
-
         analyseTable = grammar.getLL1AnalyseTable();
-
-        HashMap<String, Integer> row1 = new HashMap<String, Integer>();
-        row1.put("i", 1);
-        row1.put("(", 1);
-        HashMap<String, Integer> row2 = new HashMap<String, Integer>();
-        row2.put("+", 2);
-        row2.put("-", 3);
-        row2.put(")", 4);
-        row2.put("#", 4);
-        HashMap<String, Integer> row3 = new HashMap<String, Integer>();
-        row3.put("i", 5);
-        row3.put("(", 5);
-        HashMap<String, Integer> row4 = new HashMap<String, Integer>();
-        row4.put("+", 8);
-        row4.put("-", 8);
-        row4.put("*", 6);
-        row4.put("/", 7);
-        row4.put(")", 8);
-        row4.put("#", 8);
-        HashMap<String, Integer> row5 = new HashMap<String, Integer>();
-        row5.put("i", 9);
-        row5.put("(", 10);
-
-        analyseTable.put("E", row1);
-        analyseTable.put("E1", row2);
-        analyseTable.put("T", row3);
-        analyseTable.put("T1", row4);
-        analyseTable.put("F", row5);
     }
 
-    public Parser(ArrayList<Word> i){
+    public Parser(ArrayList<Token> i) {
         this();
         input = i;
     }
 
 
-
     /**
-     * 设置输入串
-     * @param i 输入串
+     * 设置源代码串
+     *
+     * @param s 源代码串
      */
-    public void input(ArrayList<Word> i){
-        input = i;
+    public void setSourceCode(String s) {
+        lexer.setSourceCode(s);
     }
 
-    public boolean LL1AnalyzeToken(){
-
-        for (int i = 0; i < input.size(); i++){
-            Word s = input.get(i);
-            if (s.token.equals("<00>") || s.token.equals("<03>")){
-                s.token = "i";
-                input.remove(i);
-                input.add(i, s);
-            }else if (s.token.equals("<24>")){
-                s.token = "(";
-                input.remove(i);
-                input.add(i, s);
-            }else if (s.token.equals("<25>")){
-                s.token = ")";
-                input.remove(i);
-                input.add(i, s);
-            }else if (s.token.equals("<16>")){
-                s.token = "+";
-                input.remove(i);
-                input.add(i, s);
-            }else if (s.token.equals("<17>")){
-                s.token = "-";
-                input.remove(i);
-                input.add(i, s);
-            }else if (s.token.equals("<18>")){
-                s.token = "*";
-                input.remove(i);
-                input.add(i, s);
-            }else if (s.token.equals("<19>")){
-                s.token = "/";
-                input.remove(i);
-                input.add(i, s);
-            }
-        }
-        return LL1Analyze();
-    }
-
-    public boolean LL1Analyze(){
+    public boolean LL1Analyze() throws InvalidLabelException, LexicalErrorException {
         SEM.clear();
         QT.clear();
         analyseStack.clear();
-        Word w;
+        Token w;//从input取来的token
+        Token x;//从栈里取来的token
+        Token y;
         i=0;
-        analyseStack.push(new Word("#", "#"));
-        analyseStack.push(new Word("", "E"));
-        input.add(new Word("#", "#"));
+        //analyseStack.push(new Token("#","#"));
+        analyseStack.push(new Token(null, "P"));
+        //input.add(new Token("#","#"));
         w = next();
-        while (!analyseStack.peek().token.equals("#")){
-            if (w == null){
-                return false;
-            }
-            Word x = analyseStack.pop();
-            if (x.token.equals("PUSHi")) {
-                SEM.push(new Word(x.word, "i"));
-                continue;
-            }
-            if (x.token.equals("GEQ+")){
-                Word n1, n2;
-                n2 = SEM.pop();
-                n1 = SEM.pop();
-                QT newone = new QT("+", n1.word, n2.word);
-                QT.add(newone);
-                SEM.push(new Word(newone.getResult(), "i"));
-                continue;
-            } else if (x.token.equals("GEQ-")) {
-                Word n1, n2;
-                n2 = SEM.pop();
-                n1 = SEM.pop();
-                QT newone = new QT("-", n1.word, n2.word);
-                QT.add(newone);
-                SEM.push(new Word(newone.getResult(), "i"));
-                continue;
-            } else if (x.token.equals("GEQ*")) {
-                Word n1, n2;
-                n2 = SEM.pop();
-                n1 = SEM.pop();
-                QT newone = new QT("*", n1.word, n2.word);
-                QT.add(newone);
-                SEM.push(new Word(newone.getResult(), "i"));
-                continue;
-            } else if (x.token.equals("GEQ/")) {
-                Word n1, n2;
-                n2 = SEM.pop();
-                n1 = SEM.pop();
-                QT newone = new QT("/", n1.word, n2.word);
-                QT.add(newone);
-                SEM.push(new Word(newone.getResult(), "i"));
-                continue;
-            }
-            if (x.token.equals("i") || x.token.equals("(") || x.token.equals(")") || x.token.equals("+") || x.token.equals("-") || x.token.equals("*") || x.token.equals("/")){
-
-                //如果是终结符
-                if (w.token.equals(x.token)){
-                    if (x.token.equals("i")&&analyseStack.peek().token.equals("PUSHi")) {
-                        analyseStack.peek().word = w.word;
-                    }
-                    w = next();
-                    continue;
-                }else {
-                    return false;
-                }
-            }else{
-                HashMap<String, Integer> row = analyseTable.get(x.token);
-                if (row == null){
-                    return false;
-                }
-                Integer index = row.get(w.token);
-                if (index == null){
-                    return false;
-                }
-                analyseStack.addAll(reverse(grammar.getDeriver(index).getDestination()));
-            }
-        }
-        if (w == null || !w.token.equals("#")){
+        if (w == null) {
             return false;
         }
+        while (!analyseStack.isEmpty()) {
+            x = analyseStack.pop();
+            if (grammar.isVT(x.getLabel())) {
+                //如果栈顶是终结符
+                if (!w.getLabel().equals(x.getLabel())) {
+                    //如果与input不匹配
+                    return false;
+                }
+                //如果匹配则input取下一个
+                w = next();
+                if (w == null) {
+                    return false;
+                }
+            } else if (grammar.isVN(x.getLabel())) {
+                //如果栈顶是非终结符
+                //通过分析表获取产生式序号
+                Integer index = analyseTable.get(x.getLabel()).get(w.getLabel());
+                if (index == null) {
+                    //如果没找到对应的产生式
+                    return false;
+                }
+                //产生式逆序压栈
+                for (Token t : this.reverse(grammar.getDeriver(index).getDestination())) {
+                    analyseStack.push(t);
+                }
+            } else if (grammar.isAction(x.getLabel())) {
+                //如果栈顶是动作
+                this.action(x.getLabel());
+            }
+        }
+        if (!w.getLabel().equals("#")) {
+            //如果栈空了，符号串还没读完
+            //错误
+            return false;
+        }
+
         analyseStack.clear();
         return true;
+    }
+
+    /**
+     * 调用动作函数
+     *
+     * @param a 动作字符串
+     * @throws InvalidLabelException 非法符号异常
+     */
+    private void action(String a) throws InvalidLabelException {
+        String[] split = a.split("_");
+        if (split.length < 3 || !split[1].equals("AC")) {
+            throw new InvalidLabelException("InvalidLabelException: " + a + " is not an action\n");
+        }
+        //反射调用方法
+        try {
+            Class cls = Class.forName("Translator");
+            Method method;
+            switch (split.length - 3) {
+                case 0:
+                    method = cls.getDeclaredMethod(split[2]);
+                    method.invoke(this);
+                    break;
+                case 1:
+                    method = cls.getDeclaredMethod(split[2], String.class);
+                    method.invoke(this, split[3]);
+                    break;
+                case 2:
+                    method = cls.getDeclaredMethod(split[2], String.class, String.class);
+                    method.invoke(this, split[3], split[4]);
+                    break;
+                case 3:
+                    method = cls.getDeclaredMethod(split[2], String.class, String.class,
+                            String.class);
+                    method.invoke(this, split[3], split[4], split[5]);
+                    break;
+                case 4:
+                    method = cls.getDeclaredMethod(split[2], String.class, String.class,
+                            String.class, String.class);
+                    method.invoke(this, split[3], split[4], split[5], split[6]);
+                    break;
+                case 5:
+                    method = cls.getDeclaredMethod(split[2], String.class, String.class,
+                            String.class, String.class, String.class);
+                    method.invoke(this, split[3], split[4], split[5], split[6], split[7]);
+                    break;
+            }
+        } catch (Exception e) {
+            throw new InvalidLabelException("InvalidLabelException: " + a + " action failure\n");
+        }
     }
 
     /**
      * 获取下一个单词
      * @return 单词
      */
-    private Word next(){
-        if (i >= input.size()){
+    private Token next() throws LexicalErrorException {
+        Token next = lexer.getOneWord();
+        input.add(next);
+        i = input.size() - 1;
+        return next;
+    }
+
+    /**
+     * 获取上一个单词
+     *
+     * @return 单词
+     */
+    private Token last() {
+        if (i == 0) {
             return null;
         }
-        return input.get(i++);
+        return input.get(i - 1);
     }
 
     /**
@@ -252,174 +306,11 @@ public class Parser extends Lang{
      * @param arrayList　源arrayList
      * @return 翻转后的arrayList
      */
-    private ArrayList<Word> reverse(ArrayList<String> arrayList){
-        ArrayList<Word> n = new ArrayList<>();
-        for (int i = arrayList.size() - 1; i >= 0; i--){
-            n.add(new Word("", arrayList.get(i)));
+    private ArrayList<Token> reverse(ArrayList<String> arrayList) {
+        ArrayList<Token> n = new ArrayList<>();
+        for (int i = arrayList.size() - 1; i >= 0; i--) {
+            n.add(new Token(null, arrayList.get(i)));
         }
         return n;
-    }
-
-
-
-
-
-
-    //递归下降方法
-    private Word recursiveDescentWord;
-
-    public boolean recursiveDescentAnalyzeToken(){
-        for (int i = 0; i < input.size(); i++){
-            Word s = input.get(i);
-            if (s.token.equals("<00>") || s.token.equals("<03>")){
-                s.token = "i";
-                input.remove(i);
-                input.add(i, s);
-            }else if (s.token.equals("<24>")){
-                s.token = "(";
-                input.remove(i);
-                input.add(i, s);
-            }else if (s.token.equals("<25>")){
-                s.token = ")";
-                input.remove(i);
-                input.add(i, s);
-            }else if (s.token.equals("<16>")){
-                s.token = "+";
-                input.remove(i);
-                input.add(i, s);
-            }else if (s.token.equals("<17>")){
-                s.token = "-";
-                input.remove(i);
-                input.add(i, s);
-            }else if (s.token.equals("<18>")){
-                s.token = "*";
-                input.remove(i);
-                input.add(i, s);
-            }else if (s.token.equals("<19>")){
-                s.token = "/";
-                input.remove(i);
-                input.add(i, s);
-            }
-        }
-        return recursiveDescentAnalyze();
-    }
-
-    public boolean recursiveDescentAnalyze(){
-        SEM.clear();
-        QT.clear();
-        i = 0;
-        input.add(new Word("#", "#"));
-        recursiveDescentWord = next();
-        if (!E()){
-            return false;
-        }else {
-            if (recursiveDescentWord.token.equals("#")){
-                return true;
-            }else {
-                return false;
-            }
-        }
-    }
-
-    private boolean E(){
-        if (!T()){
-            return false;
-        }else {
-            return E1();
-        }
-    }
-
-    private boolean E1(){
-        if (recursiveDescentWord.token.equals("+") || recursiveDescentWord.token.equals("-")) {
-            String temp = recursiveDescentWord.token;
-            recursiveDescentWord = next();
-            if (!T()) {
-                return false;
-            } else {
-                if (temp.equals("+")) {
-                    Word n1, n2;
-                    n2 = SEM.pop();
-                    n1 = SEM.pop();
-                    QT newone = new QT("+", n1.word, n2.word);
-                    QT.add(newone);
-                    SEM.push(new Word(newone.getResult(), "i"));
-                } else if (temp.equals("-")) {
-                    Word n1, n2;
-                    n2 = SEM.pop();
-                    n1 = SEM.pop();
-                    QT newone = new QT("-", n1.word, n2.word);
-                    QT.add(newone);
-                    SEM.push(new Word(newone.getResult(), "i"));
-                }
-                return E1();
-            }
-        } else {
-            return true;
-        }
-    }
-
-    private boolean T(){
-        if (!F()){
-            return false;
-        }else {
-            return T1();
-        }
-    }
-
-    private boolean T1(){
-        if (recursiveDescentWord.token.equals("*") || recursiveDescentWord.token.equals("/")) {
-            String temp = recursiveDescentWord.token;
-            recursiveDescentWord = next();
-            if (!F()) {
-                return false;
-            } else {
-                if (temp.equals("*")) {
-                    Word n1, n2;
-                    n2 = SEM.pop();
-                    n1 = SEM.pop();
-                    QT newone = new QT("*", n1.word, n2.word);
-                    QT.add(newone);
-                    SEM.push(new Word(newone.getResult(), "i"));
-                } else if (temp.equals("/")) {
-                    Word n1, n2;
-                    n2 = SEM.pop();
-                    n1 = SEM.pop();
-                    QT newone = new QT("/", n1.word, n2.word);
-                    QT.add(newone);
-                    SEM.push(new Word(newone.getResult(), "i"));
-                }
-                return T1();
-            }
-        } else {
-            return true;
-        }
-    }
-
-    private boolean F(){
-        if (recursiveDescentWord.token.equals("i")){
-            SEM.push(recursiveDescentWord);
-            recursiveDescentWord = next();
-            return true;
-        }else if (recursiveDescentWord.token.equals("(")){
-            recursiveDescentWord = next();
-            if (!E()){
-                return false;
-            }else {
-                if (recursiveDescentWord.token.equals(")")){
-                    recursiveDescentWord = next();
-                    return true;
-                }else {
-                    return false;
-                }
-            }
-        }else {
-            return false;
-        }
-    }
-
-    public void printQT(){
-        for (QT qt : QT) {
-            System.out.println(qt.toString());
-        }
     }
 }
