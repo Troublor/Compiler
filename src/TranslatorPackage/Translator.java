@@ -39,6 +39,8 @@ public class Translator {
     // for array a: "a[3]" -> "a.3"
     // todo: for struct type "a.b" -> "a.b"
 
+    // todo : const xxx 生成四元式就不要加.value了
+    // TODO : 赋值语句还没有四元式生成出来
     // contrast with QT's content
 
     // QT's content:
