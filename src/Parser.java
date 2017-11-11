@@ -71,7 +71,7 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("F", new String[]{}));
         grammar.addDeriver(new Deriver("structure", new String[]{"struct", "I", "{", "L", "}"}));
         grammar.addDeriver(new Deriver("function",
-            new String[]{"func", "I", "(", "形参列表", ")", "类型", "{", "proc", "}"}));
+                new String[]{"func", "I", "(", "形参列表", ")", "类型", "{", "proc", "}"}));
         grammar.addDeriver(new Deriver("形参列表", new String[]{"形参", "形参列表1"}));
         grammar.addDeriver(new Deriver("形参列表", new String[]{}));
         grammar.addDeriver(new Deriver("形参列表1", new String[]{",", "形参", "形参列表1"}));
