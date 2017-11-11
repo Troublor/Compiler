@@ -36,6 +36,16 @@ public class DFA {
 
     public boolean annotation;
 
+    /**
+     * 源代码
+     */
+    private String sourceCode;
+
+    /**
+     * 扫描字符串指针
+     */
+    private static int index = 0;
+
 
     public DFA(){
         states=new ArrayList<>();
@@ -100,34 +110,69 @@ public class DFA {
         return transformTable.addDefaultTransform(state,destination);
     }
 
+    public void setSourceCode(String sourceCode) {
+        this.sourceCode = sourceCode;
+    }
+
     /**
      * 检测字符串
-     * @param string 字符串
+     * 得到一个单词就停下
+     * 读到末尾返回false
      * @param method 检测模式，true为检测同时处理
      * @return boolean
      */
-    public boolean checkString(String string,boolean method){
-        string=string.concat("##");
+    public boolean checkString(boolean method) throws LexicalErrorException{
+        sourceCode=sourceCode.concat("##");
         String currState=startState;
         if (method){
             process(currState);
         }
-        for(int i=0;i<string.length();i++){
-            String input=string.substring(i,i+1);
+        if (index >= sourceCode.length()) {
+            throw new LexicalErrorException(
+                "LexicalErrorException: deriver error: not be expected to end");
+        }
+        String input = sourceCode.substring(index, index + 1);
+        if (input.equals("#")&&endStates.contains(currState)){
+            return false;
+        }
+        currState=transformTable.transform(currState,input);
+        if (currState.equals("no")){
+            throw new LexicalErrorException(
+                "LexicalErrorException: deriver error: " + currState + "(" + input + ")\n");
+        }
+        if (method){
+            if (process(currState,input)){
+                index--;
+            }
+        }
+        index++;
+        if (index >= sourceCode.length()) {
+            throw new LexicalErrorException(
+                "LexicalErrorException: deriver error: not be expected to end");
+        }
+        //状态转移回q1就停止运行
+        while (!currState.equals(startState)) {
+            input = sourceCode.substring(index, index + 1);
             if (input.equals("#")&&endStates.contains(currState)){
-                return true;
+                return false;
             }
             currState=transformTable.transform(currState,input);
             if (currState.equals("no")){
-                return false;
+                throw new LexicalErrorException(
+                    "LexicalErrorException: deriver error: " + currState + "(" + input + ")\n");
             }
             if (method){
                 if (process(currState,input)){
-                    i--;
+                    index--;
                 }
             }
+            index++;
+            if (index >= sourceCode.length()) {
+                throw new LexicalErrorException(
+                    "LexicalErrorException: deriver error: not be expected to end");
+            }
         }
-        return false;
+        return true;
     }
 
     /**
@@ -141,7 +186,7 @@ public class DFA {
      * 需要被重写
      * @return boolean true代表需要退格，false表示不需要退格
      */
-    protected boolean process(String currState,String input){return false;}
+    protected boolean process(String currState,String input) throws LexicalErrorException{return false;}
 
     /**
      * 添加状态

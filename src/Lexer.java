@@ -2,8 +2,9 @@
  * Created by troub on 2017/9/12.
  */
 
-import DFA.DFA;
+import DFA.*;
 import java.util.ArrayList;
+import java.util.regex.Pattern;
 
 /**
  * 词法分析器
@@ -11,13 +12,6 @@ import java.util.ArrayList;
 public class Lexer extends Lang{
 
     class LexerDFA extends DFA {
-
-        /**
-         * 相应的语言定义
-         */
-        //private Lang lang;
-
-
         /**
          * 用于存储刚刚读完的是什么类型
          */
@@ -83,11 +77,15 @@ public class Lexer extends Lang{
             for (char c='A';c<='Z';c++){
                 super.addLetter(new String(new char[]{c}));
             }
-            String[] ls={" ",":","=",".",",",";","+","-","(",")","*","/",">","<","\'","\"","[","]","{","}","#"};
+            //$用来标识行尾
+            String[] ls={" ",":","=",".",",",";","+","-","(",")","*","/",">","<","\'","\"","[","]","{","}","#","|", "&", "$", "!"};
             super.addLetters(ls);
             super.setStartState("q1");
             super.addEndState("qe");
             addTransform("q1"," ","q1");
+            addTransform("q1", "$", "q1");
+            addTransform("q1", "\r", "q1");
+            addTransform("q1", "\n", "q1");
             addTransform("q1","#","qe");
             for (char c='a';c<='z';c++){
                 addTransform("q1",new String(new char[]{c}),"q2");
@@ -116,48 +114,54 @@ public class Lexer extends Lang{
             addDefaultTransform("q3","q1");
             addDefaultTransform("q8","q1");
 
-            //判断界符
-            addTransform("q1",new String[]{"(",")","*","+","-","=",";",",",".","<",">","{","}","[","]"},"q9");
+            //判断界符（非连用界符）
+            addTransform(
+                "q1",
+                new String[]{"(", ")", "*", ";", ",", ".", "%", "{", "}", "[", "]"},
+                "q9"
+            );
             addDefaultTransform("q9","q1");
 
-            //>=,<=,==
-            addTransform("q1",new String[]{">","<","="},"q15");
-            addTransform("q15","=","q16");
-            addDefaultTransform("q16","q1");
+            //二连用字符
+            addTransform(
+                "q1",
+                new String[]{">", "<", "=", "+", "-", "!", "&", "|"},
+                "q10"
+            );
+            addTransform(
+                "q10",
+                new String[]{">", "<", "=", "+", "-", "!", "&", "|"},
+                "q11"
+            );
+            addDefaultTransform("q10", "q1");
+            addDefaultTransform("q11", "q1");
 
             //字符串
-            addTransform("q1","\"","q10");
-            for (char c='a';c<='z';c++){
-                addTransform("q10",new String(new char[]{c}),"q10");
-            }
-            for (char c='A';c<='Z';c++){
-                addTransform("q10",new String(new char[]{c}),"q10");
-            }
-            for (char c='0';c<='9';c++){
-                addTransform("q10",new String(new char[]{c}),"q10");
-            }
-            addTransform("q10","\"","q11");
-            addDefaultTransform("q11","q1");
+            addTransform("q1", "\"", "q12");
+            addTransform("q12", "\"", "q13");
+            addDefaultTransform("q12", "q12");
+            addDefaultTransform("q13","q1");
 
             //字符
-            addTransform("q1","\'","q12");
-            for (char c='a';c<='z';c++){
-                addTransform("q12",new String(new char[]{c}),"q13");
-            }
-            for (char c='A';c<='Z';c++){
-                addTransform("q12",new String(new char[]{c}),"q13");
-            }
-            for (char c='0';c<='9';c++){
-                addTransform("q12",new String(new char[]{c}),"q13");
-            }
-            addTransform("q13","\'","q14");
-            addDefaultTransform("q14","q1");
+            addTransform("q1","\'","q14");
+            addTransform("q15","\'","q16");
+            addDefaultTransform("q14", "q15");
+            addDefaultTransform("q16","q1");
 
             //注释
             addTransform("q1","/","q17");
             //如果不是注释，只是/
             addDefaultTransform("q17","q1");
             addTransform("q17","/","q18");
+            addDefaultTransform("q18", "q18");
+            addTransform("q18", "$", "q19");
+            addDefaultTransform("q19", "q1");
+            addTransform("q17", "*", "q20");
+            addDefaultTransform("q20", "q20");
+            addTransform("q20", "*", "21");
+            addDefaultTransform("q21", "q20");
+            addTransform("q21", "/", "q22");
+            addDefaultTransform("q22", "q1");
 
             //终止字符
             addTransform("q1","#","qe");
@@ -179,104 +183,114 @@ public class Lexer extends Lang{
          * @return boolean true代表需要退格，false表示不需要退格
          */
         @Override
-        protected boolean process(String currState,String input){
+        protected boolean process(String currState,String input) throws LexicalErrorException {
             if (currState.equals("q2")){
-                type=1;
+                //进入标识符分支
+                type = Token.WordType.IDENTITY;
                 word=word.concat(input);
-            }else if (currState.equals("q1")&&type==1){
-                type=0;
-                if (isKeyWord(word)){
-//                    System.out.println(word+"  (keyWord, "+(keyWordTable.indexOf(word)+4)+")");
-                    output.add(new Token(word, "<" + (keyWordTable.indexOf(word)+4) + ">"));
-                }else {
-                    int index=identifierTable.indexOf(word);
-                    if (index<0){
-                        identifierTable.add(word);
-                        index=identifierTable.indexOf(word);
-                    }
-//                    System.out.println(word+"  (identifier, "+"00"+")");
-                    output.add(new Token(word, "<00>"));
+            } else if (currState.equals("q1") && type == Token.WordType.IDENTITY) {
+                //标识符分支结束
+                if (isKeyWord(word)) {
+                    //如果是关键字
+                    output = new Token(word, word);
+                } else {
+                    output = new Token(word, "I");
                 }
-                word="";
+                //辅助参数归零
+                word = "";
+                type = Token.WordType.NONE;
                 return true;
             } else if (currState.equals("q3")) {
-                type=2;
-                num_n=10*num_n+val(input);
-            }else if (currState.equals("q4")){
-                num_t=1;
-            }else if (currState.equals("q5")){
-                num_n=10*num_n+val(input);
-                num_m=num_m+1;
-            }else if (currState.equals("q6")){
-                num_t=1;
-            }else if (currState.equals("q7")){
-                if (input.equals("-")){
-                    num_e=-1;
-                }else {
-                    num_e=1;
+                //进入数字分支
+                type = Token.WordType.NUMBER;
+                num_n = 10 * num_n + val(input);
+            } else if (currState.equals("q4")) {
+                num_t = 1;
+            } else if (currState.equals("q5")) {
+                num_n = 10 * num_n + val(input);
+                num_m = num_m + 1;
+            } else if (currState.equals("q6")) {
+                num_t = 1;
+            } else if (currState.equals("q7")) {
+                if (input.equals("-")) {
+                    num_e = -1;
+                } else {
+                    num_e = 1;
                 }
-            }else if (currState.equals("q8")){
-                num_p=10*num_p+val(input);
-            }
-            else if (currState.equals("q1")&&type==2){
-                type=0;
-                double number=num_n*Math.pow(10,num_e*num_p-num_m);
-                int index=constTable.indexOf(number);
-                if (index<0){
-                    constTable.add(number);
-                    index=constTable.indexOf(number);
+            } else if (currState.equals("q8")) {
+                num_p = 10 * num_p + val(input);
+            } else if (currState.equals("q1") && type == Token.WordType.NUMBER) {
+                //数字分支结束
+                double number = num_n * Math.pow(10, num_e * num_p - num_m);
+                double eps = 1e-10;  // 精度范围
+                if (number-Math.floor(number) < eps) {
+                    //如果是整数
+                    output = new Token(Double.toString(number), "const int");
+                } else {
+                    output = new Token(Double.toString(number), "const double");
                 }
-//                System.out.println(number+"  (Const, "+"03"+")");
-                output.add(new Token(Double.toString(number), "<03>"));
-                num_n=0;
-                num_p=0;
-                num_m=0;
-                num_t=0;
-                num_e=1;
+                //辅助参数归零
+                type = Token.WordType.NONE;
+                num_n = 0;
+                num_p = 0;
+                num_m = 0;
+                num_t = 0;
+                num_e = 1;
                 return true;
-            }else if (currState.equals("q9")||currState.equals("q15")||currState.equals("q16")){
-                type=3;
-                delimiter+=input;
-            }else if (currState.equals("q1")&&type==3){
-                type=0;
-//                System.out.println(delimiter+"  (p, "+(delimiterTable.indexOf(delimiter)+10)+")");
-                output.add(new Token(delimiter, "<" + (delimiterTable.indexOf(delimiter)+10) + ">"));
-                delimiter="";
-                return true;
-            }else if (currState.equals("q10")){
-                if (input.equals("\"")){
-                    type=4;
-                    return false;
-                }else {
-                    string=string.concat(input);
+            } else if (currState.equals("q9") || currState.equals("q10") || currState
+                .equals("q11")) {
+                //进入界符分支
+                type = Token.WordType.DELIMITER;
+                delimiter += input;
+            } else if (currState.equals("q1") && type == Token.WordType.DELIMITER) {
+                //界符分支结束
+                if (!isDelimiter(delimiter)) {
+                    throw new LexicalErrorException(
+                        "DFA.LexicalErrorException: " + delimiter + " is not a delimiter\n");
                 }
-            }else if (currState.equals("q1")&&type==4){
-                type=0;
-                stringTable.add(string);
-//                System.out.println(string+"  (sT, "+"02"+")");
-                output.add(new Token(string, "<02>"));
-                string="";
+                output = new Token(delimiter, delimiter);
+                //辅助参数归零
+                type = Token.WordType.NONE;
+                delimiter = "";
                 return true;
-            }else if (currState.equals("q12")){
-                type=5;
-            }else if (currState.equals("q13")){
-                character=input.charAt(0);
-            }else if (currState.equals("q14")||type==5){
-                characterTable.add(character);
-//                System.out.println(character+"  (cT, "+"01"+")");
-                output.add(new Token(Character.toString(character), "<01>"));
-                type=0;
-                character=0;
+            } else if (currState.equals("q12")) {
+                //进入字符串分支
+                if (input.equals("\"")) {
+                    type = Token.WordType.STRING;
+                } else {
+                    string = string.concat(input);
+                }
+            } else if (currState.equals("q1") && type == Token.WordType.STRING) {
+                //字符串分支结束
+                output= new Token(string, "字符串常量");
+                //辅助参数归零
+                type = Token.WordType.NONE;
+                string = "";
                 return true;
-            }else if (currState.equals("q18")){
-                type=0;
-//                System.out.println("//"+"  (p, "+(delimiterTable.indexOf("//")+10)+")");
-                output.add(new Token("//", "<" + (delimiterTable.indexOf("//")+10) + ">"));
-                delimiter="";
-                annotation=true;
-            }else if (currState.equals("q17")){
-                type=3;
-                delimiter=input;
+            } else if (currState.equals("q14")) {
+                //进入字符分支
+                type = Token.WordType.CHARACTER;
+            } else if (currState.equals("q15")) {
+                character = input.charAt(0);
+            } else if (currState.equals("q1") && type == Token.WordType.CHARACTER) {
+                //字符分支结束
+                output = new Token(Character.toString(character), "const char");
+                //辅助参数归零
+                type = Token.WordType.NONE;
+                character = 0;
+                return true;
+            } else if (currState.equals("q17")) {
+                //进入注释分支，但是还不能确定是不是注释
+                type = Token.WordType.DELIMITER;
+                delimiter += input;
+            } else if (currState.equals("q18") || currState.equals("q20")) {
+                //进入注释分支
+                type = Token.WordType.ANNOTATION;
+                annotation = true;
+            } else if (currState.equals("q1") && type == Token.WordType.ANNOTATION) {
+                //注释分支结束
+                //辅助参数归零
+                type = Token.WordType.NONE;
             }
             return false;
         }
@@ -293,40 +307,34 @@ public class Lexer extends Lang{
 
     private LexerDFA dfa;
 
-    private ArrayList<Token> output;
-
+    private Token output;
 
     public Lexer(){
         super();
-        output = new ArrayList<>();
-        String[] ks={
-                "int",
-                "main",
-                "void",
-                "if",
-                "else",
-                "char",
-                "return"
-        };
-        super.addKeyWords(ks);
-        String[] ds={">=","<=","==","=",">","<","+","-","*","/","{","}",",",";","(",")","\"","\'","[","]","//"};
-        super.addDelimiters(ds);
-
         //构造DFA
         dfa=new LexerDFA();
     }
 
-    public boolean analyse(String s){
-
-        if (!dfa.checkString(s,true)){
-            if (dfa.annotation)
-            {
-                dfa.annotation=false;
-                return true;
-            }
-            return false;
+    /**
+     * 获取一个单词
+     * 调用一次DFA
+     * 读到末尾了就返回#的Token
+     *
+     * @return 单词
+     * @throws LexicalErrorException 词法错误异常
+     */
+    public Token getOneWord() throws LexicalErrorException {
+        output = null;
+        if (!dfa.checkString(true)){
+            //如果读完了，到末尾了
+            return new Token("", "#");
         }else {
-            return true;
+            if (output == null) {
+                //如果当前读啥也没读到，可能有空格，注释
+                //读下一个
+                return getOneWord();
+            }
+            return output;
         }
     }
 
@@ -357,6 +365,7 @@ public class Lexer extends Lang{
      * @param c 输入字符
      * @return boolean
      */
+    @Deprecated
     private boolean isSpliter(char c){
         return c==' '||c=='\r'||c=='\t'||c=='\n';
     }
@@ -366,12 +375,13 @@ public class Lexer extends Lang{
      * @param c 输入字符
      * @return boolean
      */
+    @Deprecated
     private boolean isLetter(char c){
         return (c>='a'&&c<='z')||(c>='A'&&c<='Z');
     }
 
 
-    public ArrayList<Token> getOutput() {
-        return output;
+    public void setSourceCode(String s) {
+        dfa.setSourceCode(s);
     }
 }

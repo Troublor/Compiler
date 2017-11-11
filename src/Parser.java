@@ -1,15 +1,20 @@
+import DFA.LexicalErrorException;
+import TranslatorPackage.QT;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Stack;
-import javax.script.ScriptEngine;
 
 /**
  * Created by troub on 2017/10/10.
  */
 public class Parser extends Lang{
+    /**
+     * 词法分析器
+     */
+    private Lexer lexer;
 
     /**
      * LL1分析表
@@ -23,36 +28,127 @@ public class Parser extends Lang{
 
     private Stack<Token> SEM;
 
-    private ArrayList<QT> QT;
+    private ArrayList<TranslatorPackage.QT> QT;
 
     /**
-     * 输入表达式
+     * 输入表达式,当前正在处理的就是input的最后一个
+     * 也就是处理一个读一个，读一个放进来一个
      */
     private ArrayList<Token> input;
     private int i = 0;
 
     public Parser(){
         super();
+        lexer = new Lexer();
+        input = new ArrayList<>();
         analyseTable = new HashMap<>();
         analyseStack = new Stack<>();
         SEM = new Stack<>();
         QT = new ArrayList<QT>();
 
-        grammar.addVN(new HashSet<>(Arrays.asList(new String[]{"E", "T", "E1", "T1", "F"})));
-        grammar.addVT(new HashSet<>(Arrays.asList(new String[]{"+", "-", "*", "/", "i", "(", ")"})));
+        grammar.addVN(new HashSet<>(Arrays.asList(
+            new String[]{"bool", "join", "BOOL", "equality", "JOIN", "EQUALITY", "rel", "expr",
+                "expr1", "EXPR", "term", "TERM", "unary", "值", "值成分", "常量", "S", "P", "S", "F",
+                "structure", "function", "L", "形参列表", "形参列表1", "类型", "proc", "形参",
+                "形参类型", "类型标识符", "复合语句", "声明语句", "标识符表", "类型", "循环", "条件",
+                "顺序", "语句成分", "赋值", "函数", "条件其他", "数组下标", "非负整数", "值列表",
+                "值列表1"}
+        )));
 
-        grammar.setStartVN("E");
+        grammar.addVT(new HashSet<>(Arrays.asList(
+            new String[]{"||", "&&", "==", "!=", "<", ">", "<=", ">=", "+", "-", "*", "/", "=", "!", "I",
+                "[", "]", "(", ")", "const int", "const double", "const char", "struct", "{", "}",
+                "func", ";", ",", ".", "var", "return", "while", "if", "else"}
+        )));
 
-        grammar.addDeriver(new Deriver("E", new String[]{"T", "E1"}));
-        grammar.addDeriver(new Deriver("E1", new String[]{"+", "T", "_AC_GEQ_+_", "E1"}));
-        grammar.addDeriver(new Deriver("E1", new String[]{"-", "T", "_AC_GEQ_-_", "E1"}));
-        grammar.addDeriver(new Deriver("E1", new String[]{}));
-        grammar.addDeriver(new Deriver("T", new String[]{"F", "T1"}));
-        grammar.addDeriver(new Deriver("T1", new String[]{"*", "F", "_AC_GEQ_*_", "T1"}));
-        grammar.addDeriver(new Deriver("T1", new String[]{"/", "F", "_AC_GEQ_/_", "T1"}));
-        grammar.addDeriver(new Deriver("T1", new String[]{}));
-        grammar.addDeriver(new Deriver("F", new String[]{"i", "_AC_PUSH_"}));
-        grammar.addDeriver(new Deriver("F", new String[]{"(", "E", ")"}));
+        grammar.setStartVN("P");
+
+        grammar.addDeriver(new Deriver("P", new String[]{"S", "F"}));
+        grammar.addDeriver(new Deriver("S", new String[]{"structure", "S"}));
+        grammar.addDeriver(new Deriver("S", new String[]{}));
+        grammar.addDeriver(new Deriver("F", new String[]{"function", "F"}));
+        grammar.addDeriver(new Deriver("F", new String[]{}));
+        grammar.addDeriver(new Deriver("structure", new String[]{"struct", "I", "{", "L", "}"}));
+        grammar.addDeriver(new Deriver("function",
+            new String[]{"func", "I", "(", "形参列表", ")", "类型", "{", "proc", "}"}));
+        grammar.addDeriver(new Deriver("形参列表", new String[]{"形参", "形参列表1"}));
+        grammar.addDeriver(new Deriver("形参列表", new String[]{}));
+        grammar.addDeriver(new Deriver("形参列表1", new String[]{",", "形参", "形参列表1"}));
+        grammar.addDeriver(new Deriver("形参列表1", new String[]{}));
+        grammar.addDeriver(new Deriver("形参", new String[]{"I", "形参类型"}));
+        grammar.addDeriver(new Deriver("形参类型", new String[]{"I"}));
+        grammar.addDeriver(new Deriver("形参类型", new String[]{"[", "]", "I"}));
+        grammar.addDeriver(new Deriver("proc", new String[]{"L", "复合语句"}));
+        grammar.addDeriver(new Deriver("L", new String[]{"声明语句", ";", "L"}));
+        grammar.addDeriver(new Deriver("L", new String[]{}));
+        grammar.addDeriver(new Deriver("声明语句", new String[]{"var", "I", "标识符表", "类型"}));
+        grammar.addDeriver(new Deriver("标识符表", new String[]{",", "I", "标识符表"}));
+        grammar.addDeriver(new Deriver("标识符表", new String[]{}));
+        grammar.addDeriver(new Deriver("复合语句", new String[]{"循环", "复合语句"}));
+        grammar.addDeriver(new Deriver("复合语句", new String[]{"条件", "复合语句"}));
+        grammar.addDeriver(new Deriver("复合语句", new String[]{"顺序", "复合语句"}));
+        grammar.addDeriver(new Deriver("复合语句", new String[]{}));
+        grammar.addDeriver(new Deriver("顺序", new String[]{"I", "语句成分", ";"}));
+        grammar.addDeriver(new Deriver("语句成分", new String[]{"赋值"}));
+        grammar.addDeriver(new Deriver("语句成分", new String[]{"函数"}));
+        grammar.addDeriver(new Deriver("顺序", new String[]{"return", "bool", ";"}));
+        grammar.addDeriver(new Deriver("类型", new String[]{"I"}));
+        grammar.addDeriver(new Deriver("类型", new String[]{"[", "const int", "]", "I"}));
+        grammar.addDeriver(
+            new Deriver("循环", new String[]{"while", "(", "bool", ")", "{", "复合语句", "}"}));
+        grammar
+            .addDeriver(new Deriver("条件", new String[]{"if", "(", "bool", ")", "{", "复合语句",
+                "}", "条件其他"}));
+        grammar.addDeriver(new Deriver("条件其他", new String[]{"else", "{", "复合语句", "}"}));
+        grammar.addDeriver(new Deriver("条件其他", new String[]{}));
+        grammar.addDeriver(new Deriver("值成分", new String[]{"函数"}));
+        grammar.addDeriver(new Deriver("值成分", new String[]{"[", "非负整数", "]"}));
+        grammar.addDeriver(new Deriver("值成分", new String[]{".", "I"}));
+        grammar.addDeriver(new Deriver("值成分", new String[]{}));
+        grammar.addDeriver(new Deriver("值", new String[]{"I", "值成分"}));
+        grammar.addDeriver(new Deriver("值", new String[]{"常量"}));
+        grammar.addDeriver(new Deriver("数组下标", new String[]{"[", "bool", "]"}));
+        grammar.addDeriver(new Deriver("数组下标", new String[]{}));
+        grammar.addDeriver(new Deriver("非负整数", new String[]{"const int"}));
+        grammar.addDeriver(new Deriver("非负整数", new String[]{"I"}));
+        grammar.addDeriver(new Deriver("赋值", new String[]{"数组下标", "=", "bool"}));
+        grammar.addDeriver(new Deriver("常量", new String[]{"const int"}));
+        grammar.addDeriver(new Deriver("常量", new String[]{"const double"}));
+        grammar.addDeriver(new Deriver("常量", new String[]{"const char"}));
+        grammar.addDeriver(new Deriver("函数", new String[]{"(", "值列表", ")"}));
+        grammar.addDeriver(new Deriver("值列表", new String[]{"值", "值列表1"}));
+        grammar.addDeriver(new Deriver("值列表", new String[]{}));
+        grammar.addDeriver(new Deriver("值列表1", new String[]{",", "值", "值列表1"}));
+        grammar.addDeriver(new Deriver("值列表1", new String[]{}));
+        //表达式文法
+        grammar.addDeriver(new Deriver("bool", new String[]{"join", "BOOL"}));
+        grammar.addDeriver(new Deriver("BOOL", new String[]{"||", "join", "BOOL"}));
+        grammar.addDeriver(new Deriver("BOOL", new String[]{}));
+        grammar.addDeriver(new Deriver("join", new String[]{"equality", "JOIN"}));
+        grammar.addDeriver(new Deriver("JOIN", new String[]{"&&", "equality", "JOIN"}));
+        grammar.addDeriver(new Deriver("JOIN", new String[]{}));
+        grammar.addDeriver(new Deriver("equality", new String[]{"rel", "EQUALITY"}));
+        grammar.addDeriver(new Deriver("EQUALITY", new String[]{"==", "rel", "EQUALITY"}));
+        grammar.addDeriver(new Deriver("EQUALITY", new String[]{"!=", "rel", "EQUALITY"}));
+        grammar.addDeriver(new Deriver("EQUALITY", new String[]{}));
+        grammar.addDeriver(new Deriver("rel", new String[]{"expr", "expr1"}));
+        grammar.addDeriver(new Deriver("expr1", new String[]{"<=", "expr"}));
+        grammar.addDeriver(new Deriver("expr1", new String[]{">=", "expr"}));
+        grammar.addDeriver(new Deriver("expr1", new String[]{">", "expr"}));
+        grammar.addDeriver(new Deriver("expr1", new String[]{"<", "expr"}));
+        grammar.addDeriver(new Deriver("expr1", new String[]{}));
+        grammar.addDeriver(new Deriver("expr", new String[]{"term", "EXPR"}));
+        grammar.addDeriver(new Deriver("EXPR", new String[]{"+", "term", "EXPR"}));
+        grammar.addDeriver(new Deriver("EXPR", new String[]{"-", "term", "EXPR"}));
+        grammar.addDeriver(new Deriver("EXPR", new String[]{}));
+        grammar.addDeriver(new Deriver("term", new String[]{"unary", "TERM"}));
+        grammar.addDeriver(new Deriver("TERM", new String[]{"*", "unary", "TERM"}));
+        grammar.addDeriver(new Deriver("TERM", new String[]{"/", "unary", "TERM"}));
+        grammar.addDeriver(new Deriver("TERM", new String[]{}));
+        grammar.addDeriver(new Deriver("unary", new String[]{"!", "unary"}));
+        grammar.addDeriver(new Deriver("unary", new String[]{"-", "unary"}));
+        grammar.addDeriver(new Deriver("unary", new String[]{"值"}));
+        grammar.addDeriver(new Deriver("unary", new String[]{"(", "bool", ")"}));
 
         try {
             grammar.generateLL1AnalyzeTable();
@@ -68,53 +164,16 @@ public class Parser extends Lang{
     }
 
 
-
     /**
-     * 设置输入串
-     * @param i 输入串
+     * 设置源代码串
+     *
+     * @param s 源代码串
      */
-    public void input(ArrayList<Token> i){
-        input = i;
+    public void setSourceCode(String s) {
+        lexer.setSourceCode(s);
     }
 
-    /*public boolean LL1AnalyzeToken(){
-
-        for (int i = 0; i < input.size(); i++){
-            Token s = input.get(i);
-            if (s.getToken().equals("<00>") || s.getToken().equals("<03>")){
-                s.getToken() = "i";
-                input.remove(i);
-                input.add(i, s);
-            }else if (s.getToken().equals("<24>")){
-                s.getToken() = "(";
-                input.remove(i);
-                input.add(i, s);
-            }else if (s.getToken().equals("<25>")){
-                s.getToken() = ")";
-                input.remove(i);
-                input.add(i, s);
-            }else if (s.getToken().equals("<16>")){
-                s.getToken() = "+";
-                input.remove(i);
-                input.add(i, s);
-            }else if (s.getToken().equals("<17>")){
-                s.getToken() = "-";
-                input.remove(i);
-                input.add(i, s);
-            }else if (s.getToken().equals("<18>")){
-                s.getToken() = "*";
-                input.remove(i);
-                input.add(i, s);
-            }else if (s.getToken().equals("<19>")){
-                s.getToken() = "/";
-                input.remove(i);
-                input.add(i, s);
-            }
-        }
-        return LL1Analyze();
-    }*/
-
-    public boolean LL1Analyze() throws InvalidLabelException{
+    public boolean LL1Analyze() throws InvalidLabelException, LexicalErrorException{
         SEM.clear();
         QT.clear();
         analyseStack.clear();
@@ -122,9 +181,9 @@ public class Parser extends Lang{
         Token x;//从栈里取来的token
         Token y;
         i=0;
-        analyseStack.push(new Token("#","#"));
-        analyseStack.push(new Token(null,"E"));
-        input.add(new Token("#","#"));
+        //analyseStack.push(new Token("#","#"));
+        analyseStack.push(new Token(null,"P"));
+        //input.add(new Token("#","#"));
         w = next();
         if (w == null) {
             return false;
@@ -159,6 +218,11 @@ public class Parser extends Lang{
                 this.action(x.getLabel());
             }
         }
+        if (!w.getLabel().equals("#")) {
+            //如果栈空了，符号串还没读完
+            //错误
+            return false;
+        }
 
         analyseStack.clear();
         return true;
@@ -176,7 +240,7 @@ public class Parser extends Lang{
         }
         //反射调用方法
         try {
-            Class cls = Class.forName(this.getClass().getName());
+            Class cls = Class.forName("Translator");
             Method method;
             switch (split.length - 3) {
                 case 0:
@@ -216,11 +280,11 @@ public class Parser extends Lang{
      * 获取下一个单词
      * @return 单词
      */
-    private Token next(){
-        if (i >= input.size()){
-            return null;
-        }
-        return input.get(i++);
+    private Token next() throws LexicalErrorException{
+        Token next = lexer.getOneWord();
+        input.add(next);
+        i = input.size() - 1;
+        return next;
     }
 
     /**
@@ -231,7 +295,7 @@ public class Parser extends Lang{
         if (i == 0) {
             return null;
         }
-        return input.get(i - 2);
+        return input.get(i - 1);
     }
 
     /**
@@ -245,27 +309,5 @@ public class Parser extends Lang{
             n.add(new Token(null,arrayList.get(i)));
         }
         return n;
-    }
-
-    //一下都是动作函数的定义
-
-    private void PUSH() {
-        SEM.push(this.last());
-    }
-
-    private void GEQ(String w) {
-        Token n1, n2;
-        n1 = SEM.pop();
-        n2 = SEM.pop();
-        QT qt=new QT(w, n2.getWord(), n1.getWord());
-        QT.add(qt);
-        SEM.push(new Token(qt.getResult(), "i"));
-    }
-
-
-    public void printQT(){
-        for (QT qt : QT) {
-            System.out.println(qt.toString());
-        }
     }
 }

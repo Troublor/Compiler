@@ -6,7 +6,6 @@ import java.util.Stack;
 
 public class Translator {
     Stack<String> semanticStack;
-
     SymbolTableManager symbolTableManager = new SymbolTableManager();
-
 }
+
