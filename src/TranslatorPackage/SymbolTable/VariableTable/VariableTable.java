@@ -1,6 +1,6 @@
 package TranslatorPackage.SymbolTable.VariableTable;
 
-import TranslatorPackage.SymbolTable.SemanticExcption;
+import TranslatorPackage.SymbolTable.SemanticException;
 
 import java.util.HashMap;
 
@@ -49,10 +49,10 @@ public class VariableTable{
      * @param offset  变量类型的长度
      */
     //对符号表添加变量 添加成功返回新变量的表项
-    public VariableTableRow addVariable(String type, String name_id, int offset, int table_id) throws SemanticExcption {
+    public VariableTableRow addVariable(String type, String name_id, int offset, int table_id) throws SemanticException {
         //查重
         if (variables.get(name_id)!= null)
-            throw new SemanticExcption("variable: " + name_id + " has already existed");
+            throw new SemanticException("variable: " + name_id + " has already existed");
         //type 的合法性已由Manager的typetable查过了 这里直接添加就ok
         VariableTableRow newVariable = new VariableTableRow(name_id, type, currVarOffset, table_id);
         variables.put(name_id, newVariable);
@@ -74,6 +74,10 @@ public class VariableTable{
 
     public VariableTable getParent() {
         return parent;
+    }
+
+    protected void setStartOffset(int offset) {
+        startOffset = offset;
     }
 
     @Override
