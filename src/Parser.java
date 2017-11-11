@@ -12,6 +12,18 @@ import java.util.Stack;
 /**
  * Created by troub on 2017/10/10.
  */
+
+/**
+ * 日期 : 11.11 22:30
+ * author : lrj
+ * 更新说明: 加上了变量定义 表达式求值 顺序 循环 判断
+ * 1.修复了const_int字面值带带小数点
+ * 在常量在push到translator的semanticStack时 进行了下处理
+ * 2. const型token压到语义栈的时候换成以 const xxx_数字 的形式了 避免浮点数影响
+ * 3.基本的四元式都OK了 就是赋值还没有
+ * 4. translator类里的exception都用try/catch输出了 非常好debug
+ */
+
 public class Parser extends Lang{
     /**
      * 词法分析器
@@ -53,21 +65,24 @@ public class Parser extends Lang{
 //        QT = new ArrayList<QT>();
 
         grammar.addVN(new HashSet<>(Arrays.asList(
-            new String[]{"bool", "join", "BOOL", "equality", "JOIN", "EQUALITY", "rel", "expr",
-                "expr1", "EXPR", "term", "TERM", "unary", "值", "值成分", "常量", "S", "P", "S", "F",
-                "structure", "function", "L", "形参列表", "形参列表1", "类型", "proc", "形参",
-                "形参类型", "类型标识符", "复合语句", "声明语句", "标识符表", "类型", "循环", "条件",
-                "顺序", "语句成分", "赋值", "函数", "条件其他", "数组下标", "非负整数", "值列表",
-                "值列表1"}
+                new String[]{"bool", "join", "BOOL", "equality", "JOIN", "EQUALITY", "rel", "expr",
+                        "expr1", "EXPR", "term", "TERM", "unary", "值", "值成分", "常量", "S", "P", "S", "F",
+                        "structure", "function", "L", "形参列表", "形参列表1", "类型", "proc", "形参",
+                        "形参类型", "类型标识符", "复合语句", "声明语句", "标识符表", "类型", "循环", "条件",
+                        "顺序", "语句成分", "赋值", "函数", "条件其他", "数组下标", "非负整数", "值列表",
+                        "值列表1"}
         )));
 
         grammar.addVT(new HashSet<>(Arrays.asList(
-            new String[]{"||", "&&", "==", "!=", "<", ">", "<=", ">=", "+", "-", "*", "/", "=", "!", "I",
-                "[", "]", "(", ")", "const int", "const double", "const char", "struct", "{", "}",
-                "func", ";", ",", ".", "var", "return", "while", "if", "else"}
+                new String[]{"||", "&&", "==", "!=", "<", ">", "<=", ">=", "+", "-", "*", "/", "=", "!", "I",
+                        "[", "]", "(", ")", "const int", "const double", "const char", "struct", "{", "}",
+                        "func", ";", ",", ".", "var", "return", "while", "if", "else"}
         )));
 
         grammar.setStartVN("P");
+
+        //TODO
+        //需要修改，以支持结构体多层访问与数组多层访问
 
         grammar.addDeriver(new Deriver("P", new String[]{"S", "F"}));
         grammar.addDeriver(new Deriver("S", new String[]{"structure", "S"}));
@@ -87,26 +102,44 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("proc", new String[]{"L", "复合语句"}));
         grammar.addDeriver(new Deriver("L", new String[]{"声明语句", ";", "L"}));
         grammar.addDeriver(new Deriver("L", new String[]{}));
-        grammar.addDeriver(new Deriver("声明语句", new String[]{"var", "I", "标识符表", "类型"}));
-        grammar.addDeriver(new Deriver("标识符表", new String[]{",", "I", "标识符表"}));
+
+        //变量声明文法
+        grammar.addDeriver(new Deriver("声明语句", new String[]{
+                "var", "_AC_pushFlagDefineVariableStart", "I", "_AC_PUSH",
+                "标识符表", "类型", "_AC_defineStashedVariables"}));
+        grammar.addDeriver(new Deriver("标识符表", new String[]{",", "I", "_AC_PUSH", "标识符表"}));
         grammar.addDeriver(new Deriver("标识符表", new String[]{}));
+        grammar.addDeriver(new Deriver("类型", new String[]{"I", "_AC_PUSH", "_AC_checkTypeExist"}));
+        grammar.addDeriver(new Deriver("类型",
+                new String[]{"[", "const int", "_AC_PUSH", "]", "I", "_AC_PUSH", "_AC_defineArrayType"}));
+
+
         grammar.addDeriver(new Deriver("复合语句", new String[]{"循环", "复合语句"}));
         grammar.addDeriver(new Deriver("复合语句", new String[]{"条件", "复合语句"}));
         grammar.addDeriver(new Deriver("复合语句", new String[]{"顺序", "复合语句"}));
         grammar.addDeriver(new Deriver("复合语句", new String[]{}));
+
         grammar.addDeriver(new Deriver("顺序", new String[]{"I", "语句成分", ";"}));
         grammar.addDeriver(new Deriver("语句成分", new String[]{"赋值"}));
         grammar.addDeriver(new Deriver("语句成分", new String[]{"函数"}));
         grammar.addDeriver(new Deriver("顺序", new String[]{"return", "bool", ";"}));
-        grammar.addDeriver(new Deriver("类型", new String[]{"I"}));
-        grammar.addDeriver(new Deriver("类型", new String[]{"[", "const int", "]", "I"}));
-        grammar.addDeriver(
-            new Deriver("循环", new String[]{"while", "(", "bool", ")", "{", "复合语句", "}"}));
-        grammar
-            .addDeriver(new Deriver("条件", new String[]{"if", "(", "bool", ")", "{", "复合语句",
-                "}", "条件其他"}));
-        grammar.addDeriver(new Deriver("条件其他", new String[]{"else", "{", "复合语句", "}"}));
+
+        grammar.addDeriver(new Deriver("循环",
+                new String[]{
+                        "while", "_AC_addWhileStartQT", "(", "bool", ")",
+                        "{", "_AC_stepIntoBlock", "复合语句", "}", "_AC_stepOutBlock", "_AC_addWhileEndQT"}));
+        grammar.addDeriver(new Deriver("条件",
+                new String[]{
+                        "if", "(", "bool", ")", "_AC_addIfStartQt",
+                        "{", "_AC_stepIntoBlock", "复合语句", "}"
+                        , "_AC_stepOutBlock", "条件其他", "_AC_addIfElseEndQt"}));
+
+        grammar.addDeriver(new Deriver("条件其他",
+                new String[]{"else", "_AC_addElseStartQt",
+                        "{", "_AC_stepIntoBlock", "复合语句", "}", "_AC_stepOutBlock"}));
         grammar.addDeriver(new Deriver("条件其他", new String[]{}));
+
+
         grammar.addDeriver(new Deriver("值成分", new String[]{"函数"}));
         grammar.addDeriver(new Deriver("值成分", new String[]{"[", "非负整数", "]", "_AC_afterArray"}));
         grammar.addDeriver(new Deriver("值成分", new String[]{".", "I"}));
@@ -231,6 +264,7 @@ public class Parser extends Lang{
         }
 
         analyseStack.clear();
+        translator.printAllQTs();
         return true;
     }
 
@@ -240,6 +274,7 @@ public class Parser extends Lang{
      * @throws InvalidLabelException 非法符号异常
      */
     private void action(String a) throws InvalidLabelException{
+        translator.printAllQTs();
         String[] split = a.split("_");
         if (split.length < 3 || !split[1].equals("AC")) {
             throw new InvalidLabelException("InvalidLabelException: " + a + " is not an action\n");
@@ -267,21 +302,22 @@ public class Parser extends Lang{
                     break;
                 case 3:
                     method = cls.getDeclaredMethod(split[2], String.class, String.class,
-                        String.class);
+                            String.class);
                     method.invoke(translator, split[3], split[4], split[5]);
                     break;
                 case 4:
                     method = cls.getDeclaredMethod(split[2], String.class, String.class,
-                        String.class, String.class);
+                            String.class, String.class);
                     method.invoke(translator, split[3], split[4], split[5], split[6]);
                     break;
                 case 5:
                     method = cls.getDeclaredMethod(split[2], String.class, String.class,
-                        String.class, String.class, String.class);
+                            String.class, String.class, String.class);
                     method.invoke(translator, split[3], split[4], split[5], split[6], split[7]);
                     break;
             }
         } catch (Exception e) {
+            System.out.println("occur error : " + e);
             throw new InvalidLabelException("InvalidLabelException: " + a + " action failure\n");
         }
     }
@@ -323,13 +359,17 @@ public class Parser extends Lang{
 
     //一下都是动作函数的定义
     private void PUSH() {
-        String label = this.last().getLabel();
+        String label = this.last().getLabel(),
+                word = this.last().getWord();
         String input_item;
         if (label.equals("const int") || label.equals("const double") || label.equals("const char")) {
             // produce 1 -> "const int.1"
-            input_item = label + "." + this.last().getWord();
-        }
-        else input_item = this.last().getWord();
+
+            // 有的时候int是 xx.xx的 在这里直接转成没有小数点的
+            if (label.equals("const int"))
+                word = String.valueOf(Float.valueOf(word).intValue());
+            input_item = label + "_" + word;
+        } else input_item = word;
         translator.push(input_item);
     }
 
