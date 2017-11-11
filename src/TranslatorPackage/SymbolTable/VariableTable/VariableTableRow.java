@@ -30,7 +30,7 @@ public class VariableTableRow{
         return name_id;
     }
 
-    public String getType() {
+    public String getTypeName() {
         return type;
     }
 

@@ -2,3 +2,5 @@ out/
 src/META-INFO/
 .idea/inspectionProfiles/
 .idea/workspace.xml
+
+.idea/kotlinc.xml
