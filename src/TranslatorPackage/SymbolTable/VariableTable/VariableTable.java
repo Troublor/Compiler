@@ -85,7 +85,7 @@ public class VariableTable{
         StringBuilder stringBuilder = new StringBuilder();
         for (VariableTableRow variableTableRow : variables.values()) {
             stringBuilder.append("name: " + variableTableRow.getName_id()
-                    + "type : " + variableTableRow.getType()
+                    + "type : " + variableTableRow.getTypeName()
                     + "offset: " + variableTableRow.getOffset() + "\n");
         }
         return stringBuilder.toString();
