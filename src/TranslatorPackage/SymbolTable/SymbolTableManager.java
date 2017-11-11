@@ -43,7 +43,7 @@ public class SymbolTableManager {
 
     //查询域的类型
 
-    public String lookupStuctFieldType(String struct_type_name, String field_name) throws SemanticException {
+    public String lookupStructFieldType(String struct_type_name, String field_name) throws SemanticException {
         TypeTableRow type_res = typeTable.getTypeInfo(struct_type_name);
         FieldTableRow field_res = type_res.getField(field_name);
         return field_res.getTypeName();
