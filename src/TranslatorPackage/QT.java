@@ -11,11 +11,15 @@ public class QT {
     private String operand_right;
     private String result;
 
-    public QT(String o, String left, String right, String r) {
+    QT(String o, String left, String right, String result) {
         operator = o;
         operand_left = left;
         operand_right = right;
-        result = r;
+        this.result = result;
+    }
+
+    public String toString(){
+        return "(optr :" + operator + ",opnd_l: " + operand_left + " ,opnd_r: " + operand_right + ",res: " + result + ")";
     }
 
     public String getOperator() {
@@ -34,9 +38,6 @@ public class QT {
         return result;
     }
 
-    public String toString(){
-        return "(" + operator + ", " + operand_left + ", " + operand_right + ", " + result + ")";
-    }
 
     /**
      * 判断是否是临时变量

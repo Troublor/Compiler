@@ -15,25 +15,24 @@ public class TypeTable {
 
     public TypeTable(){
         tableRowMap = new HashMap<>();
-        TypeTableRow basicType = new TypeTableRow("int");
-        basicType.addField("value", 1, "basic");
-        //basic 是最最基本的类型了 在生成目标代码的时候就直接分配内存大小了 不再递归沿着type往下查
-        tableRowMap.put("int", basicType);
+        String[] basic_type_names = new String[]{
+                "int", "double", "char"
+        };
 
-        basicType = new TypeTableRow("double");
-        basicType.addField("value", 1, "basic");
-        tableRowMap.put("float", basicType);
+        for (String type_name : basic_type_names) {
+            TypeTableRow basicType = new TypeTableRow(type_name);
+            basicType.addField("value", 1, "basic");
+            //basic 是最最基本的类型了 在生成目标代码的时候就直接分配内存大小了 不再递归沿着type往下查
+            tableRowMap.put(type_name, basicType);
+        }
 
-        basicType = new TypeTableRow("bool");
-        basicType.addField("value", 1, "basic");
-        tableRowMap.put("bool", basicType);
     }
 
     //从类型名获取类型info
     public TypeTableRow getTypeInfo(String type_name) throws SemanticException {
         TypeTableRow res = tableRowMap.get(type_name);
         if (res == null)
-            throw new SemanticException("type :" + type_name + "has not declare");
+            throw new SemanticException("type :" + type_name + " has not declare");
         return tableRowMap.get(type_name);
     }
 

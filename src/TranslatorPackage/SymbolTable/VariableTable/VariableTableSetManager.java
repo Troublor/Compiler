@@ -48,7 +48,12 @@ public class VariableTableSetManager {
      */
 
     public VariableTableRow requestVariable(String name_id) {
-        VariableTableRow res = currActiveTable.getVariable(name_id);
+        VariableTableRow res;
+        if (name_id.charAt(0) == '$') {
+            res = tempVariableTable.getVariable(name_id);
+            return res;
+        }
+        res = currActiveTable.getVariable(name_id);
         if (res != null) {
             return res;
         }
@@ -80,7 +85,7 @@ public class VariableTableSetManager {
      * 有新块产生的 需要添加一个表
      */
     public void addTable(){
-        offsetTotal += currActiveTable.getTableOffset();
+        offsetTotal += currActiveTable.getTableLength();
         currActiveTable = new VariableTable(currActiveTable,idTotal,offsetTotal);
         idVariableTableMap.put(idTotal,currActiveTable);
         idTotal ++;

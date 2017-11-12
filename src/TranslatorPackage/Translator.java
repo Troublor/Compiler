@@ -1,7 +1,6 @@
 package TranslatorPackage;
 
 
-
 import TranslatorPackage.SymbolTable.OptNotSupportError;
 
 import TranslatorPackage.SymbolTable.SemanticException;
@@ -12,6 +11,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import java.util.Stack;
+
+
+/**
+ * 更新说明 : 因为是通过反射的invoke 调用方法
+ * 出了exception没法正常输出错误信息
+ * 为了便于debug
+ * 故在这一层都加了try /catch 进行错误信息和 栈活动的打印
+ */
 
 public class Translator {
     Stack<String> semanticStack = new Stack<String>();
@@ -32,6 +39,8 @@ public class Translator {
     // for array a: "a[3]" -> "a.3"
     // todo: for struct type "a.b" -> "a.b"
 
+    // todo : const xxx 生成四元式就不要加.value了
+    // TODO : 赋值语句还没有四元式生成出来
     // contrast with QT's content
 
     // QT's content:
@@ -41,58 +50,83 @@ public class Translator {
     // for array, a[3] -> "tableid.a.3.value"
     // todo: struct support a.b -> "tableid.a.b.value"
     // todo: array support
-    public void afterUnary() throws OptNotSupportError, SemanticException, TypeError{
-        String operand = semanticStack.pop();
-        String opt = semanticStack.pop();
-        String type = symbolTableManager.lookupVariableType(operand);
-        String return_type = getUnaryReturnType(opt, lookUpType(operand));
-        // 生成临时量
+    public void afterUnary() {
+        try {
+            String operand = semanticStack.pop();
+            String opt = semanticStack.pop();
+            String type = symbolTableManager.lookupVariableType(operand);
+            String return_type = getUnaryReturnType(opt, lookUpType(operand));
+            // 生成临时量
 
-        String tmp = symbolTableManager.addTempVariable(return_type);
-        QTs.add(new QT(opt,toRepresent(operand), "_",
-                toRepresent(tmp)));
-        semanticStack.push(tmp);
+            String tmp = symbolTableManager.addTempVariable(return_type);
+            QTs.add(new QT(opt, toRepresent(operand), "_",
+                    toRepresent(tmp)));
+            semanticStack.push(tmp);
+        } catch (Exception ee) {
+            printErrLog(ee);
+            System.exit(-1);
+        }
     }
-
 
 
     // 目前生成四元式时操作数不进行类型转换
     // todo: array suport
-    public void afterDual() throws SemanticException, TypeError{
-        String left_operand = semanticStack.pop();
-        String opt = semanticStack.pop();
-        String right_operand = semanticStack.pop();
-        String return_type = getDualReturnType(opt, lookUpType(left_operand), lookUpType(right_operand));
-        String tmp = symbolTableManager.addTempVariable(return_type);
-        QTs.add(new QT(opt, left_operand + ".value", right_operand + ".value", tmp));
-        semanticStack.push(tmp);
+    public void afterDual() {
+        try {
+            String left_operand = semanticStack.pop();
+            String opt = semanticStack.pop();
+            String right_operand = semanticStack.pop();
+            String return_type = getDualReturnType(opt, lookUpType(left_operand), lookUpType(right_operand));
+            String tmp = symbolTableManager.addTempVariable(return_type);
+            QTs.add(new QT(opt, left_operand + ".value", right_operand + ".value", tmp));
+            semanticStack.push(tmp);
+        } catch (Exception ee) {
+            printErrLog(ee);
+            System.exit(-1);
+        }
     }
 
-    public void afterArray() throws SemanticException, TypeError{
-        String index_item = semanticStack.pop();
-        String id_item = semanticStack.pop();
-        // check id is array type
-        String index_type = lookUpType(index_item);
-        if (!isNumeric(index_type)) throw new TypeError(index_item, index_type, "numeric");
-        semanticStack.push(id_item + "." + index_item);
+    public void afterArray() {
+        try {
+            String index_item = semanticStack.pop();
+            String id_item = semanticStack.pop();
+            // check id is array type
+            String index_type = lookUpType(index_item);
+            if (!isNumeric(index_type)) throw new TypeError(index_item, index_type, "numeric");
+            semanticStack.push(id_item + "." + index_item);
+
+        } catch (Exception ee) {
+            printErrLog(ee);
+            System.exit(-1);
+        }
+
     }
 
-    public void afterStruct() throws TypeError, SemanticException{
-        String field_item = semanticStack.pop();
-        String id_item = semanticStack.pop();
-        String struct_type = lookUpType(id_item);
-        // assert struct has field named field_item
-        symbolTableManager.lookupStructFieldType(struct_type, field_item);
-        semanticStack.push(id_item + "." + field_item);
+    public void afterStruct() {
+        try {
+            String field_item = semanticStack.pop();
+            String id_item = semanticStack.pop();
+            String struct_type = lookUpType(id_item);
+            // assert struct has field named field_item
+            symbolTableManager.lookupStructFieldType(struct_type, field_item);
+            semanticStack.push(id_item + "." + field_item);
+
+        } catch (Exception ee) {
+            printErrLog(ee);
+            System.exit(-1);
+        }
     }
 
 
     // todo: array support
     private String getDualReturnType(String opt, String left_type, String right_type) {
         HashMap<String, Integer> to_level = new HashMap<String, Integer>();
-        to_level.put("char", 1); to_level.put("const char", 1);
-        to_level.put("int", 2); to_level.put("const int", 2);
-        to_level.put("double", 3); to_level.put("const double", 3);
+        to_level.put("char", 1);
+        to_level.put("const char", 1);
+        to_level.put("int", 2);
+        to_level.put("const int", 2);
+        to_level.put("double", 3);
+        to_level.put("const double", 3);
 
         HashMap<Integer, String> to_type = new HashMap<Integer, String>();
         to_type.put(1, "char");
@@ -100,28 +134,40 @@ public class Translator {
         to_type.put(3, "double");
 
         // 返回类型不为 const_xx
-        if (to_level.get(left_type) > to_level.get(right_type)) return to_type.get(to_level.get(left_type));
+        if (to_level.get(left_type) > to_level.get(right_type))
+            return to_type.get(to_level.get(left_type));
+
         return to_type.get(to_level.get(right_type));
     }
 
 
-    private String getUnaryReturnType(String unaryOpt, String type) throws OptNotSupportError{
-        // 基础类型都是数值类型，支持所有操作符
-        if (isBasicType(type)) return type;
-        throw new OptNotSupportError(type, unaryOpt);
-    }
+    private String getUnaryReturnType(String unaryOpt, String type) {
+        try {
+            // 基础类型都是数值类型，支持所有操作符
+            if (isBasicType(type))
+                return type;
+            else
+                throw new OptNotSupportError(type, unaryOpt);
 
+        } catch (Exception ee) {
+            printErrLog(ee);
+            System.exit(-1);
+        }
+        System.out.println(" getUnaryReturnType 返回了个null");
+        return null;
+        //执行不到这
+    }
 
 
     private boolean isBasicType(String type) {
         return type.equals("int") ||
-               type.equals("double") || type.equals("char");
+                type.equals("double") || type.equals("char");
     }
 
     private boolean isConstant(String type) {
         return type.equals("const int") ||
                 type.equals("const double") ||
-                type.equals("const char") ;
+                type.equals("const char");
     }
 
 
@@ -138,34 +184,44 @@ public class Translator {
     // for struct array: "a.3" -> Point
     //                  "a.3.X" -> int
     // for struct contain array: "a.X.3" -> int
-    private String lookUpType(String item) throws SemanticException , TypeError{
-        String may_const = item.split(".")[0];
-        // for constant
-        if (isConstant(may_const)) return may_const;
-        // not constant
+    private String lookUpType(String item) {
+        try {
 
-        String []parts = item.split(".");
-        String id = parts[0];
-        String type = symbolTableManager.lookupVariableType(id);
-        int i = 1;
-        while (i < parts.length) {
-            // array index
-            if (type.startsWith("array") && (isInteger(parts[i]) ||
-                    symbolTableManager.lookupVariableType(parts[i]).equals("int"))) {
-                type =  type.split("_")[1];
+            String may_const = item.split("_")[0];
+            // for constant
+            if (isConstant(may_const)) return may_const;
+            // not constant
+
+            String[] parts = item.split("_");
+            String id = parts[0];
+            String type = symbolTableManager.lookupVariableType(id);
+            int i = 1;
+            while (i < parts.length) {
+                // array index
+                if (type.startsWith("array") && (isInteger(parts[i]) ||
+                        symbolTableManager.lookupVariableType(parts[i]).equals("int"))) {
+                    type = type.split("_")[1];
+                }
+                // struct field
+                else {
+                    type = symbolTableManager.lookupStructFieldType(type, parts[i]);
+                }
+                i++;
             }
-            // struct field
-            else {
-                type = symbolTableManager.lookupStructFieldType(type,parts[i]);
-            }
-            i++;
+            return type;
+        } catch (Exception ee) {
+            printErrLog(ee);
+            System.exit(-1);
         }
-        return type;
+        System.out.println("方法 lookUpType 因为错误返回了个null");
+        return null;
+        //执行不到这
+
     }
 
     private boolean isInteger(String s) {
         for (int i = 0; i < s.length(); ++i) {
-            if (!Character.isDigit(s.charAt(i)))  return false;
+            if (!Character.isDigit(s.charAt(i))) return false;
         }
         return true;
     }
@@ -176,19 +232,28 @@ public class Translator {
     // for id : a -> "tableid.a.value"
     // for temp, same as id: tmp -> "-1.tmp.value"
     // for array, a[3] -> "tableid.a.3.value"
-    private String toRepresent(String item) throws SemanticException, TypeError {
-        if (isConstant(lookUpType(item))) return item + ".value";
-        // if is not constant
-        // ( a is int id)  a -> tableid.a.int
-        // (a is int array) a.3 -> tableid.a.3.int
-        if (isBasicType(lookUpType(item))) return symbolTableManager.accessVariableAndField(item, "value");
-        String []parts = item.split(".");
-        String name = parts[0];
-        int i = 1;
-        while (i < parts.length) {
-            name = symbolTableManager.accessVariableAndField(name, parts[i++]);
+    private String toRepresent(String item) {
+        try {
+            if (isConstant(lookUpType(item))) return item + ".value";
+            // if is not constant
+            // ( a is int id)  a -> tableid.a.int
+            // (a is int array) a.3 -> tableid.a.3.int
+            if (isBasicType(lookUpType(item))) return symbolTableManager.accessVariableAndField(item, "value");
+            String[] parts = item.split(".");
+            String name = parts[0];
+            int i = 1;
+            while (i < parts.length) {
+                name = symbolTableManager.accessVariableAndField(name, parts[i++]);
+            }
+            return name;
+        } catch (Exception ee) {
+            printErrLog(ee);
+            System.exit(-1);
         }
-        return name;
+        System.out.println("方法: toRepresent 因为错误返回了个null");
+        return null;
+        //实际执行不到这
+
     }
 
 
@@ -200,58 +265,91 @@ public class Translator {
         semanticStack.push(variable_id);
     }
 
-    public void chechTypeExist() throws SemanticException {
-        String varType = semanticStack.peek();
-        symbolTableManager.lookupType(varType);
-    }
-
-    public void defineArrayType() throws SemanticException {
-        chechTypeExist();
-        String array_elem_type = semanticStack.pop();
-        String[] array_size_raw_format = semanticStack.pop().split(".");
-        if (!array_size_raw_format[0].equals("const_int")) {
-            throw new SemanticException("must use const int to define array length");
-        }
-        symbolTableManager.defineArrayType(array_elem_type, Integer.valueOf(array_size_raw_format[1]));
-    }
-
-    public void defineStashedVariables() throws SemanticException {
-        String varType = semanticStack.pop();
-        while (semanticStack.peek().equals("flag_defineVarStart")) {
-            String toDefineVariableNameId = semanticStack.pop();
-            symbolTableManager.defineVariable(toDefineVariableNameId, varType);
+    public void checkTypeExist() {
+        try {
+            String varType = semanticStack.peek();
+            symbolTableManager.lookupType(varType);
+        } catch (Exception ee) {
+            printErrLog(ee);
+            System.exit(-1);
         }
     }
+
+    public void defineArrayType() {
+        try {
+            checkTypeExist();
+            String array_elem_type = semanticStack.pop();
+            String[] array_size_raw_format = semanticStack.pop().split("_");
+            if (!array_size_raw_format[0].equals("const int")) {
+                throw new SemanticException("must use const int to define array length");
+            }
+            //reformat
+
+            int array_length = Integer.valueOf(array_size_raw_format[1]);
+            semanticStack.push(symbolTableManager.defineArrayType(array_elem_type, array_length));
+        } catch (Exception ee) {
+            printErrLog(ee);
+        }
+
+    }
+
+    public void defineStashedVariables() {
+        try {
+            String varType = semanticStack.pop();
+            while (!semanticStack.peek().equals("flag_defineVarStart")) {
+                String toDefineVariableNameId = semanticStack.pop();
+                symbolTableManager.defineVariable(toDefineVariableNameId, varType);
+            }
+            semanticStack.pop();
+        } catch (SemanticException ee) {
+            printErrLog(ee);
+
+        }
+
+    }
+
 
     public void addWhileStartQT() {
-        symbolTableManager.stepIntoNewBlock();
         QTs.add(new QT("while_start", "", "", ""));
     }
 
     public void addWhileEndQT() {
-        symbolTableManager.stepBackBlock();
         QTs.add(new QT("while_end", "", "", ""));
     }
 
     public void addIfStartQt() {
-        symbolTableManager.stepBackBlock();
         QTs.add(new QT("if_start", "", "", ""));
     }
 
-    public void StepOutBlock() {
-        symbolTableManager.stepBackBlock();
-    }
-
-    public void addelseStartQt() {
-        symbolTableManager.stepBackBlock();
+    public void addElseStartQt() {
         QTs.add(new QT("else_start", "", "", ""));
     }
 
     public void addIfElseEndQt() {
-        symbolTableManager.stepBackBlock();
         QTs.add(new QT("if_else_end", "", "", ""));
     }
 
+    public void stepOutBlock() {
+        symbolTableManager.stepBackBlock();
+    }
+
+    public void stepIntoBlock() {
+        symbolTableManager.stepIntoNewBlock();
+    }
+
+    private void printErrLog(Exception ee) {
+        ee.printStackTrace();
+        System.out.println("exception occurred: " + ee);
+    }
+
+
+    public void printAllQTs() {
+
+        System.out.println("\n\n当前所有的四元式:");
+        for (QT qt : QTs) {
+            System.out.println(qt);
+        }
+    }
 
 
 }
