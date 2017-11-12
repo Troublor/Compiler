@@ -294,17 +294,21 @@ public class MiddleLangTranslator {
 
     }
 
-
+    // ========================定义函数=======================
     private String curr_define_func_name, curr_define_func_ret_type;
+    //              要定义的函数名         该函数的返回值
     private boolean is_curr_func_has_ret;
+    //              这个函数是否需要返回值 void?
 
+
+    //压栈顺序 函数返回值类型 , 函数名
     public void preDefineFuncName() throws SemanticException {
         try {
             String func_name = semanticStack.pop();
             String func_type = semanticStack.pop();
             symbolTableManager.definefunction(func_name, func_type, QTs.size());
             curr_define_func_name = func_name;
-            if (func_type == "void")
+            if (func_type.equals("void"))
                 is_curr_func_has_ret = true;
             curr_define_func_ret_type = func_type;
         } catch (Exception ee) {
@@ -372,6 +376,8 @@ public class MiddleLangTranslator {
 
     }
 
+
+    // todo 要修改
     public void reciveReturnVal() {
         try {
             if (semanticStack.peek().equals("flag_empty_ret_val")) {
@@ -379,21 +385,27 @@ public class MiddleLangTranslator {
                     semanticStack.pop();
                 }
             } else {
+                //如果返回值是一个算式 可以通过最后一条四元式获取返回值
                 QT last_qt = QTs.get(QTs.size() - 1);
                 String ret_val = last_qt.getResult();
-                String ret_val_type = symbolTableManager.lookupVariableType(ret_val);
-                if (ret_val_type.equals(curr_define_func_ret_type))
-                    is_curr_func_has_ret = true;
-                else {
-                    String err_log = String.format("func: %s doesn't give valid return value, expect return a %s ,given %s"
-                            , curr_define_func_name, curr_define_func_ret_type, ret_val_type);
-                    throw new SemanticException(err_log);
-                }
+                is_curr_func_has_ret = true;
+                QTs.add(new QT("ret", ret_val, "_", "_"));
             }
         } catch (Exception ee) {
             printErrLog(ee);
         }
     }
+    //  ====================调用函数=============================
+
+
+    /*
+       I(函数名) ,_AC_push ,_AC_缓存函数名 pop
+      ( 参数表 -->  每个参数 _ac_push  )  _AC_取函数信息 ,检查参数列表
+       构造传参四元式 (跨表赋值)  call 函数入口标号 四元式
+     */
+
+
+    //  =================定义变量=================================
 
     public void pushFlagDefineVariableStart() {
         semanticStack.push("flag_defineVarStart");

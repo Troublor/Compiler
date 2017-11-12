@@ -166,6 +166,7 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("常量", new String[]{"const double", "_AC_PUSH"}));
         grammar.addDeriver(new Deriver("常量", new String[]{"const char", "_AC_PUSH"}));
         grammar.addDeriver(new Deriver("函数", new String[]{"(", "值列表", ")"}));
+        //todo 调用函数的文法需要改动?
         grammar.addDeriver(new Deriver("值列表", new String[]{"值", "值列表1"}));
         grammar.addDeriver(new Deriver("值列表", new String[]{}));
         grammar.addDeriver(new Deriver("值列表1", new String[]{",", "值", "值列表1"}));

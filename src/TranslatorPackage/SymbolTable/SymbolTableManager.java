@@ -128,11 +128,9 @@ public class SymbolTableManager {
         new_name_id += "." + field_name;
         //临时变量的标号id是 -1  在生成完四元式之后和普通的用户定义变量是一样的形式
         // 只不过表id是-1 说明是临时变量表里的东西
-        if (new_type_name.equals("basic"))
+        if (!new_type_name.equals("basic"))
             new_name_id += "." + new_type_name;
-        else
-            name_id += "." + field_name;
-        return name_id;
+        return new_name_id;
     }
 
 
@@ -219,17 +217,25 @@ public class SymbolTableManager {
         FunctionTableRow target_func = functionTable.getFuntionInfo(func_name);
         List<VariableTableRow> requested_param_list = target_func.getParamList();
         int requested_param_list_size = requested_param_list.size();
-        for (int i = 0; i < param_type_name_list.size(); i++) {
+        int i;
+        for (i = 0; i < param_type_name_list.size(); i++) {
             if (requested_param_list_size >= i) {
-                String requset_type_name = requested_param_list.get(i).getTypeName();
-                if (!param_type_name_list.get(i).matches(requset_type_name)) {
+                //判断下标是否超另一个数组长度
+                String request_type_name = requested_param_list.get(i).getTypeName();
+                if (!param_type_name_list.get(i).matches(request_type_name)) {
                     String err_msg = String.format("at call func:%s, request %s ,given %s",
-                            func_name, requset_type_name, param_type_name_list.get(i));
+                            func_name, request_type_name, param_type_name_list.get(i));
                     throw new SemanticException(err_msg);
                 }
 
             }//if size judge
+            else {
+                String err_msg = "too much args put into func: " + func_name;
+                throw new SemanticException(err_msg);
+            }
         }//for
+        if (i != requested_param_list_size - 1)
+            throw new SemanticException("too few args put into func");
 
         return target_func.getEntryQtIndex();
     }
