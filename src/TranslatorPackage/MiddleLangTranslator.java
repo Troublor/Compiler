@@ -1,13 +1,12 @@
 package TranslatorPackage;
 
 
-import TranslatorPackage.SymbolTable.OptNotSupportError;
+import TranslatorPackage.TranslatorExceptions.OptNotSupportError;
 
-import TranslatorPackage.SymbolTable.SemanticException;
+import TranslatorPackage.TranslatorExceptions.SemanticException;
 import TranslatorPackage.SymbolTable.SymbolTableManager;
-import TranslatorPackage.SymbolTable.TypeError;
+import TranslatorPackage.TranslatorExceptions.TypeError;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -21,7 +20,7 @@ import java.util.Stack;
  * 故在这一层都加了try /catch 进行错误信息和 栈活动的打印
  */
 
-public class Translator {
+public class MiddleLangTranslator {
     Stack<String> semanticStack = new Stack<String>();
     ArrayList<QT> QTs = new ArrayList<QT>();
     SymbolTableManager symbolTableManager = new SymbolTableManager();

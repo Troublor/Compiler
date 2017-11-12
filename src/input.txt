@@ -3,7 +3,7 @@ func main() int {
   var c double;
   var array [10]char;
   var a,b int;
-  array[0] = a;
+  array[b] = a;
   a = 1;
   b = 5;
   c = 5.5;
