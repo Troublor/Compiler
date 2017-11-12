@@ -7,6 +7,7 @@ func main() int {
   a = 1;
   b = 5;
   c = 5.5;
+  array[0] = a;
   if(a>c){
     b = (a + c)/a;
     a = a + b;

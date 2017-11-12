@@ -17,7 +17,7 @@ public class FieldTable {
 
     public boolean addField(String field_name, int field_offset, String field_type) {
         FieldTableRow res = getField(field_name);
-        if (res == null)
+        if (res != null)
             return false;
         fieldsMap.put(field_name, new FieldTableRow(field_name, field_type, length));
         length += field_offset;

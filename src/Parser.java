@@ -91,7 +91,8 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("F", new String[]{}));
         grammar.addDeriver(new Deriver("structure", new String[]{"struct", "I", "{", "L", "}"}));
         grammar.addDeriver(new Deriver("function",
-                new String[]{"func", "I", "(", "形参列表", ")", "类型", "{", "proc", "}"}));
+                new String[]{"func", "I", "(", "形参列表", ")", "类型", "_AC_POP", "{", "proc", "}"}));
+        // todo: 解决函数返回值没有pop的问题
         grammar.addDeriver(new Deriver("形参列表", new String[]{"形参", "形参列表1"}));
         grammar.addDeriver(new Deriver("形参列表", new String[]{}));
         grammar.addDeriver(new Deriver("形参列表1", new String[]{",", "形参", "形参列表1"}));
@@ -119,7 +120,7 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("复合语句", new String[]{"顺序", "复合语句"}));
         grammar.addDeriver(new Deriver("复合语句", new String[]{}));
 
-        grammar.addDeriver(new Deriver("顺序", new String[]{"I", "语句成分", ";"}));
+        grammar.addDeriver(new Deriver("顺序", new String[]{"I","_AC_PUSH" , "语句成分", ";"}));
         grammar.addDeriver(new Deriver("语句成分", new String[]{"赋值"}));
         grammar.addDeriver(new Deriver("语句成分", new String[]{"函数"}));
         grammar.addDeriver(new Deriver("顺序", new String[]{"return", "bool", ";"}));
@@ -142,7 +143,7 @@ public class Parser extends Lang{
 
         grammar.addDeriver(new Deriver("值成分", new String[]{"函数"}));
         grammar.addDeriver(new Deriver("值成分", new String[]{"[", "非负整数", "]", "_AC_afterArray"}));
-        grammar.addDeriver(new Deriver("值成分", new String[]{".", "I"}));
+        grammar.addDeriver(new Deriver("值成分", new String[]{".", "I", "_AC_PUSH"}));
         grammar.addDeriver(new Deriver("值成分", new String[]{}));
         grammar.addDeriver(new Deriver("值", new String[]{"I","_AC_PUSH", "值成分"}));
         grammar.addDeriver(new Deriver("值", new String[]{"常量"}));
@@ -150,7 +151,7 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("数组下标", new String[]{}));
         grammar.addDeriver(new Deriver("非负整数", new String[]{"const int", "_AC_PUSH"}));
         grammar.addDeriver(new Deriver("非负整数", new String[]{"I", "_AC_PUSH"}));
-        grammar.addDeriver(new Deriver("赋值", new String[]{"数组下标", "=", "bool"}));
+        grammar.addDeriver(new Deriver("赋值", new String[]{"数组下标", "=", "bool", "_AC_afterAssign"}));
         grammar.addDeriver(new Deriver("常量", new String[]{"const int", "_AC_PUSH"}));
         grammar.addDeriver(new Deriver("常量", new String[]{"const double", "_AC_PUSH"}));
         grammar.addDeriver(new Deriver("常量", new String[]{"const char", "_AC_PUSH"}));
@@ -372,6 +373,7 @@ public class Parser extends Lang{
         } else input_item = word;
         translator.push(input_item);
     }
+
 
 //    private void PUSH() {
 //        SEM.push(this.last());

@@ -28,7 +28,7 @@ public class TypeTableRow {
     public FieldTableRow getField(String field_name) throws SemanticException {
         FieldTableRow field = fields.getField(field_name);
         if (field == null)
-            throw new SemanticException("noch field:" + field_name + "in type: " + this.getName());
+            throw new SemanticException("no such field: " + field_name + " in type: " + this.getName());
         return fields.getField(field_name);
     }
 
