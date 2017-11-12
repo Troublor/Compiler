@@ -4,6 +4,9 @@ import TranslatorPackage.QT;
 import java.util.ArrayList;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * DAG优化算法类
+ */
 public class DAG {
 
     private ArrayList<QT> qts;

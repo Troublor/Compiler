@@ -3,6 +3,9 @@ package OptimizePackage;
 import TranslatorPackage.QT;
 import java.util.HashSet;
 
+/**
+ * DAG图中的一个节点的类
+ */
 public class Node {
     private String main_label;
     private HashSet<String> extra_labels;

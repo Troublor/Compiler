@@ -31,14 +31,25 @@ public class QT {
         return operand_left;
     }
 
+    public void setOperand_left(String operand_left) {
+        this.operand_left = operand_left;
+    }
+
     public String getOperand_right() {
         return operand_right;
+    }
+
+    public void setOperand_right(String operand_right) {
+        this.operand_right = operand_right;
     }
 
     public String getResult() {
         return result;
     }
 
+    public void setResult(String result) {
+        this.result = result;
+    }
 
     /**
      * 判断是否是临时变量
