@@ -126,8 +126,8 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("顺序", new String[]{"return", "bool", ";"}));
 
         grammar.addDeriver(new Deriver("循环",
-                new String[]{
-                        "while", "_AC_addWhileStartQT", "(", "bool", ")",
+                new String[]{                                   //todo while's fake jump
+                        "while", "_AC_addWhileStartQT", "(", "bool", ")", "_AC_checkWhileDo",
                         "{", "_AC_stepIntoBlock", "复合语句", "}", "_AC_stepOutBlock", "_AC_addWhileEndQT"}));
         grammar.addDeriver(new Deriver("条件",
                 new String[]{

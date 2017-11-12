@@ -27,7 +27,6 @@ public class Translator {
     SymbolTableManager symbolTableManager = new SymbolTableManager();
 
 
-    // todo: push 需要parser为它传递上一次匹配的符号
     public void push(String name) {
         semanticStack.push(name);
     }
@@ -40,8 +39,6 @@ public class Translator {
     // for array a: "a[3]" -> "a.3"
     // todo: for struct type "a.b" -> "a.b"
 
-    // todo : const xxx 生成四元式就不要加.value了
-    // TODO : 赋值语句还没有四元式生成出来
     // contrast with QT's content
 
     // QT's content:
@@ -125,13 +122,18 @@ public class Translator {
         }
     }
 
-    public void afterAssign()  throws SemanticException{
-        String right = semanticStack.pop();
-        String left = semanticStack.pop();
+    public void afterAssign() {
+        try {
+            String right = semanticStack.pop();
+            String left = semanticStack.pop();
 
-        if (!isNumeric(lookUpType(right)) || !isNumeric(lookUpType(left)))
-            throw new SemanticException(lookUpType(left) + " can not assign to " + lookUpType(right));
-        QTs.add(new QT("=", toRepresent(right), "_", toRepresent(left)));
+            if (!isNumeric(lookUpType(right)) || !isNumeric(lookUpType(left)))
+                throw new SemanticException(lookUpType(left) + " can not assign to " + lookUpType(right));
+            QTs.add(new QT("=", toRepresent(right), "_", toRepresent(left)));
+        } catch (Exception ee) {
+            printErrLog(ee);
+            System.exit(-1);
+        }
     }
 
     // todo: array support
@@ -209,7 +211,7 @@ public class Translator {
             // not constant
 
             String[] parts = item.split("\\.");
-            // todo item.split(".") 分开不开，怀疑 . 是正则的通配符
+            // . 是正则的通配符  得用 \\. 进行转义
             String id  = item;
             if (parts.length !=  0) {
                 id = parts[0];
@@ -338,23 +340,33 @@ public class Translator {
 
 
     public void addWhileStartQT() {
-        QTs.add(new QT("while_start", "", "", ""));
+        QTs.add(new QT("whl_sta", "_", "_", "_"));
     }
 
     public void addWhileEndQT() {
-        QTs.add(new QT("while_end", "", "", ""));
+        QTs.add(new QT("whl_end", "_", "_", "_"));
+    }
+
+    public void checkWhileDo() {
+        try {
+            String judge_condition_val = semanticStack.pop();
+            judge_condition_val = symbolTableManager.accessVariableAndField(judge_condition_val, "value");
+            QTs.add(new QT("whl_do_ck", judge_condition_val, "_", "_"));
+        } catch (Exception ee) {
+            printErrLog(ee);
+        }
     }
 
     public void addIfStartQt() {
-        QTs.add(new QT("if_start", "", "", ""));
+        QTs.add(new QT("if_sta", "_", "_", "_"));
     }
 
     public void addElseStartQt() {
-        QTs.add(new QT("else_start", "", "", ""));
+        QTs.add(new QT("el_sta", "_", "_", "_"));
     }
 
     public void addIfElseEndQt() {
-        QTs.add(new QT("if_else_end", "", "", ""));
+        QTs.add(new QT("ifel_end", "_", "_", "_"));
     }
 
     public void stepOutBlock() {
@@ -374,6 +386,7 @@ public class Translator {
     public void printAllQTs() {
 
         System.out.println("\n\n当前所有的四元式:");
+        System.out.println(String.format("%-11s%-25s%-25s%-25s", "oprt:", "left_oprd:", "right_oprd:", "result_target:"));
         for (QT qt : QTs) {
             System.out.println(qt);
         }
