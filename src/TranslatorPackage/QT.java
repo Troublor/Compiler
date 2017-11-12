@@ -43,9 +43,6 @@ public class QT {
     /**
      * 判断是否是临时变量
      *
-     * TODO
-     * 根据临时变量符号表，写判断是否是临时变量的逻辑
-     *
      * @param s 要判断的变量
      * @return boolean
      */
