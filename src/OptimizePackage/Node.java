@@ -128,4 +128,14 @@ public class Node {
     public boolean isMainLabel(String label) {
         return main_label.equals(label);
     }
+
+    @Override
+    public String toString() {
+        StringBuilder r = new StringBuilder("(" + operator + ")  " + main_label + " | ");
+        for (String label : extra_labels) {
+            r.append(label).append(",  ");
+        }
+
+        return r.toString();
+    }
 }

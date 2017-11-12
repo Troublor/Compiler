@@ -14,15 +14,57 @@ public class DAG {
         nodes = new ArrayList<>();
     }
 
-    public void setQts(ArrayList<QT> qts) {
+    private void setQts(ArrayList<QT> qts) {
         this.qts = qts;
+    }
+
+    public ArrayList<QT> optimize(ArrayList<QT> qts) throws QtException{
+        setQts(qts);
+        generateDAG();
+        return generateQts();
+    }
+
+    /**
+     *
+     * 根据优化了的DAG图重组四元式
+     */
+    private ArrayList<QT> generateQts() {
+        ArrayList<QT> result = new ArrayList<>();
+        for (Node node : nodes) {
+            if (node.getOperator() == null) {
+                //如果没有操作符，就说明这是叶子节点
+                for (String label : node.getExtra_labels()) {
+                    if (!QT.isTemporaryVariable(label)) {
+                        result.add(new QT("=", node.getMain_label(), null, label));
+                    }
+                }
+            } else {
+                //非叶节点
+                Node left_child = node.getLeft_child();
+                Node right_child = node.getRight_child();
+                if (right_child == null) {
+                    result.add(new QT(node.getOperator(), left_child.getMain_label(), null,
+                        node.getMain_label()));
+                } else {
+                    result.add(new QT(node.getOperator(), left_child.getMain_label(),
+                        right_child.getMain_label(), node.getMain_label()));
+                }
+                //把node中的附加标记处理
+                for (String label : node.getExtra_labels()) {
+                    if (!QT.isTemporaryVariable(label)) {
+                        result.add(new QT("=", node.getMain_label(), null, label));
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     /**
      * 根据qts中的四元式序列生成DAG图
      * 存储在nodes中
      */
-    public void generateDAG() throws QtException{
+    private void generateDAG() throws QtException{
         for (QT qt : qts) {
             if (qt.getOperator().equals("=")) {
                 //1. 若是赋值四元式: A=B  (=, B, _, A)
@@ -76,6 +118,7 @@ public class DAG {
                         if (left_node == null) {
                             left_node = new Node(qt.getOperand_left(), null, null,
                                 null);
+                            nodes.add(left_node);
                         }
                     }
                     Node right_node = null;
@@ -84,6 +127,7 @@ public class DAG {
                         if (right_node == null) {
                             right_node = new Node(qt.getOperand_right(), null, null,
                                 null);
+                            nodes.add(right_node);
                         }
                     }
                     Node new_node = new Node(qt.getResult(), qt.getOperator(), left_node,
@@ -190,18 +234,18 @@ public class DAG {
             return operand_left;
         }
         StringBuilder result = new StringBuilder("");
-        String left_type = operand_left.split("\\.")[0].split(" ")[1];
-        String right_type = operand_right.split("\\.")[0].split(" ")[1];
+        String left_type = operand_left.split(" ")[1].split("_")[0];
+        String right_type = operand_right.split(" ")[1].split("_")[0];
         if (left_type.equals("double") || right_type.equals("double")) {
-            result.append("const double").append(".");
+            result.append("const double").append("_");
             double r = calculate(operator, operand_left, operand_right);
             result.append(Double.toString(r));
         } else if (left_type.equals("char") || right_type.equals("char")) {
-            result.append("const char").append(".");
+            result.append("const char").append("_");
             double r = calculate(operator, operand_left, operand_right);
             result.append(Character.toString((char) r));
         } else if (left_type.equals("int") || right_type.equals("int")) {
-            result.append("const int").append(".");
+            result.append("const int").append("_");
             double r = calculate(operator, operand_left, operand_right);
             result.append(Integer.toString((int) r));
         } else {
@@ -218,12 +262,16 @@ public class DAG {
      * @return 转换完成的数字
      */
     private double toNumber(String label) throws QtException{
-        String[] split = label.split("\\.");
+        if (!QT.isConstVariable(label)) {
+            throw new QtException(
+                "QtException: " + label + "is not a const and can not be converted to number\n");
+        }
+        String[] split = label.split(" ")[1].split("_");
         if (split.length != 2) {
             throw new QtException("QtException: " + label + " is not a valid const\n");
         }
         try {
-            switch (split[0].split(" ")[1]) {
+            switch (split[0]) {
                 case "int":
                     return Integer.parseInt(split[1]);
                 case "double":
@@ -232,13 +280,13 @@ public class DAG {
                     if (split[1].length() != 1) {
                         throw new QtException(
                             "QtException const char error: " + label
-                                + " can not be converted to number\n");
+                                + " can not be converted to character\n");
                     }
                     return split[1].charAt(0);
             }
         } catch (NumberFormatException e) {
             throw new QtException(
-                "QtException const char error: " + label
+                "QtException const error: " + label
                     + " can not be converted to number\n");
         }
         throw new QtException("QtException: try to convert null to number\n");
