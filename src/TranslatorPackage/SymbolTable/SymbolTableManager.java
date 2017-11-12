@@ -1,5 +1,8 @@
 package TranslatorPackage.SymbolTable;
 
+import TranslatorPackage.SymbolTable.FunctionTable.FunctionTable;
+import TranslatorPackage.SymbolTable.FunctionTable.FunctionTableRow;
+import TranslatorPackage.SymbolTable.TypeTable.FieldTable;
 import TranslatorPackage.SymbolTable.TypeTable.FieldTableRow;
 import TranslatorPackage.SymbolTable.TypeTable.TypeTable;
 import TranslatorPackage.SymbolTable.TypeTable.TypeTableRow;
@@ -7,11 +10,14 @@ import TranslatorPackage.SymbolTable.VariableTable.VariableTableRow;
 import TranslatorPackage.SymbolTable.VariableTable.VariableTableSetManager;
 import TranslatorPackage.TranslatorExceptions.SemanticException;
 
+import java.util.List;
+
 public class SymbolTableManager {
 
 
     private TypeTable typeTable = new TypeTable();
     private VariableTableSetManager variableTableSetManager = new VariableTableSetManager(typeTable);
+    private FunctionTable functionTable = new FunctionTable();
 
     public static final int TEMP_VAR_TABLE_ID = -1;
 
@@ -122,7 +128,11 @@ public class SymbolTableManager {
         new_name_id += "." + field_name;
         //临时变量的标号id是 -1  在生成完四元式之后和普通的用户定义变量是一样的形式
         // 只不过表id是-1 说明是临时变量表里的东西
-        return new_name_id + "." + new_type_name;
+        if (new_type_name.equals("basic"))
+            new_name_id += "." + new_type_name;
+        else
+            name_id += "." + field_name;
+        return name_id;
     }
 
 
@@ -168,6 +178,61 @@ public class SymbolTableManager {
     }
 
 
+    /**
+     * 定义函数时 对符号表体系中函数表新增一条表项
+     *
+     * @param func_name      函数名
+     * @param return_type    返回类型
+     * @param entry_qt_index 入口的四元式序号 在生成目标代码时回填为指令地址
+     * @return 定义成功后的函数名
+     * @throws SemanticException 重复定义
+     */
+    public String definefunction(String func_name, String return_type, int entry_qt_index) throws SemanticException {
+        return functionTable.defineFunction(func_name,
+                variableTableSetManager.getCurrActiveTable(),
+                return_type,
+                entry_qt_index);
+    }
+
+
+    /**
+     * 向函数添加新的形参
+     *
+     * @param func_name  函数名
+     * @param param_name 形参名
+     * @param param_type 形参类型名
+     * @throws SemanticException 类型名不存在 变量名重复定义
+     */
+    public void addParamOnfunc(String func_name, String param_name, String param_type) throws SemanticException {
+        functionTable.addParamOnFunction(func_name, param_name, typeTable.getTypeInfo(param_type));
+    }
+
+    /**
+     * 函数传参时 参数匹配检查
+     *
+     * @param func_name            函数名
+     * @param param_type_name_list 参数类型列表
+     * @return 函数的入口四元式序号
+     * @throws SemanticException 类型匹配失败
+     */
+    public int funcParamsCheck(String func_name, List<String> param_type_name_list) throws SemanticException {
+        FunctionTableRow target_func = functionTable.getFuntionInfo(func_name);
+        List<VariableTableRow> requested_param_list = target_func.getParamList();
+        int requested_param_list_size = requested_param_list.size();
+        for (int i = 0; i < param_type_name_list.size(); i++) {
+            if (requested_param_list_size >= i) {
+                String requset_type_name = requested_param_list.get(i).getTypeName();
+                if (!param_type_name_list.get(i).matches(requset_type_name)) {
+                    String err_msg = String.format("at call func:%s, request %s ,given %s",
+                            func_name, requset_type_name, param_type_name_list.get(i));
+                    throw new SemanticException(err_msg);
+                }
+
+            }//if size judge
+        }//for
+
+        return target_func.getEntryQtIndex();
+    }
 
 
 

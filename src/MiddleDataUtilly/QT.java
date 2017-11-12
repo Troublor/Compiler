@@ -1,4 +1,4 @@
-package TranslatorPackage;
+package MiddleDataUtilly;
 
 import OptimizePackage.QtException;
 
@@ -11,7 +11,7 @@ public class QT {
     private String operand_right;
     private String result;
 
-    QT(String o, String left, String right, String result) {
+    public QT(String o, String left, String right, String result) {
         operator = o;
         operand_left = left;
         operand_right = right;

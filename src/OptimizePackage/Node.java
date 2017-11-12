@@ -1,6 +1,6 @@
 package OptimizePackage;
 
-import TranslatorPackage.QT;
+import MiddleDataUtilly.QT;
 import java.util.HashSet;
 
 public class Node {
