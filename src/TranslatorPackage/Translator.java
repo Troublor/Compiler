@@ -96,6 +96,12 @@ public class Translator {
             if (isConstant(index_type)) {
                 index_item = index_item.split("_")[1];
             }
+            if (index_item.contains(".")) {
+                // 对 a[a[10]]这种情况，本来会生成a.a.10, 现在先生成 t = a.10,  然后生成a.t，防止多层嵌套
+                String tmp = symbolTableManager.addTempVariable(index_type);
+                QTs.add(new QT("=", index_item, "_", tmp));
+                index_item = tmp;
+            }
             // todo:如果是下标是变量的话 例子：b[a[3]]  b[a]
             else if (!isNumeric(index_type)) throw new TypeError(index_item, index_type, "numeric");
             semanticStack.push(id_item + "." + index_item);
@@ -202,14 +208,12 @@ public class Translator {
     // for struct contain array: "a.X.3" -> int
     private String lookUpType(String item) {
         try {
-
             String may_const = item.split("_")[0];
             // for constant
             if (isConstant(may_const)) return may_const;
             // not constant
 
             String[] parts = item.split("\\.");
-            // todo item.split(".") 分开不开，怀疑 . 是正则的通配符
             String id  = item;
             if (parts.length !=  0) {
                 id = parts[0];
@@ -218,9 +222,11 @@ public class Translator {
             int i = 1;
             while (i < parts.length) {
                 // array index
-                if (type.startsWith("array") && (isInteger(parts[i]) ||
-                        symbolTableManager.lookupVariableType(parts[i]).equals("int"))) {
-                    type = type.split("_")[1];
+                if (type.startsWith("array")) {
+                    if (isInteger(parts[i]) || symbolTableManager.lookupVariableType(parts[i]).equals("int")) {
+                        type = type.split("_")[1];
+                    }
+                    else throw new SemanticException("index should be int variable or const int");
                 }
                 // struct field
                 else {
