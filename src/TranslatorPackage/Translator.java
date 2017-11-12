@@ -7,6 +7,7 @@ import TranslatorPackage.SymbolTable.SemanticException;
 import TranslatorPackage.SymbolTable.SymbolTableManager;
 import TranslatorPackage.SymbolTable.TypeError;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -78,7 +79,7 @@ public class Translator {
             String right_operand = semanticStack.pop();
             String return_type = getDualReturnType(opt, lookUpType(left_operand), lookUpType(right_operand));
             String tmp = symbolTableManager.addTempVariable(return_type);
-            QTs.add(new QT(opt, left_operand + ".value", right_operand + ".value", tmp));
+            QTs.add(new QT(opt, toRepresent(left_operand), toRepresent(right_operand), toRepresent(tmp)));
             semanticStack.push(tmp);
         } catch (Exception ee) {
             printErrLog(ee);
@@ -92,13 +93,20 @@ public class Translator {
             String id_item = semanticStack.pop();
             // check id is array type
             String index_type = lookUpType(index_item);
-            if (!isNumeric(index_type)) throw new TypeError(index_item, index_type, "numeric");
+            if (isConstant(index_type)) {
+                index_item = index_item.split("_")[1];
+            }
+            // todo:如果是下标是变量的话 例子：b[a[3]]  b[a]
+            else if (!isNumeric(index_type)) throw new TypeError(index_item, index_type, "numeric");
             semanticStack.push(id_item + "." + index_item);
 
         } catch (Exception ee) {
             printErrLog(ee);
             System.exit(-1);
         }
+    }
+
+    public void afterIndexOpt() {
 
     }
 
@@ -117,6 +125,14 @@ public class Translator {
         }
     }
 
+    public void afterAssign()  throws SemanticException{
+        String right = semanticStack.pop();
+        String left = semanticStack.pop();
+
+        if (!isNumeric(lookUpType(right)) || !isNumeric(lookUpType(left)))
+            throw new SemanticException(lookUpType(left) + " can not assign to " + lookUpType(right));
+        QTs.add(new QT("=", toRepresent(right), "_", toRepresent(left)));
+    }
 
     // todo: array support
     private String getDualReturnType(String opt, String left_type, String right_type) {
@@ -176,7 +192,7 @@ public class Translator {
     }
 
 
-    // for constant: "const int.1" -> "const int"
+    // for constant: "const int_1" -> "const int"
     // for id: "a" -> a's type
     // for array a: "a.3" -> type of a's element
     //               "a" -> "array_xx_length"
@@ -192,8 +208,12 @@ public class Translator {
             if (isConstant(may_const)) return may_const;
             // not constant
 
-            String[] parts = item.split("_");
-            String id = parts[0];
+            String[] parts = item.split("\\.");
+            // todo item.split(".") 分开不开，怀疑 . 是正则的通配符
+            String id  = item;
+            if (parts.length !=  0) {
+                id = parts[0];
+            }
             String type = symbolTableManager.lookupVariableType(id);
             int i = 1;
             while (i < parts.length) {
@@ -234,11 +254,19 @@ public class Translator {
     // for array, a[3] -> "tableid.a.3.value"
     private String toRepresent(String item) {
         try {
-            if (isConstant(lookUpType(item))) return item + ".value";
+            if (isConstant(lookUpType(item))) return item;
             // if is not constant
             // ( a is int id)  a -> tableid.a.int
             // (a is int array) a.3 -> tableid.a.3.int
-            if (isBasicType(lookUpType(item))) return symbolTableManager.accessVariableAndField(item, "value");
+            if (isBasicType(lookUpType(item))) {
+                // is not int, char, double variable, is array element or struct like a.0
+                if (item.split("\\.").length != 1) {
+                    String [] parts = item.split("\\.");
+                    assert item.split("\\.").length == 2;
+                    return symbolTableManager.accessVariableAndField(parts[0], parts[1]);
+                }
+                return symbolTableManager.accessVariableAndField(item, "value");
+            }
             String[] parts = item.split(".");
             String name = parts[0];
             int i = 1;
@@ -351,5 +379,10 @@ public class Translator {
         }
     }
 
+
+    // pop 目前只是为了解决函数定义返回值一直在语义栈里的问题
+    public void POP() {
+        semanticStack.pop();
+    }
 
 }

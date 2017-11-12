@@ -86,7 +86,7 @@ public class SymbolTableManager {
             if (result == null)
                 throw new SemanticException("variable: " + name_id + "has not define");
             curr_type_name = result.getTypeName();
-            new_name_id = result.getTable_id() + name_id;
+            new_name_id = result.getTable_id() + "." +  name_id;
 
         } else {
             new_name_id = name_id.substring(0, type_index);
@@ -94,11 +94,11 @@ public class SymbolTableManager {
         }
         TypeTableRow typeInfo = typeTable.getTypeInfo(curr_type_name);
         typeInfo.getField(field_name);
-        new_name_id += field_name;
+        new_name_id += "." + field_name;
         new_type_name = typeTable.getTypeInfo(typeInfo.getName()).getName();
         //临时变量的标号id是 -1  在生成完四元式之后和普通的用户定义变量是一样的形式
         // 只不过表id是-1 说明是临时变量表里的东西
-        return new_name_id + new_type_name;
+        return new_name_id + "." + new_type_name;
     }
 
 
