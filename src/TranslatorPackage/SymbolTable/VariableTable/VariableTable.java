@@ -1,6 +1,6 @@
 package TranslatorPackage.SymbolTable.VariableTable;
 
-import TranslatorPackage.SymbolTable.SemanticException;
+import TranslatorPackage.TranslatorExceptions.SemanticException;
 
 import java.util.HashMap;
 

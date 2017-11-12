@@ -1,8 +1,11 @@
 
 func main() int {
   var c double;
+  var array [10]char;
+  var a,b int;
+  array[b] = a;
   var array [10]int;
-  var a,b int; 
+  var a,b int;
   a = 1;
   b = 5;
   c = 5.5;
