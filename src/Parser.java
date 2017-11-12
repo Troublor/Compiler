@@ -43,9 +43,9 @@ public class Parser extends Lang{
     // 语义分析
     private MiddleLangTranslator translator;
 
-//    private Stack<MiddleDataUtilly.Token> SEM;
+//    private Stack<Token> SEM;
 
-//    private ArrayList<MiddleDataUtilly.QT> QT;
+//    private ArrayList<QT> QT;
 
     /**
      * 输入表达式,当前正在处理的就是input的最后一个
@@ -232,9 +232,9 @@ public class Parser extends Lang{
         Token x;//从栈里取来的token
         Token y;
         i=0;
-        //analyseStack.push(new MiddleDataUtilly.Token("#","#"));
+        //analyseStack.push(new Token("#","#"));
         analyseStack.push(new Token(null,"P"));
-        //input.add(new MiddleDataUtilly.Token("#","#"));
+        //input.add(new Token("#","#"));
         w = next();
         if (w == null) {
             return false;
@@ -391,12 +391,12 @@ public class Parser extends Lang{
 //    }
 //
 //    private void GEQ(String w) {
-//        MiddleDataUtilly.Token n1, n2;
+//        Token n1, n2;
 //        n1 = SEM.pop();
 //        n2 = SEM.pop();
 //        QT qt=new QT(w, n2.getWord(), n1.getWord());
 //        QT.add(qt);
-//        SEM.push(new MiddleDataUtilly.Token(qt.getResult(), "i"));
+//        SEM.push(new Token(qt.getResult(), "i"));
 //    }
 //
 //
