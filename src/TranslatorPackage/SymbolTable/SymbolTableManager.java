@@ -86,16 +86,16 @@ public class SymbolTableManager {
             if (result == null)
                 throw new SemanticException("variable: " + name_id + "has not define");
             curr_type_name = result.getTypeName();
-            new_name_id = result.getTable_id() + "." +  name_id;
+            new_name_id = result.getTable_id() + "." + name_id;
 
         } else {
             new_name_id = name_id.substring(0, type_index);
-            curr_type_name = name_id.substring(type_index + 1, name_id.length());
+            curr_type_name = lookupVariableType(name_id);
         }
-        TypeTableRow typeInfo = typeTable.getTypeInfo(curr_type_name);
-        typeInfo.getField(field_name);
+        TypeTableRow type_info = typeTable.getTypeInfo(curr_type_name);
+        FieldTableRow field_info = type_info.getField(field_name);
         new_name_id += "." + field_name;
-        new_type_name = typeTable.getTypeInfo(typeInfo.getName()).getName();
+        new_type_name = field_info.getTypeName();
         //临时变量的标号id是 -1  在生成完四元式之后和普通的用户定义变量是一样的形式
         // 只不过表id是-1 说明是临时变量表里的东西
         return new_name_id + "." + new_type_name;
@@ -104,23 +104,19 @@ public class SymbolTableManager {
 
     //在目前作用域查询一个变量的类型 用于表达式求值时进行类型判断
     public String lookupVariableType(String name_id) throws SemanticException {
-        String format_[] = name_id.split(".");
+        String format_[] = name_id.split("\\.");
         //第一次进入符号表系统查询 没有之前的附加后缀时
-        if (format_.length == 0)
+        if (format_.length <= 1) {
             format_ = new String[]{name_id};
-        VariableTableRow result = variableTableSetManager.requestVariable(format_[0]);
-        if (result == null)
-            throw new SemanticException("variable: " + name_id + "has not declare");
-        if (format_.length == 1) {
+            VariableTableRow result = variableTableSetManager.requestVariable(format_[0]);
+            if (result == null)
+                throw new SemanticException("variable: " + name_id + "has not declare");
+            //该变量之前从未进入符号表查询 没有格式化的 名.域.类型 结构
+            // 采用从符号表内查询的方法
             return result.getTypeName();
         } else {
-            String prefix_id = format_[format_.length - 2];
-            String type_name = lookupVariableType(prefix_id);
-            String field_name = format_[format_.length - 1];
-            FieldTableRow field = typeTable.getTypeInfo(type_name).getField(field_name);
-            if (field == null)
-                throw new SemanticException("type : " + type_name + "doesn't have this field : " + field_name);
-            return field.getTypeName();
+            String type_name = format_[format_.length - 1];
+            return type_name;
         }
     }
 

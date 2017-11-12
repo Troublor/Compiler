@@ -1,5 +1,4 @@
 
-
 func main() int {
   var c double;
   var array [10]int;
