@@ -1,6 +1,6 @@
 package TranslatorPackage.SymbolTable.VariableTable;
 
-import TranslatorPackage.SymbolTable.SemanticException;
+import TranslatorPackage.TranslatorExceptions.SemanticException;
 import TranslatorPackage.SymbolTable.TypeTable.TypeTable;
 import TranslatorPackage.SymbolTable.TypeTable.TypeTableRow;
 
@@ -58,7 +58,7 @@ public class VariableTableSetManager {
             return res;
         }
         VariableTable currActiveTableStore = currActiveTable;
-        while (currActiveTable != null) {
+        while (currActiveTable.getParent() != null) {
             traceBackToParentBlock();
             res = currActiveTable.getVariable(name_id);
             if (res != null) {

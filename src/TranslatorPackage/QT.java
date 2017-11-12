@@ -19,7 +19,8 @@ public class QT {
     }
 
     public String toString(){
-        return "(optr :" + operator + ",opnd_l: " + operand_left + " ,opnd_r: " + operand_right + ",res: " + result + ")";
+        String str = String.format("%-11s%-25s%-25s%-25s", operator, operand_left, operand_right, result);
+        return str;
     }
 
     public String getOperator() {
