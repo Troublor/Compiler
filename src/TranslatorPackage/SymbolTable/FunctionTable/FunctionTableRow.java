@@ -45,6 +45,10 @@ public class FunctionTableRow {
         return entry_qt_index;
     }
 
+    public int getFuncVarTableID() {
+        return param_n_inner_var_table.getTable_id();
+    }
+
     public List<VariableTableRow> getParamList() {
         return param_list;
     }

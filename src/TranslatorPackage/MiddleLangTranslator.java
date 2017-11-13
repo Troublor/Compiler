@@ -2,6 +2,7 @@ package TranslatorPackage;
 
 
 import MiddleDataUtilly.QT;
+import MiddleDataUtilly.Token;
 import TranslatorPackage.SymbolTable.VariableTable.VariableTable;
 import TranslatorPackage.SymbolTable.VariableTable.VariableTableRow;
 import TranslatorPackage.TranslatorExceptions.OptNotSupportError;
@@ -111,6 +112,7 @@ public class MiddleLangTranslator {
             System.exit(-1);
         }
     }
+
 
     public void afterIndexOpt() {
 
@@ -351,6 +353,45 @@ public class MiddleLangTranslator {
         }
     }
 
+
+    public void pushMayRetValFlag() {
+        semanticStack.push("flag_may_ret_val");
+    }
+
+    public void pushEmptyRetValFlag() {
+        if (semanticStack.peek().equals("flag_may_ret_val")) {
+            semanticStack.pop();
+            semanticStack.push("flag_empty_ret_val");
+        }
+
+    }
+
+    public void reciveReturnVal() {
+        try {
+            if (semanticStack.peek().equals("flag_empty_ret_val")) {
+                if (curr_define_func_ret_type.equals("void")) {
+                    semanticStack.pop();
+                    //返回值为空的情况
+                    QTs.add(new QT("ret", "_", "_", "_"));
+                }
+            } else {
+                //如果不是空返回  返回值则在语义栈中 是刚才扫描过的一个变量
+                if (curr_define_func_ret_type.equals("void"))
+                    throw new SemanticException("func: " + curr_define_func_name + "does not need return val");
+                is_curr_func_has_ret = true;
+                String ret_val = semanticStack.pop();
+                QTs.add(new QT("ret", toRepresent(ret_val),
+                        "if needed,assign at", "next qt"));
+                semanticStack.pop();
+                semanticStack.push(ret_val);
+            }
+
+        } catch (Exception ee) {
+            printErrLog(ee);
+        }
+    }
+
+
     public void clearCurrDefineFunc() {
         try {
             if (!is_curr_func_has_ret) {
@@ -366,38 +407,13 @@ public class MiddleLangTranslator {
         }
     }
 
-
-    public void pushMayRetValFlag() {
-        semanticStack.push("flag_may_ret_val");
+    public void addVoidDefaultRet() {
+        if (curr_define_func_ret_type.equals("void"))
+            QTs.add(new QT("ret", "_", "_", "_"));
     }
-
-    public void pushEmptyRetValFlag() {
-        if (semanticStack.peek().equals("flag_may_ret_val")) {
-            semanticStack.pop();
-            semanticStack.push("flag_empty_ret_val");
-        }
-
-    }
-
 
     // todo 要修改
-    public void reciveReturnVal() {
-        try {
-            if (semanticStack.peek().equals("flag_empty_ret_val")) {
-                if (curr_define_func_ret_type.equals("void")) {
-                    semanticStack.pop();
-                }
-            } else {
-                //如果返回值是一个算式 可以通过最后一条四元式获取返回值
-                QT last_qt = QTs.get(QTs.size() - 1);
-                String ret_val = last_qt.getResult();
-                is_curr_func_has_ret = true;
-                QTs.add(new QT("ret", ret_val, "_", "_"));
-            }
-        } catch (Exception ee) {
-            printErrLog(ee);
-        }
-    }
+
     //  ====================调用函数=============================
 
 
@@ -427,23 +443,51 @@ public class MiddleLangTranslator {
             List<String> param_type_list = new ArrayList<>();
             List<String> real_vars = new ArrayList<>();
             while (!semanticStack.peek().equals("flag_start_trans_params")) {
+                //根据文法和动作 传入的参数应该都在语义栈中
                 String curr_real_param = toRepresent(semanticStack.pop());
+                //pop后转换成生成四元式需要的形式
                 param_type_list.add(symbolTableManager.lookupVariableType(curr_real_param));
                 real_vars.add(curr_real_param);
             }
             semanticStack.pop();
+            // 逆序实参的顺序 和形参的顺序都是反的
+            // 因为是先压栈 然后再从栈中弹出来处理
+
+            // 检查传入参数的类型
+            // 检查正确时返回形参的在在四元式中正确的表示形式
             List<String> params = symbolTableManager.checkFuncParams(calling_func_name, param_type_list);
+
+            //函数调用时 在内存栈区为该函数的临时变量开辟新内存空间
+            // 准备下一步的传参
+            QTs.add(new QT("push_stk", calling_func_name, "_", "_"));
+
             int end_index = real_vars.size() - 1;
             for (int i = 0; i < real_vars.size(); i++) {
+                //进行传参  实际上是一个跨表的传参
                 QTs.add(new QT("=", real_vars.get(end_index - i), "_", params.get(i)));
             }
 
+            //传参完成后进行执行指令的跳转
             QTs.add(new QT("call", calling_func_name, "_", "_"));
 
         } catch (Exception ee) {
             printErrLog(ee);
         }
 
+    }
+
+    /**
+     * 翻转arrayList顺序
+     *
+     * @param arrayList 　源arrayList
+     * @return 翻转后的arrayList
+     */
+    private List<String> reverse(List<String> arrayList) {
+        List<String> n = new ArrayList<>();
+        for (int i = arrayList.size() - 1; i >= 0; i--) {
+            n.add(arrayList.get(i));
+        }
+        return n;
     }
     //  =================定义变量=================================
 
@@ -494,6 +538,38 @@ public class MiddleLangTranslator {
 
     }
 
+    //  =================定义结构体=================================
+    private String curr_define_struct_name;
+
+    public void defineStruct() {
+        try {
+            curr_define_struct_name = semanticStack.pop();
+            symbolTableManager.declareStructType(curr_define_struct_name);
+        } catch (Exception ee) {
+            printErrLog(ee);
+        }
+    }
+
+    public void pushDefineFieldStart() {
+        semanticStack.push("flag_define_start");
+    }
+
+    public void defineStashedField() {
+        try {
+            String field_type = semanticStack.pop();
+            symbolTableManager.lookupType(field_type);
+            while (!semanticStack.peek().equals("flag_define_start")) {
+                String field_name = semanticStack.pop();
+                symbolTableManager
+                        .defineFieldOnStructType(curr_define_struct_name, field_type, field_name);
+            }
+            semanticStack.pop();
+        } catch (Exception ee) {
+            printErrLog(ee);
+        }
+    }
+
+
 
     public void addWhileStartQT() {
         QTs.add(new QT("whl_sta", "_", "_", "_"));
@@ -514,7 +590,7 @@ public class MiddleLangTranslator {
     }
 
     public void addIfStartQt() {
-        QTs.add(new QT("if_sta", "_", "_", "_"));
+        QTs.add(new QT("if_sta", toRepresent(semanticStack.pop()), "_", "_"));
     }
 
     public void addElseStartQt() {
