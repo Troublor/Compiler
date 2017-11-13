@@ -1,6 +1,7 @@
 package ASMPackage;
 
-import TranslatorPackage.QT;
+import MiddleDataUtilly.QT;
+
 import java.util.ArrayList;
 
 public class test {
