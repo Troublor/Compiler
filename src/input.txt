@@ -1,42 +1,51 @@
 
-func void main() {
-  var c double;
-  var array [10] int;
-  var a,b int;
-  array[b] = a;
-  a = 1;
-  b = 5;
-  c = 5.5;
-  array[array[0]] = a;
-  if(a>c){
-    b = (a + c)/a;
-    a = a + b;
-  }else{
-    while(a+3>c){
-      array[0] = a;
-    }
-  }
+
+struct Point {
+  var x int;
+  var y char;
 }
 
+struct A {
+  var a int;
+  var b char;
+}
 
-func int hhhhha(int jhgjh,double k) {
+func int cmp(int a,int b){
+  return a>b;
+}
+
+func void hhhhha(int jhgjh,double k) {
   var brray [10] int;
   var h,b int;
+  var aa A;
   brray[b] = h;
   h = 1;
+  return ;
+  aa.a = aa.a + 5;
   b = 5;
   k = 5.5;
-  while(h+3>k){
-     brray[0] = h;
-     while(b+2/5 > 5){
-        k = k*(h+b-(b*5)*55)*5-b+(h+5);
-     }
-     h = h +1 ;
-     return h+b;
-  }
-  brray[brray[0]] = h;
-  if(h>k){
-    b = (h + k)/h;
-    h = h + b;
-  }
+
+
 }
+
+
+func int main() {
+  var a,c int;
+  var aa A;
+  var array [10]char;
+  a = 1;
+  a = a + 6;
+  c = cmp(1,1);
+  if( a > c){
+    var dfs int;
+    return aa.a;
+  }else{
+    while(a + c > c){
+      a = a + array[0] ;
+    }
+    return array[a];
+  }
+
+}
+
+
