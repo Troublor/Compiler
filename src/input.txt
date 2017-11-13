@@ -3,14 +3,12 @@ func void main() {
   var c double;
   var array [10] int;
   var a,b int;
-  array[b] = a + 1;
-array[array[a]] = a + 1;
-  if (c){
-    
-    a = 1;
-    b = 5;
-    c = 5.5;
-    
+  array[b] = a;
+  a = 1;
+  b = 5;
+  c = 5.5;
+  array[array[0]] = a;
+  if(a>c){
     b = (a + c)/a;
     a = a + b;
   }else{

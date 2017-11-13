@@ -59,6 +59,7 @@ public class SymbolTableManager {
 
     /**
      * 一个能够递归查询变量域的函数
+     * 作用域仅限当前区域
      *
      * @param name_id    待查询的变量id
      *                   第一次查询时: 只有一个单独的用户定义标识符名 ,
@@ -95,7 +96,7 @@ public class SymbolTableManager {
                 result = variableTableSetManager.requestVariable(name_id);
 
             if (result == null)
-                throw new SemanticException("variable: " + name_id + "has not define");
+                throw new SemanticException("variable: " + name_id + " has not define");
             curr_type_name = result.getTypeName();
             new_name_id = result.getTable_id() + "." + name_id;
             suffix_type_name = curr_type_name;
@@ -110,6 +111,8 @@ public class SymbolTableManager {
 
         try {
             FieldTableRow field_info = type_info.getField(field_name);
+            if (field_info == null)
+                throw new SemanticException("no such field : " + field_name + " in type: " + curr_type_name);
             new_type_name = field_info.getTypeName();
             if (new_type_name.equals("basic"))
                 suffix_type_name = curr_type_name;
@@ -121,7 +124,8 @@ public class SymbolTableManager {
             //必须是 以int型变作为下标访问数组 才合法
             if (curr_type_name.split("_")[0].equals("array")) {
                 //如果类型不是数组 肯定是访问了未定义的域
-                if (ee.getMessage().split(":")[0].equals("no such field")) {
+                if (ee.getMessage()
+                        .equals("no such field : " + field_name + " in type: " + curr_type_name)) {
                     //如果是当前作用域的变量 直接可以作为下标
                     new_type_name = this.lookupVariableType(field_name);
                     suffix_type_name = new_type_name;
@@ -146,6 +150,10 @@ public class SymbolTableManager {
 
     //在目前作用域查询一个变量的类型 用于表达式求值时进行类型判断
     public String lookupVariableType(String name_id) throws SemanticException {
+        if (name_id.split(" ")[0].equals("const")) {
+            name_id = name_id.split(" ")[1];
+            return name_id.split("_")[0];
+        }
         String format_[] = name_id.split("\\.");
         //第一次进入符号表系统查询 没有之前的附加后缀时
         if (format_.length <= 1) {
@@ -166,7 +174,13 @@ public class SymbolTableManager {
         return typeTable.isBasicType(type_name);
     }
 
-
+    /**
+     * 添加临时变量
+     *
+     * @param type_name 临时变量的类型
+     * @return 临时变量的变量名
+     * @throws SemanticException //
+     */
     public String addTempVariable(String type_name) throws SemanticException {
         VariableTableRow res = variableTableSetManager.addTempVariable(type_name);
         return res.getName_id();
@@ -231,7 +245,7 @@ public class SymbolTableManager {
      * 函数传参时 参数匹配检查
      *
      * @param func_name            函数名
-     * @param param_type_name_list 参数类型列表
+     * @param param_type_name_list 调用时传入的参数类型列表
      * @return 函数形参符号表
      * @throws SemanticException 类型匹配失败
      */
@@ -245,9 +259,9 @@ public class SymbolTableManager {
             if (requested_param_list_size >= i) {
                 //判断下标是否超另一个数组长度
                 VariableTableRow param_info = requested_param_list.get(i);
-                //如果所需和所给变量类型都为基本变量 则不需要类型匹配
+                //如果所需和所给变量类型都为基本变量or常量 则不需要类型匹配
                 if (!(typeTable.isBasicType(param_info.getTypeName())
-                        && typeTable.isBasicType(param_type_name_list.get(i)))) {
+                        && typeTable.isBasicType(param_type_name_list.get(i))) )  {
                     if (!param_type_name_list.get(i).matches(param_info.getTypeName())) {
                         String err_msg = String.format("at call func:%s, request %s ,given %s",
                                 func_name, param_info.getTypeName(), param_type_name_list.get(i));
@@ -259,8 +273,10 @@ public class SymbolTableManager {
                         formal_param_names.add(table_id + "." + param_id + "." + param_type);
                     }
                 } else {
-                    formal_param_names.add(
-                            accessVariableAndField(requested_param_list.get(i).getName_id(), "value"));
+
+                    String param_present = param_info.getTable_id() + "." + param_info.getName_id()
+                            + "." + param_info.getTypeName();
+                    formal_param_names.add(param_present);
                 }
 
             }//if size judge
@@ -269,7 +285,7 @@ public class SymbolTableManager {
                 throw new SemanticException(err_msg);
             }
         }//for
-        if (i != requested_param_list_size - 1)
+        if (i <= requested_param_list_size - 1)
             throw new SemanticException("too few args put into func");
 
         return formal_param_names;

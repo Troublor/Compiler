@@ -66,19 +66,17 @@ public class Parser extends Lang{
 //        QT = new ArrayList<QT>();
 
         grammar.addVN(new HashSet<>(Arrays.asList(
-                new String[]{"bool", "join", "BOOL", "equality", "JOIN", "EQUALITY", "rel", "expr",
-                        "expr1", "EXPR", "term", "TERM", "unary", "值", "值成分", "常量", "S", "P", "S", "F",
-                        "structure", "function", "L", "形参列表", "形参列表1", "类型", "proc", "形参",
-                        "形参类型", "类型标识符", "复合语句", "声明语句", "标识符表", "类型", "循环", "条件",
-                        "顺序", "语句成分", "赋值", "函数", "条件其他", "数组下标", "非负整数", "值列表",
-                        "值列表1"}
-        )));
+                "bool", "join", "BOOL", "equality", "JOIN", "EQUALITY", "rel", "expr",
+                "expr1", "EXPR", "term", "TERM", "unary", "值", "值成分", "常量", "S", "P", "S", "F",
+                "structure", "function", "L", "形参列表", "形参列表1", "类型", "proc", "形参",
+                "形参类型", "类型标识符", "复合语句", "声明语句", "标识符表", "类型", "循环", "条件",
+                "顺序", "语句成分", "赋值", "函数", "条件其他", "数组下标", "非负整数", "值列表", "RET_BOOL",
+                "值列表1", "S_L", "寻址")));
 
         grammar.addVT(new HashSet<>(Arrays.asList(
-                new String[]{"||", "&&", "==", "!=", "<", ">", "<=", ">=", "+", "-", "*", "/", "=", "!", "I",
-                        "[", "]", "(", ")", "const int", "const double", "const char", "struct", "{", "}",
-                        "func", ";", ",", ".", "var", "return", "while", "if", "else"}
-        )));
+                "||", "&&", "==", "!=", "<", ">", "<=", ">=", "+", "-", "*", "/", "=", "!", "I",
+                "[", "]", "(", ")", "const int", "const double", "const char", "struct", "{", "}",
+                "func", ";", ",", ".", "var", "return", "while", "if", "else")));
 
         grammar.setStartVN("P");
 
@@ -89,13 +87,24 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("S", new String[]{}));
         grammar.addDeriver(new Deriver("F", new String[]{"function", "F"}));
         grammar.addDeriver(new Deriver("F", new String[]{}));
-        grammar.addDeriver(new Deriver("structure", new String[]{"struct", "I", "{", "L", "}"}));
+
+
+        grammar.addDeriver(new Deriver("structure",
+                new String[]{"struct", "I", "_AC_PUSH", "_AC_defineStruct", "{", "S_L", "}"}));
+
+
+        grammar.addDeriver(new Deriver("S_L",
+                new String[]{"var", "_AC_pushDefineFieldStart", "I", "_AC_PUSH", "标识符表",
+                        "类型", "_AC_defineStashedField", ";", "S_L"}));
+
+        grammar.addDeriver(new Deriver("S_L", new String[]{}));
+
+
         grammar.addDeriver(new Deriver("function",
-                //todo  为什么类型放在I后面不行?
                 new String[]{"func", "I", "_AC_PUSH", "I", "_AC_PUSH", "(", "_AC_stepIntoBlock",
                         "_AC_preDefineFuncName", "_AC_pushFunctionDefineParamsStart",
                         "形参列表", ")", "_AC_defineStashedParams",
-                        "{", "proc", "}", "_AC_stepOutBlock", "_AC_clearCurrDefineFunc"}));
+                        "{", "proc", "_AC_addVoidDefaultRet", "}", "_AC_stepOutBlock", "_AC_clearCurrDefineFunc"}));
 
         grammar.addDeriver(new Deriver("形参列表", new String[]{}));
 
@@ -130,46 +139,57 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("复合语句", new String[]{}));
 
         grammar.addDeriver(new Deriver("顺序", new String[]{"I","_AC_PUSH" , "语句成分", ";"}));
-        // todo 在这个位置是函数调用
+
         grammar.addDeriver(new Deriver("语句成分", new String[]{"赋值"}));
         grammar.addDeriver(new Deriver("语句成分", new String[]{"函数"}));
 
-        grammar.addDeriver(new Deriver("顺序", new String[]{"return", "_AC_pushMayRetValFlag", "bool", "_AC_reciveReturnVal", ";"}));
-        // todo 返回值文法?  1. void的return? 2. return表达式 3. return常数?
+
+        //函数返回值
+        grammar.addDeriver(new Deriver("顺序", new String[]{"return", "_AC_pushMayRetValFlag", "RET_BOOL"}));
+
+        grammar.addDeriver(new Deriver("RET_BOOL",
+                new String[]{"_AC_pushEmptyRetValFlag", "_AC_reciveReturnVal", ";"}));
+        grammar.addDeriver(new Deriver("RET_BOOL", new String[]{"bool", "_AC_reciveReturnVal", ";"}));
+
+
 
         grammar.addDeriver(new Deriver("循环",
                 new String[]{
                         "while", "_AC_addWhileStartQT", "(", "bool", ")", "_AC_checkWhileDo",
-                        "{", "_AC_stepIntoBlock", "复合语句", "}", "_AC_stepOutBlock", "_AC_addWhileEndQT"}));
+                        "{", "_AC_stepIntoBlock", "proc", "}", "_AC_stepOutBlock", "_AC_addWhileEndQT"}));
         grammar.addDeriver(new Deriver("条件",
                 new String[]{
                         "if", "(", "bool", ")", "_AC_addIfStartQt",
-                        "{", "_AC_stepIntoBlock", "复合语句", "}",
+                        "{", "_AC_stepIntoBlock", "proc", "}",
                         "_AC_stepOutBlock", "条件其他", "_AC_addIfElseEndQt"}));
 
         grammar.addDeriver(new Deriver("条件其他",
                 new String[]{"else", "_AC_addElseStartQt",
-                        "{", "_AC_stepIntoBlock", "复合语句", "}", "_AC_stepOutBlock"}));
+                        "{", "_AC_stepIntoBlock", "proc", "}", "_AC_stepOutBlock"}));
         grammar.addDeriver(new Deriver("条件其他", new String[]{}));
 
 
+        // 只返回单个常数和变量时
+        grammar.addDeriver(new Deriver("值", new String[]{"I", "_AC_PUSH", "值成分"}));
+        grammar.addDeriver(new Deriver("值", new String[]{"常量"}));
+
         grammar.addDeriver(new Deriver("值成分", new String[]{"函数"}));
         grammar.addDeriver(new Deriver("值成分", new String[]{"[", "非负整数", "]", "_AC_afterArray"}));
-        //TODO 结构体成员访问嵌套
-        grammar.addDeriver(new Deriver("值成分", new String[]{".", "I", "_AC_PUSH"}));
+        grammar.addDeriver(new Deriver("值成分", new String[]{".", "I", "_AC_PUSH", "_AC_afterStruct"}));
         grammar.addDeriver(new Deriver("值成分", new String[]{}));
-        // 只返回单个常数和变量时
-        grammar.addDeriver(new Deriver("值", new String[]{"I","_AC_PUSH", "值成分"}));
-        grammar.addDeriver(new Deriver("值", new String[]{"常量"}));
-        grammar.addDeriver(new Deriver("数组下标", new String[]{"[", "bool", "]", "_AC_afterArray"}));
-        grammar.addDeriver(new Deriver("数组下标", new String[]{}));
+
+
+        grammar.addDeriver(new Deriver("寻址", new String[]{"[", "bool", "]", "_AC_afterArray"}));
+        grammar.addDeriver(new Deriver("寻址", new String[]{".", "I", "_AC_PUSH", "_AC_afterStruct"}));
+        grammar.addDeriver(new Deriver("寻址", new String[]{}));
+
         grammar.addDeriver(new Deriver("非负整数", new String[]{"const int", "_AC_PUSH"}));
         grammar.addDeriver(new Deriver("非负整数", new String[]{"I", "_AC_PUSH"}));
-        grammar.addDeriver(new Deriver("赋值", new String[]{"数组下标", "=", "bool", "_AC_afterAssign"}));
+        grammar.addDeriver(new Deriver("赋值", new String[]{"寻址", "=", "bool", "_AC_afterAssign"}));
         grammar.addDeriver(new Deriver("常量", new String[]{"const int", "_AC_PUSH"}));
         grammar.addDeriver(new Deriver("常量", new String[]{"const double", "_AC_PUSH"}));
         grammar.addDeriver(new Deriver("常量", new String[]{"const char", "_AC_PUSH"}));
-        grammar.addDeriver(new Deriver("函数", new String[]{"(", "_AC_funcParamStartFlag", "值列表"
+        grammar.addDeriver(new Deriver("函数", new String[]{"_AC_receiveCallingFuncName", "(", "_AC_funcParamStartFlag", "值列表"
                 , ")", "_AC_startFuncCalling"}));
         // 到达这一步函数 函数名已经传入  可以push进参数进行传参
         grammar.addDeriver(new Deriver("值列表", new String[]{"值", "值列表1"}));
@@ -177,6 +197,7 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("值列表1", new String[]{",", "值", "值列表1"}));
         grammar.addDeriver(new Deriver("值列表1", new String[]{}));
         //表达式文法
+
         grammar.addDeriver(new Deriver("bool", new String[]{"join", "BOOL"}));
         grammar.addDeriver(new Deriver("BOOL", new String[]{"||", "_AC_PUSH", "join","_AC_afterDual", "BOOL"}));
         grammar.addDeriver(new Deriver("BOOL", new String[]{}));
