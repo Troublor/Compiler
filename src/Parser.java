@@ -392,7 +392,7 @@ public class Parser extends Lang{
 
     /**
      * 获取最后生成的四元式
-     * @return
+     * @return 所有的四元式
      */
     public ArrayList<QT> getAllQTs() {
         return translator.getQTs();

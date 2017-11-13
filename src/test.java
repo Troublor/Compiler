@@ -37,9 +37,16 @@ public class test {
             if (r) {
                 Optimizer optimizer = new Optimizer(parser.getAllQTs());
                 ArrayList<QT> qts = optimizer.optimize();
+                System.out
+                    .println("\n\n优化后的所有四元式:\n" + parser.getAllQTs().size() + " => " + qts.size());
+                System.out.println(String.format("%-11s%-25s%-25s%-25s", "oprt:", "left_oprd:", "right_oprd:", "result_target:"));
+                for (QT qt : qts) {
+                    System.out.println(qt);
+                }
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
+            e.printStackTrace();
         }
     }
 

@@ -18,12 +18,16 @@ class DAG {
         this.qts = qts;
     }
 
+    public ArrayList<QT> optimite() throws QtException{
+        generateDAG();
+        return generateQts();
+    }
 
     /**
      *
      * 根据优化了的DAG图重组四元式
      */
-    public ArrayList<QT> generateQts() {
+    private ArrayList<QT> generateQts() {
         ArrayList<QT> result = new ArrayList<>();
         for (Node node : nodes) {
             if (node.getOperator() == null) {
@@ -64,19 +68,22 @@ class DAG {
             if (qt.getOperator().equals("=")) {
                 //1. 若是赋值四元式: A=B  (=, B, _, A)
                 // 查找之前定义的A（作为附加标号的）并删除， 如果是主标记，则不删除
+                // 算法改进：赋值不能超越当前最新定义节点，如：a = 1；查找1的节点的时候如果碰到a的定义就不再继续查找
                 ArrayList<Node> find_nodes = this.getAllDefineNodesAsExtraLabel(qt.getResult());
                 for (Node node : find_nodes) {
                     node.getExtra_labels().remove(qt.getResult());
                 }
+                //算法改进:赋值不能超越当前最新定义节点，如：a = 1；查找1的节点的时候如果碰到a的定义就不再继续查找
                 Node defined = this.getFirstDefindNode(qt.getOperand_left());
-                if (defined == null) {
+                Node newest_define = this.getFirstDefindNode(qt.getResult());
+                if (defined == null || (newest_define != null && nodes.indexOf(newest_define) > nodes
+                    .indexOf(defined))) {
                     //如果赋值右边没有定义
                     defined = new Node(qt.getOperand_left(), null, null,
                         null);
                     nodes.add(defined);
                 }
-                defined.getExtra_labels().add(qt.getResult());
-                defined.formatLabels();
+                defined.addLabel(qt.getResult());
 
             } else if (QT.isConstVariable(qt.getOperand_left()) && (qt.getOperand_right().equals("_")
                 || QT.isConstVariable(qt.getOperand_right()))) {
@@ -96,8 +103,7 @@ class DAG {
                     defined = new Node(const_result, null, null, null);
                     nodes.add(defined);
                 }
-                defined.getExtra_labels().add(qt.getResult());
-                defined.formatLabels();
+                defined.addLabel(qt.getResult());
 
             } else {
                 //查找之前定义的A（作为附加标号的）并删除， 如果是主标记，则不删除
@@ -129,8 +135,7 @@ class DAG {
                         right_node);
                     nodes.add(new_node);
                 } else {
-                    public_expression.getExtra_labels().add(qt.getResult());
-                    public_expression.formatLabels();
+                    public_expression.addLabel(qt.getResult());
                 }
 
             }
@@ -183,32 +188,20 @@ class DAG {
     @Nullable
     private Node getExpression(QT qt) {
         Node node;
+        Node left_node = getFirstDefindNode(qt.getOperand_left());
+        if (left_node == null) {
+            return null;
+        }
+        Node right_node = getFirstDefindNode(qt.getOperand_right());
+        if (right_node == null) {
+            return null;
+        }
         for (int i = nodes.size() - 1; i >= 0; i--) {
             node = nodes.get(i);
             if (node.getOperator() == null) {
                 continue;
             }
-            if (node.getOperator().equals(qt.getOperator())) {
-                //先看左子节点是否匹配
-                if (node.getLeft_child() == null) {
-                    if (!qt.getOperand_left().equals("_")) {
-                        continue;
-                    }
-                } else {
-                    if (!node.getLeft_child().containLabel(qt.getOperand_left())) {
-                        continue;
-                    }
-                }
-                //看右子节点是否匹配
-                if (node.getRight_child() == null) {
-                    if (!qt.getOperand_right().equals("_")) {
-                        continue;
-                    }
-                } else {
-                    if (!node.getRight_child().containLabel(qt.getOperand_right())) {
-                        continue;
-                    }
-                }
+            if (node.getLeft_child() == left_node && node.getRight_child() == right_node) {
                 return node;
             }
         }

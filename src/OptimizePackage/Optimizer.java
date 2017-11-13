@@ -11,7 +11,12 @@ public class Optimizer {
     public Optimizer(ArrayList<QT> qts) {
         origin_all_QTs = qts;
     }
-    public ArrayList<QT> optimize() {
+
+    /**
+     * 对所有的QT进行分析
+     * @return 分析完成了的QT
+     */
+    public ArrayList<QT> optimize() throws QtException{
         ArrayList<QT> result_QTs = new ArrayList<>();
         ArrayList<QT> cache = new ArrayList<>();
         ArrayList<QT> reference_QTs = new ArrayList<>();
@@ -19,8 +24,40 @@ public class Optimizer {
             if (!isArithmeticOperator(qt.getOperator())) {
                 if (!cache.isEmpty()) {
                     DAG dag = new DAG(cache);
-                    result_QTs.addAll(reference_QTs);
-                    result_QTs.addAll(dag.generateQts());
+                    cache = dag.optimite();
+                    QT qt1;
+                    for (int i = 0; i < cache.size(); i++) {
+                        qt1 = cache.get(i);
+                        if (qt1.getOperand_left() != null
+                            && qt1.getOperand_left().split("\\.").length == 4) {
+                            for (QT qt2 : reference_QTs) {
+                                if (qt2.getResult().equals(qt1.getOperand_left().split("\\.")[2])) {
+                                    cache.add(i, qt2);
+                                    i++;
+                                }
+                            }
+                        }
+                        if (qt1.getOperand_right() != null
+                            && qt1.getOperand_right().split("\\.").length == 4) {
+                            for (QT qt2 : reference_QTs) {
+                                if (qt2.getResult().equals(qt1.getOperand_right().split("\\.")[2])) {
+                                    cache.add(i, qt2);
+                                    i++;
+                                }
+                            }
+                        }
+                        if (qt1.getResult() != null
+                            && qt1.getResult().split("\\.").length == 4) {
+                            for (QT qt2 : reference_QTs) {
+                                if (qt2.getResult().equals(qt1.getResult().split("\\.")[2])) {
+                                    cache.add(i, qt2);
+                                    i++;
+                                }
+                            }
+                        }
+
+                    }
+                    result_QTs.addAll(cache);
                     cache.clear();
                     reference_QTs.clear();
                 }
@@ -43,9 +80,9 @@ public class Optimizer {
      */
     private static boolean isArithmeticOperator(String operator) {
         return operator.equals("+") || operator.equals("-") || operator.equals("*") || operator
-            .equals("/") || operator.equals(">") || operator.equals(">=") || operator.equals("<")
-            || operator.equals("<=") || operator.equals("==") || operator.equals("!=") || operator
-            .equals("!") || operator.equals("||") || operator.equals("&&") || operator
-            .equals("ref");
+            .equals("/") || operator.equals("=") || operator.equals(">") || operator.equals(">=")
+            || operator.equals("<") || operator.equals("<=") || operator.equals("==") || operator
+            .equals("!=") || operator.equals("!") || operator.equals("||") || operator.equals("&&")
+            || operator.equals("ref");
     }
 }
