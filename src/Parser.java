@@ -129,6 +129,7 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("复合语句", new String[]{}));
 
         grammar.addDeriver(new Deriver("顺序", new String[]{"I","_AC_PUSH" , "语句成分", ";"}));
+        // todo 在这个位置是函数调用
         grammar.addDeriver(new Deriver("语句成分", new String[]{"赋值"}));
         grammar.addDeriver(new Deriver("语句成分", new String[]{"函数"}));
 
@@ -155,6 +156,7 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("值成分", new String[]{"[", "非负整数", "]", "_AC_afterArray"}));
         grammar.addDeriver(new Deriver("值成分", new String[]{".", "I", "_AC_PUSH"}));
         grammar.addDeriver(new Deriver("值成分", new String[]{}));
+        // 只返回单个常数和变量时
         grammar.addDeriver(new Deriver("值", new String[]{"I","_AC_PUSH", "值成分"}));
         grammar.addDeriver(new Deriver("值", new String[]{"常量"}));
         grammar.addDeriver(new Deriver("数组下标", new String[]{"[", "bool", "]", "_AC_afterArray"}));
@@ -166,7 +168,7 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("常量", new String[]{"const double", "_AC_PUSH"}));
         grammar.addDeriver(new Deriver("常量", new String[]{"const char", "_AC_PUSH"}));
         grammar.addDeriver(new Deriver("函数", new String[]{"(", "值列表", ")"}));
-        //todo 调用函数的文法需要改动?
+        // 到达这一步函数 函数名已经传入  可以push进参数进行传参
         grammar.addDeriver(new Deriver("值列表", new String[]{"值", "值列表1"}));
         grammar.addDeriver(new Deriver("值列表", new String[]{}));
         grammar.addDeriver(new Deriver("值列表1", new String[]{",", "值", "值列表1"}));
