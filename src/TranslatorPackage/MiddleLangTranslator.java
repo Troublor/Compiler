@@ -1,6 +1,7 @@
 package TranslatorPackage;
 
 
+import MiddleDataUtilly.QT;
 import TranslatorPackage.TranslatorExceptions.OptNotSupportError;
 
 import TranslatorPackage.TranslatorExceptions.SemanticException;
@@ -21,9 +22,9 @@ import java.util.Stack;
  */
 
 public class MiddleLangTranslator {
-    Stack<String> semanticStack = new Stack<String>();
-    ArrayList<QT> QTs = new ArrayList<QT>();
-    SymbolTableManager symbolTableManager = new SymbolTableManager();
+    private Stack<String> semanticStack = new Stack<String>();
+    private ArrayList<QT> QTs = new ArrayList<QT>();
+    private SymbolTableManager symbolTableManager = new SymbolTableManager();
 
 
     public void push(String name) {
@@ -218,8 +219,8 @@ public class MiddleLangTranslator {
 
             // . 是正则的通配符  得用 \\. 进行转义
 
-            String id  = item;
-            if (parts.length !=  0) {
+            String id = item;
+            if (parts.length != 0) {
                 id = parts[0];
             }
             String type = symbolTableManager.lookupVariableType(id);
@@ -229,8 +230,7 @@ public class MiddleLangTranslator {
                 if (type.startsWith("array")) {
                     if (isInteger(parts[i]) || symbolTableManager.lookupVariableType(parts[i]).equals("int")) {
                         type = type.split("_")[1];
-                    }
-                    else throw new SemanticException("index should be int variable or const int");
+                    } else throw new SemanticException("index should be int variable or const int");
                 }
                 // struct field
                 else {
@@ -271,7 +271,7 @@ public class MiddleLangTranslator {
             if (isBasicType(lookUpType(item))) {
                 // is not int, char, double variable, is array element or struct like a.0
                 if (item.split("\\.").length != 1) {
-                    String [] parts = item.split("\\.");
+                    String[] parts = item.split("\\.");
                     assert item.split("\\.").length == 2;
                     return symbolTableManager.accessVariableAndField(parts[0], parts[1]);
                 }
@@ -294,13 +294,121 @@ public class MiddleLangTranslator {
 
     }
 
+    // ========================定义函数=======================
+    private String curr_define_func_name, curr_define_func_ret_type;
+    //              要定义的函数名         该函数的返回值
+    private boolean is_curr_func_has_ret;
+    //              这个函数是否需要返回值 void?
+
+
+    //压栈顺序 函数返回值类型 , 函数名
+    public void preDefineFuncName() throws SemanticException {
+        try {
+            String func_name = semanticStack.pop();
+            String func_type = semanticStack.pop();
+            symbolTableManager.definefunction(func_name, func_type, QTs.size());
+            curr_define_func_name = func_name;
+            if (func_type.equals("void"))
+                is_curr_func_has_ret = true;
+            curr_define_func_ret_type = func_type;
+        } catch (Exception ee) {
+            printErrLog(ee);
+        }
+    }
+
+    public void pushFunctionDefineParamsStart() {
+        semanticStack.push("flag_func_define_start");
+    }
+
+
+    public void pushArrayTypeParam() {
+        semanticStack.push("flag_array_type_param");
+    }
+
+    /**
+     * pop 顺序 param_name, (array_type_flag ,) param_type_name
+     */
+    public void defineStashedParams() {
+        try {
+            String param_name, param_type;
+            while (!semanticStack.peek().equals("flag_func_define_start")) {
+                semanticStack.pop();
+                param_name = semanticStack.pop();
+                if (semanticStack.peek().equals("flag_array_type_param")) {
+                    semanticStack.pop();
+                    param_type = "array_" + semanticStack.pop() + ".";
+                } else {
+                    param_type = semanticStack.pop();
+                }
+                symbolTableManager.addParamOnfunc(curr_define_func_name, param_name, param_type);
+            }
+            semanticStack.pop();
+        } catch (Exception ee) {
+            printErrLog(ee);
+        }
+    }
+
+    public void clearCurrDefineFunc() {
+        try {
+            if (!is_curr_func_has_ret) {
+                String err_log = String.format("func: %s doesn't give valid return value, expect return a %s "
+                        , curr_define_func_name, curr_define_func_ret_type);
+                throw new SemanticException(err_log);
+            } else {
+                curr_define_func_name = null;
+                curr_define_func_ret_type = null;
+            }
+        } catch (Exception ee) {
+            printErrLog(ee);
+        }
+    }
+
+
+    public void pushMayRetValFlag() {
+        semanticStack.push("flag_may_ret_val");
+    }
+
+    public void pushEmptyRetValFlag() {
+        if (semanticStack.peek().equals("flag_may_ret_val")) {
+            semanticStack.pop();
+            semanticStack.push("flag_empty_ret_val");
+        }
+
+    }
+
+
+    // todo 要修改
+    public void reciveReturnVal() {
+        try {
+            if (semanticStack.peek().equals("flag_empty_ret_val")) {
+                if (curr_define_func_ret_type.equals("void")) {
+                    semanticStack.pop();
+                }
+            } else {
+                //如果返回值是一个算式 可以通过最后一条四元式获取返回值
+                QT last_qt = QTs.get(QTs.size() - 1);
+                String ret_val = last_qt.getResult();
+                is_curr_func_has_ret = true;
+                QTs.add(new QT("ret", ret_val, "_", "_"));
+            }
+        } catch (Exception ee) {
+            printErrLog(ee);
+        }
+    }
+    //  ====================调用函数=============================
+
+
+    /*
+       I(函数名) ,_AC_push ,_AC_缓存函数名 pop
+      ( 参数表 -->  每个参数 _ac_push  )  _AC_取函数信息 ,检查参数列表
+       构造传参四元式 (跨表赋值)  call 函数入口标号 四元式
+     */
+
+
+    //  =================定义变量=================================
 
     public void pushFlagDefineVariableStart() {
         semanticStack.push("flag_defineVarStart");
-    }
-
-    public void pushToDefineVariable(String variable_id) {
-        semanticStack.push(variable_id);
     }
 
     public void checkTypeExist() {
@@ -309,9 +417,9 @@ public class MiddleLangTranslator {
             symbolTableManager.lookupType(varType);
         } catch (Exception ee) {
             printErrLog(ee);
-            System.exit(-1);
         }
     }
+
 
     public void defineArrayType() {
         try {
@@ -388,6 +496,7 @@ public class MiddleLangTranslator {
     private void printErrLog(Exception ee) {
         ee.printStackTrace();
         System.out.println("exception occurred: " + ee);
+        System.exit(-1);
     }
 
 

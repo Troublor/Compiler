@@ -1,11 +1,9 @@
 
-func main() int {
+func void main() {
   var c double;
-  var array [10]char;
+  var array [10] int;
   var a,b int;
   array[b] = a;
-  var array [10]int;
-  var a,b int;
   a = 1;
   b = 5;
   c = 5.5;
@@ -17,5 +15,29 @@ func main() int {
     while(a+3>c){
       array[0] = a;
     }
+  }
+}
+
+
+func int hhhhh() {
+  var k double;
+  var brray [10] int;
+  var h,b int;
+  brray[b] = h;
+  h = 1;
+  b = 5;
+  k = 5.5;
+  while(h+3>k){
+     brray[0] = h;
+     while(b+2/5 > 5){
+        k = k*(h+b-(b*5)*55)*5-b+(h+5);
+     }
+     h = h +1 ;
+     return h+b;
+  }
+  brray[brray[0]] = h;
+  if(h>k){
+    b = (h + k)/h;
+    h = h + b;
   }
 }

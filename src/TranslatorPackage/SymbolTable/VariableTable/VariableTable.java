@@ -46,17 +46,17 @@ public class VariableTable{
      *
      * @param type    变量类型 变量类型的具体信息由manager查找 表项里以string保存即可
      * @param name_id 唯一标示名
-     * @param offset  变量类型的长度
+     * @param var_len  变量类型的长度
      */
     //对符号表添加变量 添加成功返回新变量的表项
-    public VariableTableRow addVariable(String type, String name_id, int offset, int table_id) throws SemanticException {
+    public VariableTableRow addVariable(String type, String name_id, int var_len) throws SemanticException {
         //查重
         if (variables.get(name_id)!= null)
             throw new SemanticException("variable: " + name_id + " has already existed");
         //type 的合法性已由Manager的typetable查过了 这里直接添加就ok
         VariableTableRow newVariable = new VariableTableRow(name_id, type, currLen, table_id);
         variables.put(name_id, newVariable);
-        currLen += offset;
+        currLen += var_len;
         return newVariable;
     }
 
@@ -74,6 +74,10 @@ public class VariableTable{
 
     public VariableTable getParent() {
         return parent;
+    }
+
+    public int getStartOffset() {
+        return startOffset;
     }
 
     protected void setStartOffset(int offset) {

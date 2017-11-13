@@ -1,6 +1,6 @@
 package OptimizePackage;
 
-import TranslatorPackage.QT;
+import MiddleDataUtilly.QT;
 import java.util.ArrayList;
 import org.jetbrains.annotations.Nullable;
 
