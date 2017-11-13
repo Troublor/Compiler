@@ -1,4 +1,5 @@
 import DFA.LexicalErrorException;
+import MiddleDataUtilly.Token;
 import TranslatorPackage.MiddleLangTranslator;
 
 import java.lang.reflect.Method;
@@ -44,7 +45,7 @@ public class Parser extends Lang{
 
 //    private Stack<Token> SEM;
 
-//    private ArrayList<TranslatorPackage.QT> QT;
+//    private ArrayList<QT> QT;
 
     /**
      * 输入表达式,当前正在处理的就是input的最后一个
@@ -80,8 +81,7 @@ public class Parser extends Lang{
 
         grammar.setStartVN("P");
 
-        //TODO
-        //需要修改，以支持结构体多层访问与数组多层访问
+        //TODO 需要修改，以支持结构体多层访问与数组多层访问
 
         grammar.addDeriver(new Deriver("P", new String[]{"S", "F"}));
         grammar.addDeriver(new Deriver("S", new String[]{"structure", "S"}));
@@ -90,15 +90,24 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("F", new String[]{}));
         grammar.addDeriver(new Deriver("structure", new String[]{"struct", "I", "{", "L", "}"}));
         grammar.addDeriver(new Deriver("function",
-                new String[]{"func", "I", "(", "形参列表", ")", "类型", "_AC_POP", "{", "proc", "}"}));
-        // todo: 解决函数返回值没有pop的问题
-        grammar.addDeriver(new Deriver("形参列表", new String[]{"形参", "形参列表1"}));
+                //todo  为什么类型放在I后面不行?
+                new String[]{"func", "I", "_AC_PUSH", "I", "_AC_PUSH", "(", "_AC_preDefineFuncName",
+                        "_AC_stepIntoBlock", "_AC_pushFunctionDefineParamsStart",
+                        "形参列表", ")", "_AC_defineStashedParams",
+                        "{", "proc", "}", "_AC_stepOutBlock", "_AC_clearCurrDefineFunc"}));
+
         grammar.addDeriver(new Deriver("形参列表", new String[]{}));
+
+        grammar.addDeriver(new Deriver("形参列表", new String[]{"形参", "形参列表1"}));
         grammar.addDeriver(new Deriver("形参列表1", new String[]{",", "形参", "形参列表1"}));
         grammar.addDeriver(new Deriver("形参列表1", new String[]{}));
-        grammar.addDeriver(new Deriver("形参", new String[]{"I", "形参类型"}));
-        grammar.addDeriver(new Deriver("形参类型", new String[]{"I"}));
-        grammar.addDeriver(new Deriver("形参类型", new String[]{"[", "]", "I"}));
+
+        grammar.addDeriver(new Deriver("形参", new String[]{"I", "_AC_PUSH", "形参类型"}));
+
+        grammar.addDeriver(new Deriver("形参类型", new String[]{"I", "_AC_PUSH",}));
+        grammar.addDeriver(new Deriver("形参类型", new String[]{"[", "]", "I", "_AC_PUSH", "_AC_pushArrayTypeParamFlag"}));
+
+
         grammar.addDeriver(new Deriver("proc", new String[]{"L", "复合语句"}));
         grammar.addDeriver(new Deriver("L", new String[]{"声明语句", ";", "L"}));
         grammar.addDeriver(new Deriver("L", new String[]{}));
@@ -122,17 +131,19 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("顺序", new String[]{"I","_AC_PUSH" , "语句成分", ";"}));
         grammar.addDeriver(new Deriver("语句成分", new String[]{"赋值"}));
         grammar.addDeriver(new Deriver("语句成分", new String[]{"函数"}));
-        grammar.addDeriver(new Deriver("顺序", new String[]{"return", "bool", ";"}));
+
+        grammar.addDeriver(new Deriver("顺序", new String[]{"return", "_AC_pushMayRetValFlag", "bool", "_AC_reciveReturnVal", ";"}));
+        // todo 返回值文法?  1. void的return? 2. return表达式 3. return常数?
 
         grammar.addDeriver(new Deriver("循环",
-                new String[]{                                   //todo while's fake jump
+                new String[]{
                         "while", "_AC_addWhileStartQT", "(", "bool", ")", "_AC_checkWhileDo",
                         "{", "_AC_stepIntoBlock", "复合语句", "}", "_AC_stepOutBlock", "_AC_addWhileEndQT"}));
         grammar.addDeriver(new Deriver("条件",
                 new String[]{
                         "if", "(", "bool", ")", "_AC_addIfStartQt",
-                        "{", "_AC_stepIntoBlock", "复合语句", "}"
-                        , "_AC_stepOutBlock", "条件其他", "_AC_addIfElseEndQt"}));
+                        "{", "_AC_stepIntoBlock", "复合语句", "}",
+                        "_AC_stepOutBlock", "条件其他", "_AC_addIfElseEndQt"}));
 
         grammar.addDeriver(new Deriver("条件其他",
                 new String[]{"else", "_AC_addElseStartQt",
@@ -155,6 +166,7 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("常量", new String[]{"const double", "_AC_PUSH"}));
         grammar.addDeriver(new Deriver("常量", new String[]{"const char", "_AC_PUSH"}));
         grammar.addDeriver(new Deriver("函数", new String[]{"(", "值列表", ")"}));
+        //todo 调用函数的文法需要改动?
         grammar.addDeriver(new Deriver("值列表", new String[]{"值", "值列表1"}));
         grammar.addDeriver(new Deriver("值列表", new String[]{}));
         grammar.addDeriver(new Deriver("值列表1", new String[]{",", "值", "值列表1"}));

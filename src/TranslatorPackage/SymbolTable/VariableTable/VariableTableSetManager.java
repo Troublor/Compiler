@@ -74,7 +74,7 @@ public class VariableTableSetManager {
         if (typeRes == null)
             throw new SemanticException("type : " + type_name + "has not declared");
 
-        currActiveTable.addVariable(type_name, name_id, typeRes.getLength(), currActiveTable.getTable_id());
+        currActiveTable.addVariable(type_name, name_id, typeRes.getLength());
     }
 
 
@@ -108,6 +108,7 @@ public class VariableTableSetManager {
     }
 
 
-
-
+    public VariableTable getCurrActiveTable() {
+        return currActiveTable;
+    }
 }

@@ -18,7 +18,7 @@ public class TempVariableTable extends VariableTable {
     //对原来的接口重新封装了 只需提供类型就够了
     public VariableTableRow addTempVariable(String type_name) throws SemanticException {
         return super.
-                addVariable(type_name, "$t" + tmpCount++, getTableLength(), SymbolTableManager.TEMP_VAR_TABLE_ID);
+                addVariable(type_name, "$t" + tmpCount++, getTableLength());
     }
 
     public void setStartOffset(int offset) {

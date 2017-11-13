@@ -3,8 +3,9 @@
  */
 
 import DFA.*;
+import MiddleDataUtilly.Token;
+
 import java.util.ArrayList;
-import java.util.regex.Pattern;
 
 /**
  * 词法分析器
