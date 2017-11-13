@@ -4,9 +4,9 @@ import MiddleDataUtilly.QT;
 import java.util.HashSet;
 
 /**
- * DAG图中的一个节点的类
+ * DAG图中的一个节点的类（只在package内可用)
  */
-public class Node {
+class Node {
     private String main_label;
     private HashSet<String> extra_labels;
     private String operator;

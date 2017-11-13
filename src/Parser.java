@@ -1,4 +1,5 @@
 import DFA.LexicalErrorException;
+import MiddleDataUtilly.QT;
 import MiddleDataUtilly.Token;
 import TranslatorPackage.MiddleLangTranslator;
 
@@ -389,6 +390,13 @@ public class Parser extends Lang{
         translator.push(input_item);
     }
 
+    /**
+     * 获取最后生成的四元式
+     * @return
+     */
+    public ArrayList<QT> getAllQTs() {
+        return translator.getQTs();
+    }
 
 //    private void PUSH() {
 //        SEM.push(this.last());

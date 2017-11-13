@@ -546,6 +546,9 @@ public class MiddleLangTranslator {
         }
     }
 
+    public ArrayList<QT> getQTs() {
+        return QTs;
+    }
 
     // pop 目前只是为了解决函数定义返回值一直在语义栈里的问题
     public void POP() {

@@ -2,14 +2,13 @@ package TranslatorPackage.SymbolTable;
 
 import TranslatorPackage.SymbolTable.FunctionTable.FunctionTable;
 import TranslatorPackage.SymbolTable.FunctionTable.FunctionTableRow;
-import TranslatorPackage.SymbolTable.TypeTable.FieldTable;
 import TranslatorPackage.SymbolTable.TypeTable.FieldTableRow;
 import TranslatorPackage.SymbolTable.TypeTable.TypeTable;
 import TranslatorPackage.SymbolTable.TypeTable.TypeTableRow;
 import TranslatorPackage.SymbolTable.VariableTable.VariableTableRow;
 import TranslatorPackage.SymbolTable.VariableTable.VariableTableSetManager;
 import TranslatorPackage.TranslatorExceptions.SemanticException;
-import org.graalvm.compiler.lir.asm.CompilationResultBuilder;
+
 
 import java.util.ArrayList;
 import java.util.List;

@@ -58,7 +58,7 @@ public class QT {
      * @return boolean
      */
     public static boolean isTemporaryVariable(String s) {
-        return s.charAt(0) == '$';
+        return s.split("\\.")[1].charAt(0) == '$';
     }
 
     /**
