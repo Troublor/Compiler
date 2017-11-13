@@ -91,8 +91,8 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("structure", new String[]{"struct", "I", "{", "L", "}"}));
         grammar.addDeriver(new Deriver("function",
                 //todo  为什么类型放在I后面不行?
-                new String[]{"func", "I", "_AC_PUSH", "I", "_AC_PUSH", "(", "_AC_preDefineFuncName",
-                        "_AC_stepIntoBlock", "_AC_pushFunctionDefineParamsStart",
+                new String[]{"func", "I", "_AC_PUSH", "I", "_AC_PUSH", "(", "_AC_stepIntoBlock",
+                        "_AC_preDefineFuncName", "_AC_pushFunctionDefineParamsStart",
                         "形参列表", ")", "_AC_defineStashedParams",
                         "{", "proc", "}", "_AC_stepOutBlock", "_AC_clearCurrDefineFunc"}));
 
