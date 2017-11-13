@@ -1,6 +1,5 @@
 import DFA.LexicalErrorException;
-import TranslatorPackage.QT;
-import TranslatorPackage.Translator;
+import TranslatorPackage.MiddleLangTranslator;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -41,7 +40,7 @@ public class Parser extends Lang{
     private Stack<Token> analyseStack;
 
     // 语义分析
-    private Translator translator;
+    private MiddleLangTranslator translator;
 
 //    private Stack<Token> SEM;
 
@@ -60,7 +59,7 @@ public class Parser extends Lang{
         input = new ArrayList<>();
         analyseTable = new HashMap<>();
         analyseStack = new Stack<>();
-        translator = new Translator();
+        translator = new MiddleLangTranslator();
 //        SEM = new Stack<>();
 //        QT = new ArrayList<QT>();
 

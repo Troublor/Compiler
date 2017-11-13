@@ -5,6 +5,7 @@ import TranslatorPackage.SymbolTable.TypeTable.TypeTable;
 import TranslatorPackage.SymbolTable.TypeTable.TypeTableRow;
 import TranslatorPackage.SymbolTable.VariableTable.VariableTableRow;
 import TranslatorPackage.SymbolTable.VariableTable.VariableTableSetManager;
+import TranslatorPackage.TranslatorExceptions.SemanticException;
 
 public class SymbolTableManager {
 
@@ -77,7 +78,9 @@ public class SymbolTableManager {
 
         int type_index = name_id.lastIndexOf(".");
         String new_name_id, new_type_name, curr_type_name;
+        //第一次进入该方法访问域的变量
         if (type_index == -1) {
+            //如果时临时变量 进入临时变量表查找
             if (name_id.charAt(0) == '$')
                 result = variableTableSetManager.accessVariableByTableId(name_id, TEMP_VAR_TABLE_ID);
             else
@@ -91,11 +94,32 @@ public class SymbolTableManager {
         } else {
             new_name_id = name_id.substring(0, type_index);
             curr_type_name = lookupVariableType(name_id);
+            //取下上一次访问域时的类型名
+            //根据这个类型名进行下一个域的访问
         }
         TypeTableRow type_info = typeTable.getTypeInfo(curr_type_name);
-        FieldTableRow field_info = type_info.getField(field_name);
+
+        try {
+            FieldTableRow field_info = type_info.getField(field_name);
+            new_type_name = field_info.getTypeName();
+        } catch (SemanticException ee) {
+            //域访问异常时
+            //必须是 以int型变作为下标访问数组 才合法
+            if (curr_type_name.split("_")[0].equals("array")) {
+                //如果类型不是数组 肯定是访问了未定义的域
+                if (ee.getMessage().split(":")[0].equals("no such field")) {
+                    //如果是当前作用域的变量 直接可以作为下标
+                    new_type_name = this.lookupVariableType(field_name);
+                    if (!new_type_name.equals("int"))
+                        //如果该变量不为int 而作为下标则不合法
+                        throw new SemanticException("un_int var cannot be array index");
+                } else
+                    new_type_name = null;
+            } else
+                throw ee;
+        }
+        //重新生成完成当前访问的id名
         new_name_id += "." + field_name;
-        new_type_name = field_info.getTypeName();
         //临时变量的标号id是 -1  在生成完四元式之后和普通的用户定义变量是一样的形式
         // 只不过表id是-1 说明是临时变量表里的东西
         return new_name_id + "." + new_type_name;
@@ -110,7 +134,7 @@ public class SymbolTableManager {
             format_ = new String[]{name_id};
             VariableTableRow result = variableTableSetManager.requestVariable(format_[0]);
             if (result == null)
-                throw new SemanticException("variable: " + name_id + "has not declare");
+                throw new SemanticException("variable: " + name_id + " has not declare");
             //该变量之前从未进入符号表查询 没有格式化的 名.域.类型 结构
             // 采用从符号表内查询的方法
             return result.getTypeName();
@@ -124,6 +148,13 @@ public class SymbolTableManager {
     public String addTempVariable(String type_name) throws SemanticException {
         VariableTableRow res = variableTableSetManager.addTempVariable(type_name);
         return res.getName_id();
+    }
+
+
+    public boolean isVariableExist(String var_name) {
+        if (variableTableSetManager.requestVariable(var_name) == null)
+            return false;
+        return true;
     }
 
 

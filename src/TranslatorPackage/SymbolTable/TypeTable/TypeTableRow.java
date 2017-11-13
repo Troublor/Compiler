@@ -1,7 +1,7 @@
 package TranslatorPackage.SymbolTable.TypeTable;
 
 
-import TranslatorPackage.SymbolTable.SemanticException;
+import TranslatorPackage.TranslatorExceptions.SemanticException;
 
 public class TypeTableRow {
     private String name;

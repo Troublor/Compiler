@@ -4,3 +4,5 @@ src/META-INFO/
 .idea/workspace.xml
 
 .idea/kotlinc.xml
+/src/OptimizePackage/test.java
+!/src/OptimizePackage/test.java

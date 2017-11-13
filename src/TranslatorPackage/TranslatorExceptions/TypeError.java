@@ -1,4 +1,4 @@
-package TranslatorPackage.SymbolTable;
+package TranslatorPackage.TranslatorExceptions;
 
 
 public class TypeError extends Exception {
