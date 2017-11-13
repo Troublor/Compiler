@@ -2,6 +2,8 @@ package TranslatorPackage;
 
 
 import MiddleDataUtilly.QT;
+import TranslatorPackage.SymbolTable.VariableTable.VariableTable;
+import TranslatorPackage.SymbolTable.VariableTable.VariableTableRow;
 import TranslatorPackage.TranslatorExceptions.OptNotSupportError;
 
 import TranslatorPackage.TranslatorExceptions.SemanticException;
@@ -11,6 +13,7 @@ import TranslatorPackage.TranslatorExceptions.TypeError;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import java.util.List;
 import java.util.Stack;
 
 
@@ -404,7 +407,41 @@ public class MiddleLangTranslator {
        构造传参四元式 (跨表赋值)  call 函数入口标号 四元式
      */
 
+    private String calling_func_name;
 
+    public void receiveCallingFuncName() {
+        try {
+            calling_func_name = semanticStack.pop();
+            symbolTableManager.checkFuncName(calling_func_name);
+        } catch (Exception ee) {
+            printErrLog(ee);
+        }
+    }
+
+    public void funcParamStartFlag() {
+        semanticStack.push("flag_start_trans_params");
+    }
+
+    public void startFuncCalling() {
+        try {
+            List<String> param_type_list = new ArrayList<>();
+            List<VariableTableRow> real_vars = new ArrayList<>();
+            while (!semanticStack.peek().equals("flag_start_trans_params")) {
+                String curr_real_param = semanticStack.pop();
+                //实参
+                param_type_list.add("");
+                if (symbolTableManager.isBasicType("")) {
+                    symbolTableManager.accessVariableAndField("", "value");
+                } else {
+                }
+            }
+            semanticStack.pop();
+            List<String> params = symbolTableManager.checkFuncParams(calling_func_name, param_type_list);
+        } catch (Exception ee) {
+            printErrLog(ee);
+        }
+
+    }
     //  =================定义变量=================================
 
     public void pushFlagDefineVariableStart() {
