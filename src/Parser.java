@@ -154,6 +154,7 @@ public class Parser extends Lang{
 
         grammar.addDeriver(new Deriver("值成分", new String[]{"函数"}));
         grammar.addDeriver(new Deriver("值成分", new String[]{"[", "非负整数", "]", "_AC_afterArray"}));
+        //TODO 结构体成员访问嵌套
         grammar.addDeriver(new Deriver("值成分", new String[]{".", "I", "_AC_PUSH"}));
         grammar.addDeriver(new Deriver("值成分", new String[]{}));
         // 只返回单个常数和变量时
