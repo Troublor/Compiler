@@ -19,8 +19,7 @@ func void main() {
 }
 
 
-func int hhhhh() {
-  var k double;
+func int hhhhha(int jhgjh,double k) {
   var brray [10] int;
   var h,b int;
   brray[b] = h;

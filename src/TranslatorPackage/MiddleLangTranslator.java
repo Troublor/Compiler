@@ -99,7 +99,7 @@ public class MiddleLangTranslator {
             if (index_item.contains(".")) {
                 // 对 a[a[10]]这种情况，本来会生成a.a.10, 现在先生成 t = a.10,  然后生成a.t，防止多层嵌套
                 String tmp = symbolTableManager.addTempVariable(index_type);
-                QTs.add(new QT("=", index_item, "_", tmp));
+                QTs.add(new QT("ref", index_item, "_", tmp));
                 index_item = tmp;
             }
             // todo:如果是下标是变量的话 例子：b[a[3]]  b[a]
@@ -314,6 +314,7 @@ public class MiddleLangTranslator {
             if (func_type.equals("void"))
                 is_curr_func_has_ret = true;
             curr_define_func_ret_type = func_type;
+            QTs.add(new QT("func_label", func_name, "_", "_"));
         } catch (Exception ee) {
             printErrLog(ee);
         }
@@ -335,7 +336,6 @@ public class MiddleLangTranslator {
         try {
             String param_name, param_type;
             while (!semanticStack.peek().equals("flag_func_define_start")) {
-                semanticStack.pop();
                 param_name = semanticStack.pop();
                 if (semanticStack.peek().equals("flag_array_type_param")) {
                     semanticStack.pop();
@@ -425,18 +425,21 @@ public class MiddleLangTranslator {
     public void startFuncCalling() {
         try {
             List<String> param_type_list = new ArrayList<>();
-            List<VariableTableRow> real_vars = new ArrayList<>();
+            List<String> real_vars = new ArrayList<>();
             while (!semanticStack.peek().equals("flag_start_trans_params")) {
-                String curr_real_param = semanticStack.pop();
-                //实参
-                param_type_list.add("");
-                if (symbolTableManager.isBasicType("")) {
-                    symbolTableManager.accessVariableAndField("", "value");
-                } else {
-                }
+                String curr_real_param = toRepresent(semanticStack.pop());
+                param_type_list.add(symbolTableManager.lookupVariableType(curr_real_param));
+                real_vars.add(curr_real_param);
             }
             semanticStack.pop();
             List<String> params = symbolTableManager.checkFuncParams(calling_func_name, param_type_list);
+            int end_index = real_vars.size() - 1;
+            for (int i = 0; i < real_vars.size(); i++) {
+                QTs.add(new QT("=", real_vars.get(end_index - i), "_", params.get(i)));
+            }
+
+            QTs.add(new QT("call", calling_func_name, "_", "_"));
+
         } catch (Exception ee) {
             printErrLog(ee);
         }
