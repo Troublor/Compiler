@@ -15,9 +15,9 @@ public class VariableTableRow{
     //标识符名字 需要用它来在变量表中找寻该变量
     //必须是唯一的 在插入时变量表会进行检查
 
-    public VariableTableRow(String name_id, String type, int offset, int table_id) {
+    public VariableTableRow(String name_id, String type, int var_len, int table_id) {
         this.type = type;
-        this.offset = offset;
+        this.offset = var_len;
         this.name_id = name_id;
         this.table_id = table_id;
     }
