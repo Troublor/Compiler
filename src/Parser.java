@@ -167,7 +167,8 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("常量", new String[]{"const int", "_AC_PUSH"}));
         grammar.addDeriver(new Deriver("常量", new String[]{"const double", "_AC_PUSH"}));
         grammar.addDeriver(new Deriver("常量", new String[]{"const char", "_AC_PUSH"}));
-        grammar.addDeriver(new Deriver("函数", new String[]{"(", "值列表", ")"}));
+        grammar.addDeriver(new Deriver("函数", new String[]{"(", "_AC_funcParamStartFlag", "值列表"
+                , ")", "_AC_startFuncCalling"}));
         // 到达这一步函数 函数名已经传入  可以push进参数进行传参
         grammar.addDeriver(new Deriver("值列表", new String[]{"值", "值列表1"}));
         grammar.addDeriver(new Deriver("值列表", new String[]{}));
