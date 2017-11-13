@@ -31,27 +31,34 @@ public class QT {
         return operand_left;
     }
 
+    public void setOperand_left(String operand_left) {
+        this.operand_left = operand_left;
+    }
+
     public String getOperand_right() {
         return operand_right;
+    }
+
+    public void setOperand_right(String operand_right) {
+        this.operand_right = operand_right;
     }
 
     public String getResult() {
         return result;
     }
 
+    public void setResult(String result) {
+        this.result = result;
+    }
 
     /**
      * 判断是否是临时变量
-     *
-     * TODO
-     * 根据临时变量符号表，写判断是否是临时变量的逻辑
      *
      * @param s 要判断的变量
      * @return boolean
      */
     public static boolean isTemporaryVariable(String s) {
-
-        return false;
+        return s.charAt(0) == '$';
     }
 
     /**
@@ -60,14 +67,8 @@ public class QT {
      * @param label 标号
      * @return boolean
      */
-    public static boolean isConstVariable(String label) throws QtException {
-        String[] split = label.split(".");
-        if (split[0].substring(0, 5).equals("const")) {
-            if (split.length != 2) {
-                throw new QtException("QtException: " + label + " is invalid const value");
-            }
-            return true;
-        }
-        return false;
+    public static boolean isConstVariable(String label) {
+        String[] split = label.split(" ");
+        return split.length == 2 && split[0].equals("const");
     }
 }

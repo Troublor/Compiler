@@ -224,7 +224,7 @@ public class Lexer extends Lang{
                 //数字分支结束
                 double number = num_n * Math.pow(10, num_e * num_p - num_m);
                 double eps = 1e-10;  // 精度范围
-                if (number-Math.floor(number) < eps) {
+                if (num_t == 0) {
                     //如果是整数
                     output = new Token(Double.toString(number), "const int");
                 } else {

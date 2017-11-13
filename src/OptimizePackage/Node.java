@@ -3,6 +3,9 @@ package OptimizePackage;
 import MiddleDataUtilly.QT;
 import java.util.HashSet;
 
+/**
+ * DAG图中的一个节点的类
+ */
 public class Node {
     private String main_label;
     private HashSet<String> extra_labels;
@@ -93,7 +96,10 @@ public class Node {
                 main_label = label;
             }
         }
-        extra_labels.add(temp);
+        if (temp != null) {
+            extra_labels.add(temp);
+            extra_labels.remove(main_label);
+        }
     }
 
 
@@ -124,5 +130,15 @@ public class Node {
      */
     public boolean isMainLabel(String label) {
         return main_label.equals(label);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder r = new StringBuilder("(" + operator + ")  " + main_label + " | ");
+        for (String label : extra_labels) {
+            r.append(label).append(",  ");
+        }
+
+        return r.toString();
     }
 }
