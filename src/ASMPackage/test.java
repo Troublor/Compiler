@@ -8,17 +8,26 @@ public class test {
 
     public static void main(String[] args) {
         ArrayList<QT> qts = new ArrayList<>();
-        qts.add(new QT("+", "a.value", "b.value", "$t1.value"));
-        qts.add(new QT("-", "c.value", "d.value", "$t2.value"));
-        qts.add(new QT("*", "$t1.value", "$t2.value", "$t3.value"));
-        qts.add(new QT("-", "a.value", "$t3.value", "$t4.value"));
-        qts.add(new QT("/", "$t1.value", "const int_2", "$t5.value"));
-        qts.add(new QT("+", "$t4.value", "$t5.value", "x.value"));
+        qts.add(new QT("+", "a.int", "b.int", "$t1.int"));
+        qts.add(new QT("-", "c.int", "d.int", "$t2.int"));
+        qts.add(new QT("*", "$t1.int", "$t2.int", "$t3.int"));
+        qts.add(new QT("-", "a.int", "$t3.int", "$t4.int"));
+        qts.add(new QT("/", "$t1.int", "const int_2", "$t5.int"));
+        qts.add(new QT("+", "$t4.int", "$t5.int", "x.int"));
 
         ASMGenerater generater = new ASMGenerater(qts);
         generater.generate();
-        System.out.println("");
 
+        try {
+            ASMArith arith = new ASMArith(qts);
+            ArrayList<ASMSentence> asms = arith.getResult();
+            for (ASMSentence asm : asms) {
+                System.out.println(asm);
+            }
+        }
+        catch  (ASMException e) {
+            e.printStackTrace();
+        }
     }
 
 }
