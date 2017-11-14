@@ -13,7 +13,7 @@ public class ASMSentence {
     /**
      * 操作数序列
      */
-    private ArrayList<String> operands;
+    private ArrayList<String> operands = new ArrayList<>();
 
     /**
      * 汇编语句构造方法
@@ -31,5 +31,13 @@ public class ASMSentence {
 
     public ArrayList<String> getOperands() {
         return operands;
+    }
+
+    @Override
+    public String toString() {
+        return "ASMSentence{" +
+                "operator='" + operator + '\'' +
+                ", operands=" + operands +
+                '}';
     }
 }

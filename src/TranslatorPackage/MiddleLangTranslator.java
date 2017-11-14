@@ -71,9 +71,9 @@ public class MiddleLangTranslator {
     // todo: array suport
     public void afterDual() {
         try {
-            String left_operand = semanticStack.pop();
-            String opt = semanticStack.pop();
             String right_operand = semanticStack.pop();
+            String opt = semanticStack.pop();
+            String left_operand = semanticStack.pop();
             String return_type = getDualReturnType(opt, lookUpType(left_operand), lookUpType(right_operand));
             String tmp = symbolTableManager.addTempVariable(return_type);
             QTs.add(new QT(opt, toRepresent(left_operand), toRepresent(right_operand), toRepresent(tmp)));
