@@ -29,7 +29,7 @@ public class FunctionTableRow {
 
     public void addParam(String param_name, TypeTableRow type_info) throws SemanticException {
         VariableTableRow new_param =
-                param_n_inner_var_table.addVariable(param_name, type_info.getName(), type_info.getLength());
+                param_n_inner_var_table.addVariable(type_info.getName(), param_name, type_info.getLength());
         param_list.add(new_param);
     }
 
@@ -43,6 +43,10 @@ public class FunctionTableRow {
 
     public int getEntryQtIndex() {
         return entry_qt_index;
+    }
+
+    public int getFuncVarTableID() {
+        return param_n_inner_var_table.getTable_id();
     }
 
     public List<VariableTableRow> getParamList() {

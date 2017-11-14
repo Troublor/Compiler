@@ -4,9 +4,9 @@ import MiddleDataUtilly.QT;
 import java.util.HashSet;
 
 /**
- * DAG图中的一个节点的类
+ * DAG图中的一个节点的类（只在package内可用)
  */
-public class Node {
+class Node {
     private String main_label;
     private HashSet<String> extra_labels;
     private String operator;
@@ -78,31 +78,6 @@ public class Node {
         return right_child;
     }
 
-    /**
-     * 格式化标记，调整优先级，常数 > 用户定义变量> 临时变量
-     * （如果有用户定义变量在主标记中的话）
-     */
-    public void formatLabels() throws QtException{
-        String temp = null;
-        for (String label : extra_labels) {
-            if (QT.isTemporaryVariable(label)) {
-                continue;
-            }
-            if (QT.isConstVariable(label)) {
-                temp = main_label;
-                main_label = label;
-            } else if ( !QT.isConstVariable(main_label)){
-                temp = main_label;
-                main_label = label;
-            }
-        }
-        if (temp != null) {
-            extra_labels.add(temp);
-            extra_labels.remove(main_label);
-        }
-    }
-
-
 
     /**
      * 判断是否包含一个标号
@@ -140,5 +115,26 @@ public class Node {
         }
 
         return r.toString();
+    }
+
+    /**
+     * 添加标记
+     * 优先级，常数 > 用户定义变量> 临时变量
+     * @param label 标记
+     */
+    public void addLabel(String label) throws QtException{
+        if (QT.isConstVariable(label)) {
+            extra_labels.add(main_label);
+            main_label = label;
+        } else if (QT.isTemporaryVariable(label)) {
+            extra_labels.add(label);
+        } else {
+            if (QT.isTemporaryVariable(main_label)) {
+                extra_labels.add(main_label);
+                main_label = label;
+            } else {
+                extra_labels.add(label);
+            }
+        }
     }
 }
