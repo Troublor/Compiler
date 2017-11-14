@@ -11,13 +11,14 @@ import java.util.Map;
  */
 public class TypeTable {
     private Map<String,TypeTableRow> tableRowMap;
+    private String[] basic_type_names = new String[]{
+            "int", "double", "char"
+    };
     //类型名到具体类型info的map
 
     public TypeTable(){
         tableRowMap = new HashMap<>();
-        String[] basic_type_names = new String[]{
-                "int", "double", "char"
-        };
+
 
         for (String type_name : basic_type_names) {
             TypeTableRow basicType = new TypeTableRow(type_name);
@@ -26,6 +27,14 @@ public class TypeTable {
             tableRowMap.put(type_name, basicType);
         }
 
+    }
+
+    public boolean isBasicType(String type) {
+        for (String i : basic_type_names) {
+            if (i.equals(type))
+                return true;
+        }
+        return false;
     }
 
     //从类型名获取类型info

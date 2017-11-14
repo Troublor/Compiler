@@ -21,15 +21,5 @@ public class test {
         qts.add(new QT("-", "R.value", "r.value", "$t7.value"));
         qts.add(new QT("/", "$t6.value", "$t7.value", "$t8.value"));
         qts.add(new QT("=", "$t8.value", null, "B.value"));
-
-        DAG dag = new DAG();
-
-        try {
-            ArrayList<QT> result = dag.optimize(qts);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            e.printStackTrace();
-        }
-
     }
 }

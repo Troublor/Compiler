@@ -58,7 +58,12 @@ public class QT {
      * @return boolean
      */
     public static boolean isTemporaryVariable(String s) {
-        return s.charAt(0) == '$';
+        try {
+            return s.split("\\.")[1].charAt(0) == '$';
+        } catch (Exception e) {
+            return false;
+        }
+
     }
 
     /**
@@ -68,7 +73,12 @@ public class QT {
      * @return boolean
      */
     public static boolean isConstVariable(String label) {
-        String[] split = label.split(" ");
-        return split.length == 2 && split[0].equals("const");
+        try {
+            String[] split = label.split(" ");
+            return split.length == 2 && split[0].equals("const");
+        } catch (Exception e) {
+            return false;
+        }
+
     }
 }

@@ -5,24 +5,20 @@ import java.util.ArrayList;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * DAG优化算法类
+ * DAG优化算法类，只在package内可用
  */
-public class DAG {
+class DAG {
 
     private ArrayList<QT> qts;
 
     private ArrayList<Node> nodes;
 
-    public DAG() {
+    DAG(ArrayList<QT> qts) {
         nodes = new ArrayList<>();
-    }
-
-    private void setQts(ArrayList<QT> qts) {
         this.qts = qts;
     }
 
-    public ArrayList<QT> optimize(ArrayList<QT> qts) throws QtException{
-        setQts(qts);
+    public ArrayList<QT> optimite() throws QtException{
         generateDAG();
         return generateQts();
     }
@@ -72,21 +68,24 @@ public class DAG {
             if (qt.getOperator().equals("=")) {
                 //1. 若是赋值四元式: A=B  (=, B, _, A)
                 // 查找之前定义的A（作为附加标号的）并删除， 如果是主标记，则不删除
+                // 算法改进：赋值不能超越当前最新定义节点，如：a = 1；查找1的节点的时候如果碰到a的定义就不再继续查找
                 ArrayList<Node> find_nodes = this.getAllDefineNodesAsExtraLabel(qt.getResult());
                 for (Node node : find_nodes) {
                     node.getExtra_labels().remove(qt.getResult());
                 }
+                //算法改进:赋值不能超越当前最新定义节点，如：a = 1；查找1的节点的时候如果碰到a的定义就不再继续查找
                 Node defined = this.getFirstDefindNode(qt.getOperand_left());
-                if (defined == null) {
+                Node newest_define = this.getFirstDefindNode(qt.getResult());
+                if (defined == null || (newest_define != null && nodes.indexOf(newest_define) > nodes
+                    .indexOf(defined))) {
                     //如果赋值右边没有定义
                     defined = new Node(qt.getOperand_left(), null, null,
                         null);
                     nodes.add(defined);
                 }
-                defined.getExtra_labels().add(qt.getResult());
-                defined.formatLabels();
+                defined.addLabel(qt.getResult());
 
-            } else if (QT.isConstVariable(qt.getOperand_left()) && (qt.getOperand_right() == null
+            } else if (QT.isConstVariable(qt.getOperand_left()) && (qt.getOperand_right().equals("_")
                 || QT.isConstVariable(qt.getOperand_right()))) {
                 //如果是常值表达式
                 // 查找之前定义的A（作为附加标号的）并删除， 如果是主标记，则不删除
@@ -104,8 +103,7 @@ public class DAG {
                     defined = new Node(const_result, null, null, null);
                     nodes.add(defined);
                 }
-                defined.getExtra_labels().add(qt.getResult());
-                defined.formatLabels();
+                defined.addLabel(qt.getResult());
 
             } else {
                 //查找之前定义的A（作为附加标号的）并删除， 如果是主标记，则不删除
@@ -116,7 +114,7 @@ public class DAG {
                 Node public_expression = getExpression(qt);
                 if (public_expression == null) {
                     Node left_node = null;
-                    if (qt.getOperand_left() != null) {
+                    if (!qt.getOperand_left().equals("_")) {
                         left_node = getFirstDefindNode(qt.getOperand_left());
                         if (left_node == null) {
                             left_node = new Node(qt.getOperand_left(), null, null,
@@ -125,7 +123,7 @@ public class DAG {
                         }
                     }
                     Node right_node = null;
-                    if (qt.getOperand_right() != null) {
+                    if (!qt.getOperand_right().equals("_")) {
                         right_node = getFirstDefindNode(qt.getOperand_right());
                         if (right_node == null) {
                             right_node = new Node(qt.getOperand_right(), null, null,
@@ -137,8 +135,7 @@ public class DAG {
                         right_node);
                     nodes.add(new_node);
                 } else {
-                    public_expression.getExtra_labels().add(qt.getResult());
-                    public_expression.formatLabels();
+                    public_expression.addLabel(qt.getResult());
                 }
 
             }
@@ -191,32 +188,20 @@ public class DAG {
     @Nullable
     private Node getExpression(QT qt) {
         Node node;
+        Node left_node = getFirstDefindNode(qt.getOperand_left());
+        if (left_node == null) {
+            return null;
+        }
+        Node right_node = getFirstDefindNode(qt.getOperand_right());
+        if (right_node == null) {
+            return null;
+        }
         for (int i = nodes.size() - 1; i >= 0; i--) {
             node = nodes.get(i);
             if (node.getOperator() == null) {
                 continue;
             }
-            if (node.getOperator().equals(qt.getOperator())) {
-                //先看左子节点是否匹配
-                if (node.getLeft_child() == null) {
-                    if (qt.getOperand_left() != null) {
-                        continue;
-                    }
-                } else {
-                    if (!node.getLeft_child().containLabel(qt.getOperand_left())) {
-                        continue;
-                    }
-                }
-                //看右子节点是否匹配
-                if (node.getRight_child() == null) {
-                    if (qt.getOperand_right() != null) {
-                        continue;
-                    }
-                } else {
-                    if (!node.getRight_child().containLabel(qt.getOperand_right())) {
-                        continue;
-                    }
-                }
+            if (node.getLeft_child() == left_node && node.getRight_child() == right_node) {
                 return node;
             }
         }
@@ -233,7 +218,7 @@ public class DAG {
      * @return String 常值结果（标识符形式）
      */
     private String calculateConstExpression(String operator, String operand_left, String operand_right) throws QtException {
-        if (operand_right == null) {
+        if (operand_right.equals("_")) {
             return operand_left;
         }
         StringBuilder result = new StringBuilder("");
