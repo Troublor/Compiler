@@ -25,6 +25,8 @@ public class VariableTable{
     // 需要以一个id表示表的位置 在生成目标代码时进行查找
 
 
+    private int tmpCount;
+
     /**
      * 在产生一个新的块时会生成一个表
      *
@@ -39,6 +41,7 @@ public class VariableTable{
         this.startOffset = startOffset;
         this.currLen = 0;
         this.table_id = id;
+        tmpCount = 0;
     }
 
     /**
@@ -58,6 +61,14 @@ public class VariableTable{
         variables.put(name_id, newVariable);
         currLen += var_len;
         return newVariable;
+    }
+
+    //对原来的接口重新封装了 只需提供类型就够了
+    public VariableTableRow addTempVariable(String type_name) throws SemanticException {
+        String new_id_name = "$t" + tmpCount++;
+        VariableTableRow new_var = addVariable(type_name, new_id_name, getTableLength());
+        variables.put(new_id_name, new_var);
+        return new_var;
     }
 
     public VariableTableRow getVariable(String name_id) {
@@ -80,9 +91,6 @@ public class VariableTable{
         return startOffset;
     }
 
-    protected void setStartOffset(int offset) {
-        startOffset = offset;
-    }
 
     @Override
     public String toString() {

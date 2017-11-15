@@ -29,6 +29,7 @@ public class FunctionTable {
     public String defineFunction(String func_name, VariableTable param_table, String return_type, int entry_qt_index) throws SemanticException {
         if (getFuntionInfo(func_name) != null)
             throw new SemanticException("redeclare function: " + func_name);
+        param_table.addVariable("double", "#ret_val", 1);
         FunctionTableRow new_func = new FunctionTableRow(param_table, func_name, return_type, entry_qt_index);
         functions_map.put(func_name, new_func);
         return func_name;

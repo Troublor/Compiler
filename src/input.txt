@@ -1,32 +1,4 @@
 
-func void main() {
-  var c double;
-  var array [10] int;
-  var a,b int;
-  var ch char;
-  array[b] = a;
-  a = 1;
-  b = 5;
-  c = 5.5;
-  array[array[0]] = a;
-  ch = 'a';
-
-
-  a = b + c;
-  a = array[0] + c;
-  a = array[b] + c;
-  a = array[array[0]] + c;
-
-  if(a>c){
-    b = (a + c)/a;
-    a = a + b;
-  }else{
-    while(a+3>c){
-      array[0] = a;
-    }
-  }
-}
-
 
 func int hhhhha(int jhgjh,double k) {
   var brray [10] int;
@@ -43,9 +15,35 @@ func int hhhhha(int jhgjh,double k) {
      h = h +1 ;
      return h+b;
   }
+  hhhhha(h,b);
   brray[brray[0]] = h;
   if(h>k){
     b = (h + k)/h;
     h = h + b;
   }
 }
+
+func void main() {
+  var c double;
+  var array [10] int;
+  var a,b int;
+  var ch char;
+  array[b] = a;
+  a = 1;
+  b = 5;
+  c = 5.5;
+  array[array[0]] = a;
+  ch = 'a';
+  a = hhhhha(a,b);
+
+  if(a>c){
+    b = (a + c)/a;
+    a = a + b;
+  }else{
+    while(a+3>c){
+      array[0] = a;
+    }
+  }
+}
+
+

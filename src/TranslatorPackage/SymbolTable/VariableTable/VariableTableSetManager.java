@@ -16,26 +16,21 @@ public class VariableTableSetManager {
     private VariableTable currActiveTable;
     private TypeTable typeTable;
     //维护一个类型表 查询类型的工作由Manager承包
-    private int offsetTotal;
+    private int currOffsetStart;
     //总的offset 再插入新表时需要用到
-
-    private TempVariableTable tempVariableTable;
-
     private int idTotal;
     //一个自增的表id记录 可以拿来当表的计数
     private Map<Integer,VariableTable>  idVariableTableMap;
 
     public VariableTableSetManager(TypeTable typeTable) {
         this.typeTable = typeTable;
-        offsetTotal = 0;
+        currOffsetStart = 0;
         idTotal = 1;
         idVariableTableMap = new HashMap<>();
 
-        tempVariableTable = new TempVariableTable();
-        idVariableTableMap.put(-1, tempVariableTable);
         //临时变量表号为-1  放在VariableTableManager里统一管理
         //生成四元式的时候也是-1
-        currActiveTable = new VariableTable(null, idTotal, offsetTotal);
+        currActiveTable = new VariableTable(null, idTotal, currOffsetStart);
         idVariableTableMap.put(idTotal,currActiveTable);
         idTotal ++;
     }
@@ -49,10 +44,6 @@ public class VariableTableSetManager {
 
     public VariableTableRow requestVariable(String name_id) {
         VariableTableRow res;
-        if (name_id.charAt(0) == '$') {
-            res = tempVariableTable.getVariable(name_id);
-            return res;
-        }
         res = currActiveTable.getVariable(name_id);
         if (res != null) {
             return res;
@@ -79,14 +70,19 @@ public class VariableTableSetManager {
 
 
     public VariableTableRow addTempVariable(String type_name) throws SemanticException {
-        return tempVariableTable.addTempVariable(type_name);
+        return currActiveTable.addTempVariable(type_name);
     }
     /**
      * 有新块产生的 需要添加一个表
      */
     public void addTable(){
-        offsetTotal += currActiveTable.getTableLength();
-        currActiveTable = new VariableTable(currActiveTable,idTotal,offsetTotal);
+        currOffsetStart += currActiveTable.getTableLength();
+        //每个函数定义;连在一个全局变量表上
+        // 因为每次调用压栈是只将一整个函数压进去
+        // 所有每当从一个函数的定义返回,总当前函数表的offset归零
+        if (currActiveTable.getParent() == null)
+            currOffsetStart = 0;
+        currActiveTable = new VariableTable(currActiveTable, idTotal, currOffsetStart);
         idVariableTableMap.put(idTotal,currActiveTable);
         idTotal ++;
     }
@@ -102,10 +98,6 @@ public class VariableTableSetManager {
 
     }
 
-
-    public void assignTempVarPos() {
-        tempVariableTable.setStartOffset(this.offsetTotal);
-    }
 
 
     public VariableTable getCurrActiveTable() {

@@ -12,13 +12,12 @@ public class ASMArith {
     private Map<String, register> registers = new HashMap<>();
 //    private ASMArith arith;
     private int cur_index = 0;
-    private ArrayList<QT> qts;
-    ArrayList<ASMSentence> asms = new ArrayList<>();
-    ArrayList<register>  order;
-    int end_index;
+    private List<QT> qts;
+    private ArrayList<ASMSentence> asms = new ArrayList<>();
+    private ArrayList<register> order;
+    private int end_index;
 
-    public ASMArith(ArrayList<QT> qts) {
-        this.qts = qts;
+    public ASMArith() {
         end_index = qts.size();
         registers.put("eax", eax);
         registers.put("ebx", ebx);
@@ -111,7 +110,8 @@ public class ASMArith {
 
 
     // todo : only allow operation of same type
-    ArrayList<ASMSentence> getResult() throws ASMException {
+    ArrayList<ASMSentence> getResult(List<QT> qts) throws ASMException {
+        this.qts = qts;
         for (QT qt : qts) {
             String operator = qt.getOperator();
             String type = getType(qt.getResult());

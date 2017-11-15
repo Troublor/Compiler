@@ -14,7 +14,7 @@ public class test {
         Parser parser = new Parser();
 
         StringBuilder input = new StringBuilder("");
-        File file = new File("C:\\JavaProject\\Compiler\\src\\input.txt");
+        File file = new File("/home/scarecrow/IdeaProjects/Compiler/src/input.txt");
         BufferedReader reader = null;
         try {
             reader = new BufferedReader(new FileReader(file));

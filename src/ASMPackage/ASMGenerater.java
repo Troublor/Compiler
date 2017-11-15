@@ -87,8 +87,10 @@ public class ASMGenerater {
         }
     }
 
+
     public void generate() {
         initializeActiveTable();
         addActiveInfomation();
+
     }
 }
