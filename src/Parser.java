@@ -2,6 +2,7 @@ import DFA.LexicalErrorException;
 import MiddleDataUtilly.QT;
 import MiddleDataUtilly.Token;
 import TranslatorPackage.MiddleLangTranslator;
+import TranslatorPackage.SymbolTable.SymbolTableManager;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -419,6 +420,9 @@ public class Parser extends Lang{
         return translator.getQTs();
     }
 
+    public SymbolTableManager getSymbolTableManager() {
+        return translator.getSymbolTableManager();
+    }
 //    private void PUSH() {
 //        SEM.push(this.last());
 //    }

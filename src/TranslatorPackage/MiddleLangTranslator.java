@@ -2,14 +2,13 @@ package TranslatorPackage;
 
 
 import MiddleDataUtilly.QT;
-import MiddleDataUtilly.Token;
-import TranslatorPackage.SymbolTable.VariableTable.VariableTable;
-import TranslatorPackage.SymbolTable.VariableTable.VariableTableRow;
+
 import TranslatorPackage.TranslatorExceptions.OptNotSupportError;
 
 import TranslatorPackage.TranslatorExceptions.SemanticException;
 import TranslatorPackage.SymbolTable.SymbolTableManager;
 import TranslatorPackage.TranslatorExceptions.TypeError;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -100,7 +99,7 @@ public class MiddleLangTranslator {
             if (index_item.contains(".")) {
                 // 对 a[a[10]]这种情况，本来会生成a.a.10, 现在先生成 t = a.10,  然后生成a.t，防止多层嵌套
                 String tmp = symbolTableManager.addTempVariable(index_type);
-                QTs.add(new QT("ref", index_item, "_", tmp));
+                QTs.add(new QT("=", toRepresent(index_item), "_", toRepresent(tmp)));
                 index_item = tmp;
             }
             // todo:如果是下标是变量的话 例子：b[a[3]]  b[a]
@@ -383,7 +382,6 @@ public class MiddleLangTranslator {
                 QTs.add(new QT("ret", toRepresent(ret_val),
                         "if needed,assign at", "next qt"));
                 semanticStack.pop();
-                semanticStack.push(ret_val);
             }
 
         } catch (Exception ee) {
@@ -464,11 +462,12 @@ public class MiddleLangTranslator {
             int end_index = real_vars.size() - 1;
             for (int i = 0; i < real_vars.size(); i++) {
                 //进行传参  实际上是一个跨表的传参
-                QTs.add(new QT("=", real_vars.get(end_index - i), "_", params.get(i)));
+                QTs.add(new QT("pass_param", real_vars.get(end_index - i), "_", params.get(i)));
             }
 
             //传参完成后进行执行指令的跳转
             QTs.add(new QT("call", calling_func_name, "_", "_"));
+            semanticStack.push("#ret_val");
 
         } catch (Exception ee) {
             printErrLog(ee);
@@ -623,6 +622,7 @@ public class MiddleLangTranslator {
         for (QT qt : QTs) {
             System.out.println(qt);
         }
+
     }
 
     public ArrayList<QT> getQTs() {
@@ -634,4 +634,8 @@ public class MiddleLangTranslator {
         semanticStack.pop();
     }
 
+
+    public SymbolTableManager getSymbolTableManager() {
+        return symbolTableManager;
+    }
 }
