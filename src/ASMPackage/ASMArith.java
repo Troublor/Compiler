@@ -17,7 +17,8 @@ public class ASMArith {
     private ArrayList<register> order;
     private int end_index;
 
-    public ASMArith() {
+    public ASMArith(List<QT> qts) {
+        this.qts = qts;
         end_index = qts.size();
         registers.put("eax", eax);
         registers.put("ebx", ebx);
@@ -110,8 +111,8 @@ public class ASMArith {
 
 
     // todo : only allow operation of same type
-    ArrayList<ASMSentence> getResult(List<QT> qts) throws ASMException {
-        this.qts = qts;
+    ArrayList<ASMSentence> getResult() throws ASMException {
+
         for (QT qt : qts) {
             String operator = qt.getOperator();
             String type = getType(qt.getResult());
