@@ -1,5 +1,3 @@
-
-
 import MiddleDataUtilly.QT;
 import OptimizePackage.Optimizer;
 import java.io.BufferedReader;
@@ -8,13 +6,15 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class test {
+public class Compile {
 
     public static void main(String[] args) {
         Parser parser = new Parser();
 
         StringBuilder input = new StringBuilder("");
-        File file = new File("C:\\JavaProject\\Compiler\\src\\input.txt");
+        String filename =
+            (args.length == 0) ? "C:\\JavaProject\\Compiler\\src\\input.txt" : args[0];
+        File file = new File(filename);
         BufferedReader reader = null;
         try {
             reader = new BufferedReader(new FileReader(file));
