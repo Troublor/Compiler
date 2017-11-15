@@ -41,7 +41,6 @@ public class ASMArith {
         boolean contains(String id) {
             return this.content != null && this.content.equals(id);
         }
-
         @Override
         public int compareTo(@NotNull ASMArith.register o) {
             int left_life = this.active_index - cur_index, right_life = o.active_index - cur_index;
@@ -68,9 +67,20 @@ public class ASMArith {
             return content == null;
         }
 
-        // 将寄存器的数据置空
-        public void free(){
-            this.content = null;
+        // 只将寄存器置为空闲，不对（如果有数据的话）寄存器的数据做任何处理
+        public void free() {
+            content = null;
+        }
+
+
+
+        // 将寄存器的释放（同时（如果有数据的话）将寄存器的数据存回内存）
+        public void release(){
+            if (!available()) {
+
+                produce(new ASMSentence("mov", toAddress(content), this.name));
+                content = null;
+            }
         }
 
         // 表明 该寄存器会被id占用
@@ -111,24 +121,42 @@ public class ASMArith {
 
 
     // todo : only allow operation of same type
-    ArrayList<ASMSentence> getResult() throws ASMException {
+    ArrayList<ASMSentence> produceASM() throws ASMException {
         for (QT qt : qts) {
-            String operator = qt.getOperator();
-            String type = getType(qt.getResult());
-            if (type.equals("int")) {
-                if (operator.equals("+")) add(qt);
-                if (operator.equals("-")) sub(qt);
-            }
-            else if (type.equals("double")) {
-
-            }
-            // char
-            else {
-            }
-            ++cur_index;
+            dispatch(qt);
         }
         return this.asms;
     }
+
+    private void dispatch(QT qt) throws ASMException{
+        String operator = qt.getOperator();
+        String type = getType(qt.getResult());
+
+        switch (type) {
+            // char 也是32位的，所以操作和int操作完全一样
+            case "char":
+            case "int": {
+                switch (operator) {
+                    case "+": { iadd(qt); break;}
+                    case "-": { isub(qt);break;}
+                    case "*": { imul(qt); break;}
+                    case "/": { idiv(qt); break;}
+                }
+                break;
+            }
+            case "double" : {
+                switch (operator) {
+                    case "+": { fadd(qt); break;}
+                    case "-": { fsub(qt);break;}
+                    case "*": { fmul(qt); break;}
+                    case "/": { fdiv(qt); break;}
+                }
+                break;
+            }
+        }
+        ++cur_index;
+    }
+
 
     // oprand form: 1.a.int->X    2.b.double->X  2.array.a.int->X    const int_1  const double_3.14
     private String getType(String operand) throws ASMException {
@@ -190,7 +218,8 @@ public class ASMArith {
 
     }
 
-    // 定位 id 所在的位置，如果在寄存器，返回寄存器名字，如果在内存，调用toAddrees(),返回在内存中的表示形式
+    // 定位 id 所在的位置，如果在寄存器，优先返回寄存器名字，如果在内存，调用toAddress(),返回在内存中的表示形式
+    // 如果确定要一个 id 的内存地址，请直接调用 toAddress)_
     private String locate(String id) {
         assert !isConstant(id);
         register r = inWhichRegister(id);
@@ -201,17 +230,36 @@ public class ASMArith {
     }
 
     private String toASMForm(String item) {
-        // not constant, directly use locate()
-        if (!isConstant(item)) return locate(item);
+        // if not constant, directly use locate()
+        if (!isConstant(item)) {
+            if (isArray(item)) {
+                // like  1.a.t.int->t
+                // do specific staff
+            }
+            else {
+                return locate(item);
+            }
+        }
+        // is  constant;
         return getValue(item);
     }
 
+    // todo: recognize array
+    private boolean isArray(String item) {
+        return false;
+    }
+
+    /*
+    *   about active information
+    * */
     private boolean isActive(String id) {
         Pattern p = Pattern.compile("(.*)(->)(\\d+|y)");
         Matcher m = p.matcher(id);
         return m.find();
     }
 
+    // id should be variable, not constant
+    // return: -1.a.int->X  -->   X
     private String getActiveInfo(String id) throws ASMException{
         assert !id.startsWith("const");
         Pattern p = Pattern.compile("(.*)(->)(\\d+|y|n)");
@@ -241,16 +289,13 @@ public class ASMArith {
     private register arrangeRegister() {
         register selected = null;
         if ((selected = getAvailableRegister()) != null) {
-            selected.free();
             return selected;
         }
         else {
             Collections.sort(order);
             selected = order.get(0);
             // seleted 原本被占用, 将内容存到内存中
-            String id = selected.content;
-            selected.free();
-            produce(new ASMSentence("move", toAddress(id), selected.name));
+            selected.release();
             return selected;
         }
     }
@@ -281,12 +326,131 @@ public class ASMArith {
         }
     }
 
-    void add(QT qt) {
+    void iadd(QT qt) {
         addOrSub(qt, "add");
     }
 
-    void sub(QT qt) {
+    void isub(QT qt) {
         addOrSub(qt, "sub");
+    }
+
+
+    private void idiv(QT qt) {
+        idivOrImul(qt, "idiv");
+    }
+
+    private void imul(QT qt) {
+        idivOrImul(qt, "imul");
+    }
+
+    private void idivOrImul(QT qt, String operator) {
+        // compared to imul, idiv need to expand left_operand to eax & edx
+        String left_operand = qt.getOperand_left(), right_operand = qt.getOperand_right(), result = qt.getResult();
+        if (isConstant(left_operand)) {
+            eax.release();
+            produce(new ASMSentence("mov", eax.name, toASMForm(left_operand)));
+        }
+        // else left_operand is not constant
+        else {
+            register r = inWhichRegister(left_operand);
+            // left_operand is in register;
+            if (r != null) {
+                // left_operand is not in eax
+                if (r != eax) {
+                    eax.release();
+                    produce(new ASMSentence("mov", eax.name, r.name));
+                    // if left_operand is result, this may result in 2 same variable in the registers(r & eax),
+                    // so free register r (without put the value back to memory, because now the result variable has new value)
+                    //  example: * a 2 a      or * a a a
+                    if (left_operand.equals(result)) {
+                        r.free();
+                    }
+                }
+                // left_operand is in eax
+                else {
+                    // pass
+                }
+            }
+            // left not in register
+            else  {
+                eax.release();
+                produce(new ASMSentence("mov", eax.name, toAddress(left_operand)));
+            }
+        }
+        // now left is in eax
+        edx.release();
+        if (operator.equals("idiv")) {
+            produce(new ASMSentence("cdq"));  // 32bit to 64bit EAX->EDX:EAX
+        }
+        produce(new ASMSentence(operator, toASMForm(right_operand)));
+        eax.occupyWith(result);
+    }
+
+    private void floatOperation(QT qt, String operator) throws ASMException {
+        String[] operands = {qt.getOperand_left(),qt.getOperand_right()};
+        String result = qt.getResult();
+        // load operands to float register
+        produce(new ASMSentence("finit"));
+        for (String operand: operands) {
+            String type = getType(operand);
+            if (isConstant(operand)) {
+                switch (type) {
+                    case "char": {
+                        // 'a' -> 97
+                        produce(new ASMSentence("push", "dword " +
+                                String.valueOf(
+                                        (int)(getValue(operand).charAt(0))
+                                )));
+                    }
+                    case "int": {
+                        produce(new ASMSentence("push", "dword " + getValue(operand) ));
+                        break;
+                    }
+                    case "double": {
+                        produce(new ASMSentence("push", "dword __float__(" + getValue(operand) + ")"));
+                        break;
+                    }
+                }
+            }
+            // not constant
+            else {
+                produce(new ASMSentence("push", "dword [" + toAddress(operand) + "]"));
+            }
+            switch (type) {
+                case "char":
+                case "int": {
+                    produce(new ASMSentence("fild", "dword [esp]"));
+                    break;
+                }
+                case "double": {
+                    produce(new ASMSentence("fld", "dword [esp]"));
+                    break;
+                }
+            }
+            // todo: pop 回来的 数据不再需要， 定义一个null来存没用的数据（不然会占用一个寄存器）
+            produce(new ASMSentence("pop", "[null]"));
+        }
+        produce(new ASMSentence(operator));
+        // fstp:  store the result and pops the register stack.
+        produce(new ASMSentence("fstp", "dword [" + toAddress(result) + "]"));
+
+    }
+
+
+    private void fdiv(QT qt) throws ASMException {
+        floatOperation(qt, "fdiv");
+    }
+
+    private void fmul(QT qt) throws ASMException {
+        floatOperation(qt, "fmul");
+    }
+
+    private void fsub(QT qt) throws ASMException {
+        floatOperation(qt, "fsub");
+    }
+
+    private void fadd(QT qt) throws ASMException {
+        floatOperation(qt, "fadd");
     }
 
     private String getValue(String constant) {
