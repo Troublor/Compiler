@@ -49,6 +49,16 @@ public class FunctionTableRow {
         return param_n_inner_var_table.getTable_id();
     }
 
+    public int getRuntimeStackLength() {
+        VariableTable curr_table = this.param_n_inner_var_table;
+        int length = curr_table.getTableLength();
+        while (curr_table.getParent() != null) {
+            curr_table = curr_table.getParent();
+            length += curr_table.getTableLength();
+        }
+        return length;
+    }
+
     public List<VariableTableRow> getParamList() {
         return param_list;
     }

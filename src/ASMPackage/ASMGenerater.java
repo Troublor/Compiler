@@ -5,12 +5,11 @@ import MiddleDataUtilly.QT;
 import OptimizePackage.Optimizer;
 import TranslatorPackage.SymbolTable.SymbolTableManager;
 import TranslatorPackage.TranslatorExceptions.SemanticException;
-import java.lang.reflect.Array;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Stack;
-import jdk.nashorn.internal.runtime.arrays.ArrayLikeIterator;
-import jdk.nashorn.internal.runtime.arrays.IntOrLongElements;
+
 
 public class ASMGenerater {
 
@@ -49,17 +48,17 @@ public class ASMGenerater {
         for (QT qt : qts) {
             if (qt.getOperand_left() != null && !QT.isConstVariable(qt.getOperand_left())) {
                 active_table
-                    .put(qt.getOperand_left(),
-                        QT.isTemporaryVariable(qt.getOperand_left()) ? "n" : "y");
+                        .put(qt.getOperand_left(),
+                                QT.isTemporaryVariable(qt.getOperand_left()) ? "n" : "y");
             }
             if (qt.getOperand_right() != null && !QT.isConstVariable(qt.getOperand_right())) {
                 active_table
-                    .put(qt.getOperand_right(),
-                        QT.isTemporaryVariable(qt.getOperand_right()) ? "n" : "y");
+                        .put(qt.getOperand_right(),
+                                QT.isTemporaryVariable(qt.getOperand_right()) ? "n" : "y");
             }
             if (qt.getResult() != null && !QT.isConstVariable(qt.getResult())) {
                 active_table
-                    .put(qt.getResult(), QT.isTemporaryVariable(qt.getResult()) ? "n" : "y");
+                        .put(qt.getResult(), QT.isTemporaryVariable(qt.getResult()) ? "n" : "y");
             }
         }
     }
@@ -96,17 +95,13 @@ public class ASMGenerater {
 
             qts.remove(i);
             qts.add(i, new QT(qt.getOperator(), (sb_left != null) ? sb_left.toString() : null,
-                (sb_right != null) ? sb_right.toString() : null,
-                (sb_result != null) ? sb_result.toString() : null));
+                    (sb_right != null) ? sb_right.toString() : null,
+                    (sb_result != null) ? sb_result.toString() : null));
         }
     }
 
-    /**
-     * 生成汇编代码序列
-     *
-     * @return 汇编代码序列 ArrayList
-     */
-    public ArrayList<ASMSentence> generate() throws ASMException, SemanticException{
+
+    public ArrayList<ASMSentence> generate() throws ASMException, SemanticException {
         ArrayList<ASMSentence> result = new ArrayList<>();
         ArrayList<QT> cache = new ArrayList<>();
         Stack<String> jumpStack = new Stack<>();
@@ -129,7 +124,7 @@ public class ASMGenerater {
                 //查找变量offset并从内存中取到AX中
                 //TODO 修改8086指令到x86
                 result.add(new ASMSentence("MOV", "AX",
-                    "ES:" + symbolTableManager.lookUpVariableOffset(qt.getOperand_left())));
+                        "ES:" + symbolTableManager.lookUpVariableOffset(qt.getOperand_left())));
                 result.add(new ASMSentence("CMP", "AX", "0"));
                 result.add(new ASMSentence("JZ", "IF" + Integer.toString(i)));
                 jumpStack.push("IF" + Integer.toString(i));//等待回填
@@ -144,7 +139,7 @@ public class ASMGenerater {
                 jumpStack.push("WHILE" + Integer.toString(i));
             } else if (qt.getOperator().equals("whl_do_ck")) {
                 result.add(new ASMSentence("MOV", "AX",
-                    "ES:" + symbolTableManager.lookUpVariableOffset(qt.getOperand_left())));
+                        "ES:" + symbolTableManager.lookUpVariableOffset(qt.getOperand_left())));
                 result.add(new ASMSentence("CMP", "AX", "0"));
                 result.add(new ASMSentence("JZ", "WHILE" + Integer.toString(i)));
                 jumpStack.push("WHILE" + Integer.toString(i));
@@ -156,12 +151,8 @@ public class ASMGenerater {
 
             //TODO 下面写函数调用
 
-
-
-
-
-
         }
         return result;
     }
+
 }

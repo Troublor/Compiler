@@ -5,6 +5,7 @@ import TranslatorPackage.SymbolTable.FunctionTable.FunctionTableRow;
 import TranslatorPackage.SymbolTable.TypeTable.FieldTableRow;
 import TranslatorPackage.SymbolTable.TypeTable.TypeTable;
 import TranslatorPackage.SymbolTable.TypeTable.TypeTableRow;
+import TranslatorPackage.SymbolTable.VariableTable.VariableTable;
 import TranslatorPackage.SymbolTable.VariableTable.VariableTableRow;
 import TranslatorPackage.SymbolTable.VariableTable.VariableTableSetManager;
 import TranslatorPackage.TranslatorExceptions.SemanticException;
@@ -20,9 +21,8 @@ public class SymbolTableManager {
     private VariableTableSetManager variableTableSetManager = new VariableTableSetManager(typeTable);
     private FunctionTable functionTable = new FunctionTable();
 
-    public static final int TEMP_VAR_TABLE_ID = -1;
 
-    //声明结构体类型 目前用不上 hhh'
+    //声明结构体类型
     public String declareStructType(String type_name) throws SemanticException {
         return typeTable.declareType(type_name);
     }
@@ -89,11 +89,7 @@ public class SymbolTableManager {
                 curr_type_name, suffix_type_name = null;
         //第一次进入该方法访问域的变量
         if (type_index == -1) {
-            //如果时临时变量 进入临时变量表查找
-            if (name_id.charAt(0) == '$')
-                result = variableTableSetManager.accessVariableByTableId(name_id, TEMP_VAR_TABLE_ID);
-            else
-                result = variableTableSetManager.requestVariable(name_id);
+            result = variableTableSetManager.requestVariable(name_id);
 
             if (result == null)
                 throw new SemanticException("variable: " + name_id + " has not define");
@@ -146,6 +142,7 @@ public class SymbolTableManager {
 
         return new_name_id + "." + suffix_type_name;
     }
+
 
 
     //在目前作用域查询一个变量的类型 用于表达式求值时进行类型判断
@@ -292,22 +289,52 @@ public class SymbolTableManager {
     }
 
 
-
-
-
     /*
             目标代码生成部分
      */
 
+    /**
+     * 穿入整个四元式中整个运算变量 ,表号.变量名.域.域.域.....类型
+     *
+     * @param QT_identifier
+     * @return
+     * @throws SemanticException
+     */
+    public int lookUpVariableOffset(String QT_identifier) throws SemanticException {
+        int offset;
+        String[] identifier_elems = QT_identifier.split("\\.");
+        int table_id = Integer.valueOf(identifier_elems[0]);
+        String name_id = identifier_elems[1];
+        VariableTableRow this_var = variableTableSetManager.accessVariableByTableId(name_id, table_id);
+        offset = this_var.getOffset();
+        TypeTableRow curr_type = typeTable.getTypeInfo(this_var.getTypeName());
+        FieldTableRow access_field = curr_type.getField(identifier_elems[1]);
+        offset += access_field.getOffset();
 
-    public String lookUpVariableOffset(String QT_identifier) throws SemanticException {
-
-        return "";
+        String curr_field_type_name = access_field.getTypeName();
+        for (int i = 2; i < identifier_elems.length - 1; i++) {
+            TypeTableRow curr_field_type = typeTable.getTypeInfo(curr_field_type_name);
+            FieldTableRow next_field = curr_field_type.getField(identifier_elems[i]);
+            offset += next_field.getOffset();
+            curr_field_type_name = next_field.getTypeName();
+        }
+        return offset;
 
     }
 
-    public void assignTempVariableTablePos() {
-        variableTableSetManager.assignTempVarPos();
+
+    public int getCallingFuncStackLength(String func_name) {
+        FunctionTableRow calling_func = functionTable.getFuntionInfo(func_name);
+        return calling_func.getRuntimeStackLength();
     }
+
+
+    public int getCallingFuncVariableTableID(String func_name) {
+        FunctionTableRow calling_func = functionTable.getFuntionInfo(func_name);
+        return calling_func.getFuncVarTableID();
+    }
+
+
+
 }
 
