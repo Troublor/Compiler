@@ -78,7 +78,7 @@ public class Optimizer {
      * @param operator 运算符
      * @return boolean
      */
-    private static boolean isArithmeticOperator(String operator) {
+    public static boolean isArithmeticOperator(String operator) {
         return operator.equals("+") || operator.equals("-") || operator.equals("*") || operator
             .equals("/") || operator.equals("=") || operator.equals(">") || operator.equals(">=")
             || operator.equals("<") || operator.equals("<=") || operator.equals("==") || operator

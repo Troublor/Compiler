@@ -16,7 +16,7 @@ public class test {
         qts.add(new QT("+", "$t4.int", "$t5.int", "x.int"));
 
         ASMGenerater generater = new ASMGenerater(qts);
-        generater.generate();
+        //generater.generate();
 
         try {
             ASMArith arith = new ASMArith(qts);

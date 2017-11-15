@@ -2,8 +2,11 @@ package ASMPackage;
 
 import MiddleDataUtilly.QT;
 
+import OptimizePackage.Optimizer;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
+import jdk.nashorn.internal.runtime.arrays.ArrayLikeIterator;
 
 public class ASMGenerater {
 
@@ -87,8 +90,36 @@ public class ASMGenerater {
         }
     }
 
-    public void generate() {
-        initializeActiveTable();
-        addActiveInfomation();
+    /**
+     * 生成汇编代码序列
+     *
+     * @return 汇编代码序列 ArrayList
+     */
+    public ArrayList<ASMSentence> generate() throws ASMException{
+        ArrayList<ASMSentence> result = new ArrayList<>();
+        ArrayList<QT> cache = new ArrayList<>();
+        QT qt;
+        for (int i = 0; i < qts.size(); i++) {
+            qt = qts.get(i);
+            if (Optimizer.isArithmeticOperator(qt.getOperator())) {
+                cache.add(qt);
+                continue;
+            }
+            if (cache.size() > 0) {
+                result.addAll(new ASMArith(cache).getResult());
+                cache.clear();
+                continue;
+            }
+
+            //如果碰到控制四元式（非运算类的四元式）
+
+
+
+
+
+
+
+        }
+        return result;
     }
 }
