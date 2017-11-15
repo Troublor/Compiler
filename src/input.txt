@@ -29,13 +29,15 @@ func void main() {
   var a,b int;
   var ch char;
   array[b] = a;
+  c = array[b];
+  b = 3 + c;
+  array[b] = b;
   a = 1;
   b = 5;
   c = 5.5;
   array[array[0]] = a;
   ch = 'a';
   a = hhhhha(a,b);
-
   if(a>c){
     b = (a + c)/a;
     a = a + b;

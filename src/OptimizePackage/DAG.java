@@ -34,7 +34,7 @@ class DAG {
                 //如果没有操作符，就说明这是叶子节点
                 for (String label : node.getExtra_labels()) {
                     if (!QT.isTemporaryVariable(label)) {
-                        result.add(new QT("=", node.getMain_label(), null, label));
+                        result.add(new QT("=", node.getMain_label(), "_", label));
                     }
                 }
             } else {
@@ -42,7 +42,7 @@ class DAG {
                 Node left_child = node.getLeft_child();
                 Node right_child = node.getRight_child();
                 if (right_child == null) {
-                    result.add(new QT(node.getOperator(), left_child.getMain_label(), null,
+                    result.add(new QT(node.getOperator(), left_child.getMain_label(), "_",
                         node.getMain_label()));
                 } else {
                     result.add(new QT(node.getOperator(), left_child.getMain_label(),
@@ -51,7 +51,7 @@ class DAG {
                 //把node中的附加标记处理
                 for (String label : node.getExtra_labels()) {
                     if (!QT.isTemporaryVariable(label)) {
-                        result.add(new QT("=", node.getMain_label(), null, label));
+                        result.add(new QT("=", node.getMain_label(), "_", label));
                     }
                 }
             }
