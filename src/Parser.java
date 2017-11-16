@@ -50,6 +50,11 @@ public class Parser extends Lang{
     // 语义分析
     private MiddleLangTranslator translator;
 
+    /**
+     * 是否debug模式
+     */
+    private boolean debug;
+
 //    private Stack<Token> SEM;
 
 //    private ArrayList<QT> QT;
@@ -68,6 +73,7 @@ public class Parser extends Lang{
         analyseTable = new HashMap<>();
         analyseStack = new Stack<>();
         translator = new MiddleLangTranslator();
+        debug = false;
 //        SEM = new Stack<>();
 //        QT = new ArrayList<QT>();
 
@@ -241,11 +247,9 @@ public class Parser extends Lang{
         analyseTable = grammar.getLL1AnalyseTable();
     }
 
-    public Parser(ArrayList<Token> i){
-        this();
-        input = i;
+    public void setDebug(boolean debug) {
+        this.debug = debug;
     }
-
 
     /**
      * 设置源代码串
@@ -256,7 +260,7 @@ public class Parser extends Lang{
         lexer.setSourceCode(s);
     }
 
-    public boolean LL1Analyze() throws CompileException{
+    public void LL1Analyze() throws CompileException{
         analyseStack.clear();
         Token w;//从input取来的token
         Token x;//从栈里取来的token
@@ -305,14 +309,15 @@ public class Parser extends Lang{
             }
 
         } catch (Exception e) {
-            throw new CompileException("At Line " + lexer.getLine() + " - " + e.getMessage());
+            throw new CompileException("GrammarException: At Line " + lexer.getLine() + " - " + e.getMessage());
         } catch (Throwable throwable) {
-            throw new CompileException("At Line " + lexer.getLine() + " - Unknown error");
+            throw new CompileException("GrammarException: At Line " + lexer.getLine() + " - Unknown error");
         }
 
         analyseStack.clear();
-        translator.printAllQTs();
-        return true;
+        if (debug) {
+            translator.printAllQTs();
+        }
     }
 
     /**
@@ -321,7 +326,9 @@ public class Parser extends Lang{
      * @throws InvalidLabelException 非法符号异常
      */
     private void action(String a) throws InvalidLabelException, SemanticException, Throwable{
-        translator.printAllQTs();
+        if (debug) {
+            translator.printAllQTs();
+        }
         String[] split = a.split("_");
         if (split.length < 3 || !split[1].equals("AC")) {
             throw new InvalidLabelException("InvalidLabelException: " + a + " is not an action\n");

@@ -15,10 +15,19 @@ public class Compile {
         Parser parser = new Parser();
 
         StringBuilder input = new StringBuilder("");
-
-
         String filename =
                 (args.length == 0) ? "/home/scarecrow/IdeaProjects/Compiler/src/input.txt" : args[0];
+        boolean debug = false;
+        if (args.length == 1) {
+            if (!args[0].startsWith("-")) {
+                filename = args[0];
+            } else {
+                debug = args[0].equals("-d");
+            }
+        } else if (args.length == 2) {
+            debug = args[0].equals("-d");
+            filename = args[1];
+        }
         File file = new File(filename);
         BufferedReader reader = null;
         try {
@@ -36,12 +45,12 @@ public class Compile {
         parser.setSourceCode(input.toString());
 
         try {
-            boolean r = parser.LL1Analyze();
-            System.out.println(r);
-            System.out.println();
-            if (r) {
-                Optimizer optimizer = new Optimizer(parser.getAllQTs());
-                ArrayList<QT> qts = optimizer.optimize();
+            //TODO 赋值似乎没有进行类型检查
+            parser.setDebug(debug);
+            parser.LL1Analyze();
+            Optimizer optimizer = new Optimizer(parser.getAllQTs());
+            ArrayList<QT> qts = optimizer.optimize();
+            if (debug) {
                 System.out
                         .println("\n\n优化后的所有四元式:\n" + parser.getAllQTs().size() + " => " + qts.size());
                 System.out.println(String.format("%-11s%-25s%-25s%-25s", "oprt:", "left_oprd:", "right_oprd:", "result_target:"));
@@ -55,6 +64,8 @@ public class Compile {
                     System.out.println(asm);
                 }
             }
+            //TODO 进行优化
+            System.out.println("编译成功！");
         } catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
