@@ -4,6 +4,8 @@ import MiddleDataUtilly.Token;
 import TranslatorPackage.MiddleLangTranslator;
 import TranslatorPackage.SymbolTable.SymbolTableManager;
 
+import TranslatorPackage.TranslatorExceptions.SemanticException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,6 +26,9 @@ import java.util.Stack;
  * 2. const型token压到语义栈的时候换成以 const xxx_数字 的形式了 避免浮点数影响
  * 3.基本的四元式都OK了 就是赋值还没有
  * 4. translator类里的exception都用try/catch输出了 非常好debug
+ *
+ * 日期：11.16 0：20
+ * //translator类中的异常全部抛出，又Parser类处理，加上行号信息
  */
 
 public class Parser extends Lang{
@@ -251,9 +256,7 @@ public class Parser extends Lang{
         lexer.setSourceCode(s);
     }
 
-    public boolean LL1Analyze() throws InvalidLabelException, LexicalErrorException{
-//        SEM.clear();
-//        QT.clear();
+    public boolean LL1Analyze() throws CompileException{
         analyseStack.clear();
         Token w;//从input取来的token
         Token x;//从栈里取来的token
@@ -261,45 +264,50 @@ public class Parser extends Lang{
         i=0;
         //analyseStack.push(new Token("#","#"));
         analyseStack.push(new Token(null,"P"));
-        //input.add(new Token("#","#"));
-        w = next();
-        if (w == null) {
-            return false;
-        }
-        while (!analyseStack.isEmpty()) {
-            x = analyseStack.pop();
-            if (grammar.isVT(x.getLabel())) {
-                //如果栈顶是终结符
-                if (!w.getLabel().equals(x.getLabel())) {
-                    //如果与input不匹配
-                    return false;
+        try {
+
+            //input.add(new Token("#","#"));
+            w = next();
+            while (!analyseStack.isEmpty()) {
+                x = analyseStack.pop();
+                if (grammar.isVT(x.getLabel())) {
+                    //如果栈顶是终结符
+                    if (!w.getLabel().equals(x.getLabel())) {
+                        //如果与input不匹配
+                        throw new GrammarException(
+                            "GrammarException: unexpected word \"" + w.getWord() + "\"");
+                    }
+                    //如果匹配则input取下一个
+                    w = next();
+                } else if (grammar.isVN(x.getLabel())) {
+                    //如果栈顶是非终结符
+                    //通过分析表获取产生式序号
+                    Integer index = analyseTable.get(x.getLabel()).get(w.getLabel());
+                    if (index == null) {
+                        //如果没找到对应的产生式
+                        throw new GrammarException(
+                            "GrammarException: unexpected word \"" + w.getWord() + "\"");
+                    }
+                    //产生式逆序压栈
+                    for (Token t : this.reverse(grammar.getDeriver(index).getDestination())) {
+                        analyseStack.push(t);
+                    }
+                } else if (grammar.isAction(x.getLabel())) {
+                    //如果栈顶是动作
+                    this.action(x.getLabel());
                 }
-                //如果匹配则input取下一个
-                w = next();
-                if (w == null) {
-                    return false;
-                }
-            } else if (grammar.isVN(x.getLabel())) {
-                //如果栈顶是非终结符
-                //通过分析表获取产生式序号
-                Integer index = analyseTable.get(x.getLabel()).get(w.getLabel());
-                if (index == null) {
-                    //如果没找到对应的产生式
-                    return false;
-                }
-                //产生式逆序压栈
-                for (Token t : this.reverse(grammar.getDeriver(index).getDestination())) {
-                    analyseStack.push(t);
-                }
-            } else if (grammar.isAction(x.getLabel())) {
-                //如果栈顶是动作
-                this.action(x.getLabel());
             }
-        }
-        if (!w.getLabel().equals("#")) {
-            //如果栈空了，符号串还没读完
-            //错误
-            return false;
+            if (!w.getLabel().equals("#")) {
+                //如果栈空了，符号串还没读完
+                //错误
+                throw new GrammarException(
+                    "GrammarException: redundant words after \"" + w.getWord() + "\"");
+            }
+
+        } catch (Exception e) {
+            throw new CompileException("At Line " + lexer.getLine() + " - " + e.getMessage());
+        } catch (Throwable throwable) {
+            throw new CompileException("At Line " + lexer.getLine() + " - Unknown error");
         }
 
         analyseStack.clear();
@@ -312,7 +320,7 @@ public class Parser extends Lang{
      * @param a 动作字符串
      * @throws InvalidLabelException 非法符号异常
      */
-    private void action(String a) throws InvalidLabelException{
+    private void action(String a) throws InvalidLabelException, SemanticException, Throwable{
         translator.printAllQTs();
         String[] split = a.split("_");
         if (split.length < 3 || !split[1].equals("AC")) {
@@ -341,23 +349,24 @@ public class Parser extends Lang{
                     break;
                 case 3:
                     method = cls.getDeclaredMethod(split[2], String.class, String.class,
-                            String.class);
+                        String.class);
                     method.invoke(translator, split[3], split[4], split[5]);
                     break;
                 case 4:
                     method = cls.getDeclaredMethod(split[2], String.class, String.class,
-                            String.class, String.class);
+                        String.class, String.class);
                     method.invoke(translator, split[3], split[4], split[5], split[6]);
                     break;
                 case 5:
                     method = cls.getDeclaredMethod(split[2], String.class, String.class,
-                            String.class, String.class, String.class);
+                        String.class, String.class, String.class);
                     method.invoke(translator, split[3], split[4], split[5], split[6], split[7]);
                     break;
             }
-        } catch (Exception e) {
-            System.out.println("occur error : " + e);
+        } catch (NoSuchMethodException | IllegalAccessException e) {
             throw new InvalidLabelException("InvalidLabelException: " + a + " action failure\n");
+        } catch (InvocationTargetException e) {
+            throw e.getTargetException();
         }
     }
 
