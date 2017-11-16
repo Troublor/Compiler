@@ -385,4 +385,12 @@ public class Lexer extends Lang{
     public void setSourceCode(String s) {
         dfa.setSourceCode(s);
     }
+
+    /**
+     * 获取当前行号
+     * @return 行号
+     */
+    public int getLine() {
+        return DFA.getLine();
+    }
 }
