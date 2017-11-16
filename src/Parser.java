@@ -2,6 +2,7 @@ import DFA.LexicalErrorException;
 import MiddleDataUtilly.QT;
 import MiddleDataUtilly.Token;
 import TranslatorPackage.MiddleLangTranslator;
+import TranslatorPackage.SymbolTable.SymbolTableManager;
 
 import TranslatorPackage.TranslatorExceptions.SemanticException;
 import java.lang.reflect.InvocationTargetException;
@@ -304,9 +305,9 @@ public class Parser extends Lang{
             }
 
         } catch (Exception e) {
-            throw new CompileException("At Line " + lexer.getLine() + " - " + e.getMessage());
+            throw new CompileException("GrammarException: At Line " + lexer.getLine() + " - " + e.getMessage());
         } catch (Throwable throwable) {
-            throw new CompileException("At Line " + lexer.getLine() + " - Unknown error");
+            throw new CompileException("GrammarException: At Line " + lexer.getLine() + " - Unknown error");
         }
 
         analyseStack.clear();
@@ -428,6 +429,9 @@ public class Parser extends Lang{
         return translator.getQTs();
     }
 
+    public SymbolTableManager getSymbolTableManager() {
+        return translator.getSymbolTableManager();
+    }
 //    private void PUSH() {
 //        SEM.push(this.last());
 //    }

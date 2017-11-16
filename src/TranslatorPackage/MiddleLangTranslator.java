@@ -2,14 +2,13 @@ package TranslatorPackage;
 
 
 import MiddleDataUtilly.QT;
-import MiddleDataUtilly.Token;
-import TranslatorPackage.SymbolTable.VariableTable.VariableTable;
-import TranslatorPackage.SymbolTable.VariableTable.VariableTableRow;
+
 import TranslatorPackage.TranslatorExceptions.OptNotSupportError;
 
 import TranslatorPackage.TranslatorExceptions.SemanticException;
 import TranslatorPackage.SymbolTable.SymbolTableManager;
 import TranslatorPackage.TranslatorExceptions.TypeError;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -88,15 +87,17 @@ public class MiddleLangTranslator {
         if (isConstant(index_type)) {
             index_item = index_item.split("_")[1];
         }
-        if (index_item.contains(".")) {
-            // 对 a[a[10]]这种情况，本来会生成a.a.10, 现在先生成 t = a.10,  然后生成a.t，防止多层嵌套
-            String tmp = symbolTableManager.addTempVariable(index_type);
-            QTs.add(new QT("ref", index_item, "_", tmp));
-            index_item = tmp;
-        }
-        // todo:如果是下标是变量的话 例子：b[a[3]]  b[a]
-        else if (!isNumeric(index_type)) throw new TypeError(index_item, index_type, "numeric");
-        semanticStack.push(id_item + "." + index_item);
+
+            if (index_item.contains(".")) {
+                // 对 a[a[10]]这种情况，本来会生成a.a.10, 现在先生成 t = a.10,  然后生成a.t，防止多层嵌套
+                String tmp = symbolTableManager.addTempVariable(index_type);
+                QTs.add(new QT("=", toRepresent(index_item), "_", toRepresent(tmp)));
+                index_item = tmp;
+            }
+            // todo:如果是下标是变量的话 例子：b[a[3]]  b[a]
+            else if (!isNumeric(index_type)) throw new TypeError(index_item, index_type, "numeric");
+            semanticStack.push(id_item + "." + index_item);
+
     }
 
 
@@ -321,23 +322,23 @@ public class MiddleLangTranslator {
 
     public void reciveReturnVal() throws SemanticException, OptNotSupportError{
         if (semanticStack.peek().equals("flag_empty_ret_val")) {
-        if (curr_define_func_ret_type.equals("void")) {
+            if (curr_define_func_ret_type.equals("void")) {
+                semanticStack.pop();
+                //返回值为空的情况
+                QTs.add(new QT("ret", "_", "_", "_"));
+            } } else {
+            //如果不是空返回  返回值则在语义栈中 是刚才扫描过的一个变量
+            if (curr_define_func_ret_type.equals("void"))
+                throw new SemanticException("func: " + curr_define_func_name + "does not need return val");
+            is_curr_func_has_ret = true;
+            String ret_val = semanticStack.pop();
+            QTs.add(new QT("ret", toRepresent(ret_val),
+                    "if needed,assign at", "next qt"));
             semanticStack.pop();
-            //返回值为空的情况
-            QTs.add(new QT("ret", "_", "_", "_"));
+            semanticStack.push(ret_val);
         }
-    } else {
-        //如果不是空返回  返回值则在语义栈中 是刚才扫描过的一个变量
-        if (curr_define_func_ret_type.equals("void"))
-            throw new SemanticException("func: " + curr_define_func_name + "does not need return val");
-        is_curr_func_has_ret = true;
-        String ret_val = semanticStack.pop();
-        QTs.add(new QT("ret", toRepresent(ret_val),
-            "if needed,assign at", "next qt"));
-        semanticStack.pop();
-        semanticStack.push(ret_val);
     }
-    }
+
 
 
     public void clearCurrDefineFunc() throws SemanticException {
@@ -407,8 +408,10 @@ public class MiddleLangTranslator {
             QTs.add(new QT("=", real_vars.get(end_index - i), "_", params.get(i)));
         }
 
-        //传参完成后进行执行指令的跳转
-        QTs.add(new QT("call", calling_func_name, "_", "_"));
+            //传参完成后进行执行指令的跳转
+            QTs.add(new QT("call", calling_func_name, "_", "_"));
+            semanticStack.push("#ret_val");
+
 
     }
 
@@ -532,6 +535,7 @@ public class MiddleLangTranslator {
         for (QT qt : QTs) {
             System.out.println(qt);
         }
+
     }
 
     public ArrayList<QT> getQTs() {
@@ -543,4 +547,8 @@ public class MiddleLangTranslator {
         semanticStack.pop();
     }
 
+
+    public SymbolTableManager getSymbolTableManager() {
+        return symbolTableManager;
+    }
 }
