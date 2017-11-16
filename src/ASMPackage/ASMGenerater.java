@@ -113,7 +113,7 @@ public class ASMGenerater {
                 continue;
             }
             if (cache.size() > 0) {
-                result.addAll(new ASMArith(cache).getResult());
+                result.addAll(new ASMArith(cache).produceASM());
                 cache.clear();
                 continue;
             }
