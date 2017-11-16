@@ -65,7 +65,6 @@ public class Compile {
                     System.out.println(asm);
                 }
             }
-            //TODO 进行优化
             System.out.println("编译成功！");
         } catch (Exception e) {
             System.out.println(e.getMessage());
