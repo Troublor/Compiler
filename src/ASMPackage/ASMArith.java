@@ -12,12 +12,12 @@ public class ASMArith {
     private Map<String, register> registers = new HashMap<>();
 //    private ASMArith arith;
     private int cur_index = 0;
-    private ArrayList<QT> qts;
-    ArrayList<ASMSentence> asms = new ArrayList<>();
-    ArrayList<register>  order;
-    int end_index;
+    private List<QT> qts;
+    private ArrayList<ASMSentence> asms = new ArrayList<>();
+    private ArrayList<register> order;
+    private int end_index;
 
-    public ASMArith(ArrayList<QT> qts) {
+    public ASMArith(List<QT> qts) {
         this.qts = qts;
         end_index = qts.size();
         registers.put("eax", eax);

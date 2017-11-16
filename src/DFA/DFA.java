@@ -46,6 +46,10 @@ public class DFA {
      */
     private static int index = 0;
 
+    /**
+     * 记录行号
+     */
+    private static int line = 1;
 
     public DFA(){
         states=new ArrayList<>();
@@ -129,7 +133,7 @@ public class DFA {
         }
         if (index >= sourceCode.length()) {
             throw new LexicalErrorException(
-                "LexicalErrorException: deriver error: not be expected to end");
+                "LexicalErrorException: not expected to end");
         }
         String input = sourceCode.substring(index, index + 1);
         if (input.equals("#")&&endStates.contains(currState)){
@@ -138,7 +142,7 @@ public class DFA {
         currState=transformTable.transform(currState,input);
         if (currState.equals("no")){
             throw new LexicalErrorException(
-                "LexicalErrorException: deriver error: " + currState + "(" + input + ")\n");
+                "LexicalErrorException: illegal word \"" + input + "\"");
         }
         if (method){
             if (process(currState,input)){
@@ -148,7 +152,10 @@ public class DFA {
         index++;
         if (index >= sourceCode.length()) {
             throw new LexicalErrorException(
-                "LexicalErrorException: deriver error: not be expected to end");
+                "LexicalErrorException: not expected to end");
+        }
+        if (input.equals("$")) {
+            line++;
         }
         //状态转移回q1就停止运行
         while (!currState.equals(startState)) {
@@ -159,7 +166,7 @@ public class DFA {
             currState=transformTable.transform(currState,input);
             if (currState.equals("no")){
                 throw new LexicalErrorException(
-                    "LexicalErrorException: deriver error: " + currState + "(" + input + ")\n");
+                    "LexicalErrorException: illegal word \"" + input + "\"");
             }
             if (method){
                 if (process(currState,input)){
@@ -169,8 +176,11 @@ public class DFA {
             index++;
             if (index >= sourceCode.length()) {
                 throw new LexicalErrorException(
-                    "LexicalErrorException: deriver error: not be expected to end");
+                    "LexicalErrorException: not expected to end");
             }
+            /*if (input.equals("$")) {
+                line++;
+            }*/
         }
         return true;
     }
@@ -265,6 +275,14 @@ public class DFA {
     public boolean addEndStates(String[] eSs){
         letters.addAll(Arrays.asList(eSs));
         return true;
+    }
+
+    /**
+     * 获取当前行号
+     * @return 行号
+     */
+    public static int getLine() {
+        return line;
     }
 
 }

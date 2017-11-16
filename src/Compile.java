@@ -1,5 +1,3 @@
-
-
 import MiddleDataUtilly.QT;
 import OptimizePackage.Optimizer;
 import java.io.BufferedReader;
@@ -8,14 +6,21 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class test {
+public class Compile {
 
     public static void main(String[] args) {
         Parser parser = new Parser();
 
         StringBuilder input = new StringBuilder("");
-        File file = new File("/Users/gexinjie/IdeaProjects/Compiler/src/input.txt");
-
+        String filename = "C:\\JavaProject\\Compiler\\src\\input.txt";
+        boolean debug = false;
+        if (args.length == 1) {
+            filename = args[0];
+        } else if (args.length == 2) {
+            debug = args[0].equals("-d");
+            filename = args[1];
+        }
+        File file = new File(filename);
         BufferedReader reader = null;
         try {
             reader = new BufferedReader(new FileReader(file));
@@ -32,12 +37,10 @@ public class test {
         parser.setSourceCode(input.toString());
 
         try {
-            boolean r = parser.LL1Analyze();
-            System.out.println(r);
-            System.out.println();
-            if (r) {
-                Optimizer optimizer = new Optimizer(parser.getAllQTs());
-                ArrayList<QT> qts = optimizer.optimize();
+            parser.LL1Analyze();
+            Optimizer optimizer = new Optimizer(parser.getAllQTs());
+            ArrayList<QT> qts = optimizer.optimize();
+            if (debug) {
                 System.out
                     .println("\n\n优化后的所有四元式:\n" + parser.getAllQTs().size() + " => " + qts.size());
                 System.out.println(String.format("%-11s%-25s%-25s%-25s", "oprt:", "left_oprd:", "right_oprd:", "result_target:"));
@@ -45,6 +48,8 @@ public class test {
                     System.out.println(qt);
                 }
             }
+            //TODO 进行优化
+            System.out.println("编译成功！");
         } catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
