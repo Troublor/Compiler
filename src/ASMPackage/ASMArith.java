@@ -126,7 +126,7 @@ public class ASMArith {
     // todo : only allow operation of same type
     ArrayList<ASMSentence> produceASM() throws ASMException {
         for (QT qt : qts) {
-            dispatch(qt);
+           dispatch(qt);
         }
         return this.asms;
     }
