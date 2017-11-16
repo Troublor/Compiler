@@ -300,26 +300,39 @@ public class SymbolTableManager {
      * @return
      * @throws SemanticException
      */
-    public int lookUpVariableOffset(String QT_identifier) throws SemanticException {
-        int offset;
-        String[] identifier_elems = QT_identifier.split("\\.");
-        int table_id = Integer.valueOf(identifier_elems[0]);
-        String name_id = identifier_elems[1];
-        VariableTableRow this_var = variableTableSetManager.accessVariableByTableId(name_id, table_id);
-        offset = this_var.getOffset();
-        TypeTableRow curr_type = typeTable.getTypeInfo(this_var.getTypeName());
-        FieldTableRow access_field = curr_type.getField(identifier_elems[1]);
-        offset += access_field.getOffset();
+    public int lookUpVariableOffset(String QT_identifier) {
+        try {
+            int offset;
+            String[] identifier_elems = QT_identifier.split("\\.");
+            int table_id = Integer.valueOf(identifier_elems[0]);
+            String name_id = identifier_elems[1];
+            String may_type_or_field = identifier_elems[2];
 
-        String curr_field_type_name = access_field.getTypeName();
-        for (int i = 2; i < identifier_elems.length - 1; i++) {
-            TypeTableRow curr_field_type = typeTable.getTypeInfo(curr_field_type_name);
-            FieldTableRow next_field = curr_field_type.getField(identifier_elems[i]);
-            offset += next_field.getOffset();
-            curr_field_type_name = next_field.getTypeName();
+            VariableTableRow this_var = variableTableSetManager.accessVariableByTableId(name_id, table_id);
+            offset = this_var.getOffset();
+            TypeTableRow curr_type = typeTable.getTypeInfo(this_var.getTypeName());
+
+            //如果是基本类型 直接返回变量的offset即可
+            if (may_type_or_field.equals("int") || may_type_or_field.equals("double")
+                    || may_type_or_field.equals("char"))
+                return offset;
+
+            //如果不是基本类型 则需要进行偏移量的寻址
+            FieldTableRow access_field = curr_type.getField(identifier_elems[2]);
+            offset += access_field.getOffset();
+
+            String curr_field_type_name = access_field.getTypeName();
+            for (int i = 2; i < identifier_elems.length - 1; i++) {
+                TypeTableRow curr_field_type = typeTable.getTypeInfo(curr_field_type_name);
+                FieldTableRow next_field = curr_field_type.getField(identifier_elems[i]);
+                offset += next_field.getOffset();
+                curr_field_type_name = next_field.getTypeName();
+            }
+            return offset;
+        } catch (Exception ee) {
+            ee.printStackTrace();
         }
-        return offset;
-
+        return 1;
     }
 
 
@@ -334,6 +347,10 @@ public class SymbolTableManager {
         return calling_func.getFuncVarTableID();
     }
 
+    public String getFuncReturnType(String func_name) {
+        FunctionTableRow func_info = functionTable.getFuntionInfo(func_name);
+        return func_info.getReturnType();
+    }
 
 
 }

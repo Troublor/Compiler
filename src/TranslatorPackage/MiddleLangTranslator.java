@@ -60,7 +60,7 @@ public class MiddleLangTranslator {
         // 生成临时量
 
         String tmp = symbolTableManager.addTempVariable(return_type);
-        QTs.add(new QT(opt, toRepresent(operand), "_",
+        QTs.add(new QT(opt, toRepresent(operand), null,
             toRepresent(tmp)));
         semanticStack.push(tmp);
 
@@ -91,7 +91,7 @@ public class MiddleLangTranslator {
             if (index_item.contains(".")) {
                 // 对 a[a[10]]这种情况，本来会生成a.a.10, 现在先生成 t = a.10,  然后生成a.t，防止多层嵌套
                 String tmp = symbolTableManager.addTempVariable(index_type);
-                QTs.add(new QT("=", toRepresent(index_item), "_", toRepresent(tmp)));
+                QTs.add(new QT("=", toRepresent(index_item), null, toRepresent(tmp)));
                 index_item = tmp;
             }
             // todo:如果是下标是变量的话 例子：b[a[3]]  b[a]
@@ -120,7 +120,7 @@ public class MiddleLangTranslator {
 
         if (!isNumeric(lookUpType(right)) || !isNumeric(lookUpType(left)))
             throw new SemanticException(lookUpType(left) + " can not assign to " + lookUpType(right));
-        QTs.add(new QT("=", toRepresent(right), "_", toRepresent(left)));
+        QTs.add(new QT("=", toRepresent(right), null, toRepresent(left)));
     }
 
     // todo: array support
@@ -276,7 +276,7 @@ public class MiddleLangTranslator {
         if (func_type.equals("void"))
             is_curr_func_has_ret = true;
         curr_define_func_ret_type = func_type;
-        QTs.add(new QT("func_label", func_name, "_", "_"));
+        QTs.add(new QT("func_label", func_name, null, null));
 
     }
 
@@ -325,7 +325,7 @@ public class MiddleLangTranslator {
             if (curr_define_func_ret_type.equals("void")) {
                 semanticStack.pop();
                 //返回值为空的情况
-                QTs.add(new QT("ret", "_", "_", "_"));
+                QTs.add(new QT("ret", null, null, null));
             } } else {
             //如果不是空返回  返回值则在语义栈中 是刚才扫描过的一个变量
             if (curr_define_func_ret_type.equals("void"))
@@ -355,7 +355,7 @@ public class MiddleLangTranslator {
 
     public void addVoidDefaultRet() {
         if (curr_define_func_ret_type.equals("void"))
-            QTs.add(new QT("ret", "_", "_", "_"));
+            QTs.add(new QT("ret", null, null, null));
     }
 
     // todo 要修改
@@ -400,16 +400,16 @@ public class MiddleLangTranslator {
 
         //函数调用时 在内存栈区为该函数的临时变量开辟新内存空间
         // 准备下一步的传参
-        QTs.add(new QT("push_stk", calling_func_name, "_", "_"));
+        QTs.add(new QT("push_stk", calling_func_name, null, null));
 
         int end_index = real_vars.size() - 1;
         for (int i = 0; i < real_vars.size(); i++) {
             //进行传参  实际上是一个跨表的传参
-            QTs.add(new QT("=", real_vars.get(end_index - i), "_", params.get(i)));
+            QTs.add(new QT("=", real_vars.get(end_index - i), null, params.get(i)));
         }
 
             //传参完成后进行执行指令的跳转
-            QTs.add(new QT("call", calling_func_name, "_", "_"));
+        QTs.add(new QT("call", calling_func_name, null, null));
             semanticStack.push("#ret_val");
 
 
@@ -488,29 +488,29 @@ public class MiddleLangTranslator {
 
 
     public void addWhileStartQT() {
-        QTs.add(new QT("whl_sta", "_", "_", "_"));
+        QTs.add(new QT("whl_sta", null, null, null));
     }
 
     public void addWhileEndQT() {
-        QTs.add(new QT("whl_end", "_", "_", "_"));
+        QTs.add(new QT("whl_end", null, null, null));
     }
 
     public void checkWhileDo() throws SemanticException{
         String judge_condition_val = semanticStack.pop();
         judge_condition_val = symbolTableManager.accessVariableAndField(judge_condition_val, "value");
-        QTs.add(new QT("whl_do_ck", judge_condition_val, "_", "_"));
+        QTs.add(new QT("whl_do_ck", judge_condition_val, null, null));
     }
 
     public void addIfStartQt() throws SemanticException, OptNotSupportError{
-        QTs.add(new QT("if_sta", toRepresent(semanticStack.pop()), "_", "_"));
+        QTs.add(new QT("if_sta", toRepresent(semanticStack.pop()), null, null));
     }
 
     public void addElseStartQt() {
-        QTs.add(new QT("el_sta", "_", "_", "_"));
+        QTs.add(new QT("el_sta", null, null, null));
     }
 
     public void addIfElseEndQt() {
-        QTs.add(new QT("ifel_end", "_", "_", "_"));
+        QTs.add(new QT("ifel_end", null, null, null));
     }
 
     public void stepOutBlock() {

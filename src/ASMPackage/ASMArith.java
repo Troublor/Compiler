@@ -1,6 +1,7 @@
 package ASMPackage;
 
 import MiddleDataUtilly.QT;
+import TranslatorPackage.TranslatorExceptions.SemanticException;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -10,15 +11,16 @@ import java.util.regex.Pattern;
 public class ASMArith {
     // represent 4 general registers: eax, ebx, ecx, edx
     private Map<String, register> registers = new HashMap<>();
-//    private ASMArith arith;
+    private ASMGenerater asmGenerater;
     private int cur_index = 0;
     private List<QT> qts;
     private ArrayList<ASMSentence> asms = new ArrayList<>();
     private ArrayList<register> order;
     private int end_index;
 
-    public ASMArith(List<QT> qts) {
+    public ASMArith(List<QT> qts, ASMGenerater asmGenerater) {
         this.qts = qts;
+        this.asmGenerater = asmGenerater;
         end_index = qts.size();
         registers.put("eax", eax);
         registers.put("ebx", ebx);
@@ -224,7 +226,8 @@ public class ASMArith {
 
     // todo: mov ri, 1.b.int -> mov ri, b.offset
     private String toAddress(String id) {
-        return id;
+        id = id.split("->")[0];
+        return asmGenerater.toASMOprd(id, "esi");
     }
 
 
@@ -267,7 +270,6 @@ public class ASMArith {
 
 
     // 输入为标志过 活跃 的QT
-    // todo: 替换为offset, 其实我觉得更好的是用 id_tableid 或者其他字符串 替换，产生的汇编更有可读性
     void addOrSub(QT qt, String operator) {
         String left_operand = qt.getOperand_left(), right_operand = qt.getOperand_right(), result = qt.getResult();
         if (isConstant(left_operand)) {

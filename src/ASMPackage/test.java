@@ -15,19 +15,19 @@ public class test {
         qts.add(new QT("/", "$t1.int", "const int_2", "$t5.int"));
         qts.add(new QT("+", "$t4.int", "$t5.int", "x.int"));
 
-        //ASMGenerater generater = new ASMGenerater(qts);
+        // ASMGenerater generater = new ASMGenerater(qts);
         //generater.generate();
 
-        try {
-            ASMArith arith = new ASMArith(qts);
-            ArrayList<ASMSentence> asms = arith.getResult();
-            for (ASMSentence asm : asms) {
-                System.out.println(asm);
-            }
-        }
-        catch  (ASMException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            ASMArith arith = new ASMArith(qts,generater);
+//            ArrayList<ASMSentence> asms = arith.getResult();
+//            for (ASMSentence asm : asms) {
+//                System.out.println(asm);
+//            }
+//        }
+//        catch  (ASMException e) {
+//            e.printStackTrace();
+//        }
     }
 
 }

@@ -1,3 +1,5 @@
+import ASMPackage.ASMGenerater;
+import ASMPackage.ASMSentence;
 import MiddleDataUtilly.QT;
 import OptimizePackage.Optimizer;
 import java.io.BufferedReader;
@@ -5,6 +7,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class Compile {
 
@@ -13,8 +16,9 @@ public class Compile {
 
         StringBuilder input = new StringBuilder("");
 
+
         String filename =
-            (args.length == 0) ? "/home/scarecrow/IdeaProjects/Compiler/src/input.txt" : args[0];
+                (args.length == 0) ? "/home/scarecrow/IdeaProjects/Compiler/src/input.txt" : args[0];
         File file = new File(filename);
         BufferedReader reader = null;
         try {
@@ -39,10 +43,16 @@ public class Compile {
                 Optimizer optimizer = new Optimizer(parser.getAllQTs());
                 ArrayList<QT> qts = optimizer.optimize();
                 System.out
-                    .println("\n\n优化后的所有四元式:\n" + parser.getAllQTs().size() + " => " + qts.size());
+                        .println("\n\n优化后的所有四元式:\n" + parser.getAllQTs().size() + " => " + qts.size());
                 System.out.println(String.format("%-11s%-25s%-25s%-25s", "oprt:", "left_oprd:", "right_oprd:", "result_target:"));
                 for (QT qt : qts) {
                     System.out.println(qt);
+                }
+
+                ASMGenerater asmGenerater = new ASMGenerater(qts, parser.getSymbolTableManager());
+                List<ASMSentence> asmSentences = asmGenerater.generate();
+                for (ASMSentence asm : asmSentences) {
+                    System.out.println(asm);
                 }
             }
         } catch (Exception e) {

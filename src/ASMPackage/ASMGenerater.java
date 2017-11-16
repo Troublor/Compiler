@@ -8,7 +8,9 @@ import TranslatorPackage.TranslatorExceptions.SemanticException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Stack;
+
 
 
 public class ASMGenerater {
@@ -23,6 +25,12 @@ public class ASMGenerater {
      */
     private ArrayList<QT> qts;
 
+
+    /**
+     * 生成函数相关的asm
+     */
+    private ASMFunctionGenerater asmFunctionGenerater;
+
     /**
      * 生成的汇编语句序列
      */
@@ -33,6 +41,7 @@ public class ASMGenerater {
         this.qts = qts;
         sentences = new ArrayList<>();
         this.symbolTableManager = symbolTableManager;
+        asmFunctionGenerater = new ASMFunctionGenerater(symbolTableManager, this);
     }
 
     /**
@@ -44,8 +53,8 @@ public class ASMGenerater {
     /**
      * 根据qts初始化变量的活跃信息表
      */
-    private void initializeActiveTable() {
-        for (QT qt : qts) {
+    private void initializeActiveTable(List<QT> qts_block) {
+        for (QT qt : qts_block) {
             if (qt.getOperand_left() != null && !QT.isConstVariable(qt.getOperand_left())) {
                 active_table
                         .put(qt.getOperand_left(),
@@ -66,10 +75,10 @@ public class ASMGenerater {
     /**
      * 为每一个四元式的变量附加上活跃信息
      */
-    private void addActiveInfomation() {
+    private void addActiveInfomation(List<QT> qts_block) {
         QT qt;
-        for (int i = qts.size() - 1; i >= 0; i--) {
-            qt = qts.get(i);
+        for (int i = qts_block.size() - 1; i >= 0; i--) {
+            qt = qts_block.get(i);
             StringBuilder sb_result = null;
             if (qt.getResult() != null) {
                 sb_result = new StringBuilder(qt.getResult());
@@ -93,8 +102,8 @@ public class ASMGenerater {
                 }
             }
 
-            qts.remove(i);
-            qts.add(i, new QT(qt.getOperator(), (sb_left != null) ? sb_left.toString() : null,
+            qts_block.remove(i);
+            qts_block.add(i, new QT(qt.getOperator(), (sb_left != null) ? sb_left.toString() : null,
                     (sb_right != null) ? sb_right.toString() : null,
                     (sb_result != null) ? sb_result.toString() : null));
         }
@@ -113,46 +122,110 @@ public class ASMGenerater {
                 continue;
             }
             if (cache.size() > 0) {
-                result.addAll(new ASMArith(cache).getResult());
+                initializeActiveTable(cache);
+                addActiveInfomation(cache);
+                result.addAll(new ASMArith(cache, this).getResult());
                 cache.clear();
                 continue;
             }
-
+            String judge_opd;
             //如果碰到控制四元式（非运算类的四元式）
             if (qt.getOperator().equals("if_sta")) {
                 //与0比较判断真假
                 //查找变量offset并从内存中取到AX中
-                //TODO 修改8086指令到x86
-                result.add(new ASMSentence("MOV", "AX",
-                        "ES:" + symbolTableManager.lookUpVariableOffset(qt.getOperand_left())));
-                result.add(new ASMSentence("CMP", "AX", "0"));
-                result.add(new ASMSentence("JZ", "IF" + Integer.toString(i)));
+                judge_opd = toASMOprd(qt.getOperand_left(), "esi");
+                result.add(new ASMSentence("mov", "eax", judge_opd));
+                result.add(new ASMSentence("cmp", "eax", "0"));
+                result.add(new ASMSentence("jz", "IF" + Integer.toString(i)));
+                //i 是四元式序列序号,不可能撞
                 jumpStack.push("IF" + Integer.toString(i));//等待回填
+
             } else if (qt.getOperator().equals("el_sta")) {
-                result.add(new ASMSentence("JMP", "ELSE" + Integer.toString(i)));
+                result.add(new ASMSentence("jmp", "ELSE" + Integer.toString(i)));
                 result.add(new ASMSentence(jumpStack.pop() + ":"));//回填Label
                 jumpStack.push("ELSE" + Integer.toString(i));//等待回填
+
             } else if (qt.getOperator().equals("ifel_end")) {
                 result.add(new ASMSentence(jumpStack.pop() + ":"));
+
             } else if (qt.getOperator().equals("whl_sta")) {
                 result.add(new ASMSentence("WHILE" + Integer.toString(i)));
                 jumpStack.push("WHILE" + Integer.toString(i));
+
             } else if (qt.getOperator().equals("whl_do_ck")) {
-                result.add(new ASMSentence("MOV", "AX",
-                        "ES:" + symbolTableManager.lookUpVariableOffset(qt.getOperand_left())));
-                result.add(new ASMSentence("CMP", "AX", "0"));
-                result.add(new ASMSentence("JZ", "WHILE" + Integer.toString(i)));
+                judge_opd = toASMOprd(qt.getOperand_left(), "esi");
+                result.add(new ASMSentence("mov", "eax", judge_opd));
+                result.add(new ASMSentence("cmp", "eax", "0"));
+                result.add(new ASMSentence("jz", "WHILE" + Integer.toString(i)));
                 jumpStack.push("WHILE" + Integer.toString(i));
             } else if (qt.getOperator().equals("whl_end")) {
                 String temp = jumpStack.pop();
-                result.add(new ASMSentence("JMP", jumpStack.pop()));
+                result.add(new ASMSentence("jmp", jumpStack.pop()));
                 result.add(new ASMSentence(temp + ":"));
             }
 
-            //TODO 下面写函数调用
+            if (qt.getOperator().equals("push_stk") || qt.getOperator().equals("pass_param")) {
+                cache.add(qt);
+                continue;
+            }
+            if (qt.getOperator().equals("call")) {
+                cache.add(qt);
+                List<ASMSentence> res = asmFunctionGenerater.generateFunctionCalling(cache);
+                cache.clear();
+
+                result.addAll(res);
+
+            }
+
+            if (qt.getOperator().equals("ret")) {
+                List<ASMSentence> res = asmFunctionGenerater.generateFunctionReturn(qt);
+                result.addAll(res);
+            }
+
+            if (qt.getOperator().equals("func_label")) {
+                result.add(new ASMSentence(qt.getOperand_left() + ":"));
+                //函数定义的时候添加标号
+            }
+
+
 
         }
         return result;
+    }
+
+
+    /**
+     * 根据给定的偏移寄存器
+     * 将四元式中的表示转换为汇编指令中的运算数
+     *
+     * @param qt_form_opd 四元式形式
+     * @param register    偏移寄存器
+     * @return 汇编代码中的操作数
+     * @throws SemanticException
+     */
+    public String toASMOprd(String qt_form_opd, String register) {
+
+        String ASM_form_opd;
+        //如果是常数的话 用立即数传参
+        if (qt_form_opd.startsWith("const")) {
+            ASM_form_opd = qt_form_opd.split(" ")[1];
+            String type = ASM_form_opd.split("_")[0];
+            String val = ASM_form_opd.split("_")[1];
+            if (type.equals("int")) {
+                ASM_form_opd = val;
+            } else if (type.equals("char"))
+                ASM_form_opd = "'" + val + "'";
+            else
+                ASM_form_opd = "__float__" + val;
+        } else {
+            //反之则是从上层函数(eax)向当前函数栈层(esi)传参
+            ASM_form_opd = toAddress(register, symbolTableManager.lookUpVariableOffset(qt_form_opd));
+        }
+        return ASM_form_opd;
+    }
+
+    public String toAddress(String register, int offset) {
+        return "[" + register + "+" + offset + "]";
     }
 
 }
