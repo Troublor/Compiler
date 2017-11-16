@@ -146,6 +146,7 @@ public class MiddleLangTranslator {
     }
 
 
+
     private String getUnaryReturnType(String unaryOpt, String type) throws OptNotSupportError{
         // 基础类型都是数值类型，支持所有操作符
         if (isBasicType(type))
