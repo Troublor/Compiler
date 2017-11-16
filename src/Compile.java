@@ -15,7 +15,11 @@ public class Compile {
         String filename = "C:\\JavaProject\\Compiler\\src\\input.txt";
         boolean debug = false;
         if (args.length == 1) {
-            filename = args[0];
+            if (!args[0].startsWith("-")) {
+                filename = args[0];
+            } else {
+                debug = args[0].equals("-d");
+            }
         } else if (args.length == 2) {
             debug = args[0].equals("-d");
             filename = args[1];
@@ -37,6 +41,8 @@ public class Compile {
         parser.setSourceCode(input.toString());
 
         try {
+            //TODO 赋值似乎没有进行类型检查
+            parser.setDebug(debug);
             parser.LL1Analyze();
             Optimizer optimizer = new Optimizer(parser.getAllQTs());
             ArrayList<QT> qts = optimizer.optimize();
