@@ -234,8 +234,8 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("TERM", new String[]{"*", "_AC_PUSH", "unary","_AC_afterDual",  "TERM"}));
         grammar.addDeriver(new Deriver("TERM", new String[]{"/", "_AC_PUSH", "unary", "_AC_afterDual", "TERM"}));
         grammar.addDeriver(new Deriver("TERM", new String[]{}));
-        grammar.addDeriver(new Deriver("unary", new String[]{"!","_AC_PUSH", "_AC_afterUnary",  "unary"}));
-        grammar.addDeriver(new Deriver("unary", new String[]{"-", "_AC_PUSH","_AC_afterUnary", "unary"}));
+        grammar.addDeriver(new Deriver("unary", new String[]{"!","_AC_PUSH",  "unary", "_AC_afterUnary"}));
+        grammar.addDeriver(new Deriver("unary", new String[]{"-", "_AC_PUSH", "unary","_AC_afterUnary"}));
         grammar.addDeriver(new Deriver("unary", new String[]{"值"}));
         grammar.addDeriver(new Deriver("unary", new String[]{"(", "bool", ")"}));
 

@@ -124,7 +124,8 @@ public class ASMGenerater {
             if (cache.size() > 0) {
                 initializeActiveTable(cache);
                 addActiveInfomation(cache);
-                result.addAll(new ASMArith(cache, this).getResult());
+                result.addAll(new ASMArith(cache, this).produceASM());
+
                 cache.clear();
                 continue;
             }
