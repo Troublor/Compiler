@@ -1,3 +1,5 @@
+
+
 func void main() {
   var c double;
   var array [10] int;
@@ -7,7 +9,7 @@ func void main() {
   c = array[b];
   b = 3 + c;
   array[b] = b;
-  a = 1;的萨芬
+  a = 1;
   b = 5;
   c = 5.5;
   array[array[0]] = a;
