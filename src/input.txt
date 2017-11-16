@@ -8,6 +8,8 @@ struct A {
 func int hhhhha(int jhgjh,double k) {
   var brray [10] int;
   var h,b int;
+  var aaa A;
+  aaa.a = 1.2;
   brray[b] = h;
   h = 1;
   b = 5;
