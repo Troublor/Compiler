@@ -5,7 +5,8 @@ func void main() {
   var a,b int;
   var ch char;
   array[b] = a;
-  a = 1;
+  a = -1;
+
   b = 5;
   c = 5.5;
   array[array[0]] = a;
@@ -13,11 +14,12 @@ func void main() {
 
 
   a = b + c;
+  b = array[0] + c;
+  c = array[b] + c;
   a = array[0] + c;
-  a = array[b] + c;
-  a = array[array[0]] + c;
+  a = -a;
 
-  if(a>c){
+  if(a>c && a < c){
     b = (a + c)/a;
     a = a + b;
   }else{

@@ -73,6 +73,7 @@ public class MiddleLangTranslator {
 
     // 目前生成四元式时操作数不进行类型转换
     // todo: array suport
+    // todo: !!! 逻辑判断返回值为int型，真为1，假为零
     public void afterDual() {
         try {
             String right_operand = semanticStack.pop();
@@ -173,7 +174,7 @@ public class MiddleLangTranslator {
     private String getUnaryReturnType(String unaryOpt, String type) {
         try {
             // 基础类型都是数值类型，支持所有操作符
-            if (isBasicType(type))
+            if (isNumeric(type))
                 return type;
             else
                 throw new OptNotSupportError(type, unaryOpt);
