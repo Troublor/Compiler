@@ -154,6 +154,9 @@ public class DFA {
             throw new LexicalErrorException(
                 "LexicalErrorException: not expected to end");
         }
+        if (input.equals("$")) {
+            line++;
+        }
         //状态转移回q1就停止运行
         while (!currState.equals(startState)) {
             input = sourceCode.substring(index, index + 1);
@@ -175,9 +178,9 @@ public class DFA {
                 throw new LexicalErrorException(
                     "LexicalErrorException: not expected to end");
             }
-            if (input.equals("$")) {
+            /*if (input.equals("$")) {
                 line++;
-            }
+            }*/
         }
         return true;
     }

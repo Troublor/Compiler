@@ -305,9 +305,9 @@ public class Parser extends Lang{
             }
 
         } catch (Exception e) {
-            throw new CompileException("At Line " + lexer.getLine() + " - " + e.getMessage());
+            throw new CompileException("GrammarException: At Line " + lexer.getLine() + " - " + e.getMessage());
         } catch (Throwable throwable) {
-            throw new CompileException("At Line " + lexer.getLine() + " - Unknown error");
+            throw new CompileException("GrammarException: At Line " + lexer.getLine() + " - Unknown error");
         }
 
         analyseStack.clear();
