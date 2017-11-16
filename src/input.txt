@@ -1,5 +1,33 @@
 
 
+struct A {
+  var a int;
+}
+
+
+func int hhhhha(int jhgjh,double k) {
+  var brray [10] int;
+  var h,b int;
+  brray[b] = h;
+  h = 1;
+  b = 5;
+  k = 5.5;
+  while(h+3>k){
+     brray[0] = h;
+     while(b+2/5 > 5){
+        k = k*(h+b-(b*5)*55)*5-b+(h+5);
+     }
+     h = h +1 ;
+     return h+b;
+  }
+  brray[brray[0]] = h;
+  if(h>k){
+    b = (h + k)/h;
+    h = h + b;
+  }
+}
+
+
 func void main() {
   var c double;
   var array [10] int;
@@ -26,24 +54,3 @@ func void main() {
 }
 
 
-func int hhhhha(int jhgjh,double k) {
-  var brray [10] int;
-  var h,b int;
-  brray[b] = h;
-  h = 1;
-  b = 5;
-  k = 5.5;
-  while(h+3>k){
-     brray[0] = h;
-     while(b+2/5 > 5){
-        k = k*(h+b-(b*5)*55)*5-b+(h+5);
-     }
-     h = h +1 ;
-     return h+b;
-  }
-  brray[brray[0]] = h;
-  if(h>k){
-    b = (h + k)/h;
-    h = h + b;
-  }
-}
