@@ -62,7 +62,7 @@ public class ASMFunctionGenerater {
 
 
             String ret_var = symbolTableManager
-                    .getCallingFuncVariableTableID(func_name) + ".#ret_val.value.double";
+                    .getCallingFuncVariableTableID(func_name) + ".#ret_val.double";
             int ret_val_offset = symbolTableManager.lookUpVariableOffset(ret_var);
             asmSentences.add(new ASMSentence(
                     "mov", asmGenerater.toAddress("esi", ret_val_offset), "bx"));

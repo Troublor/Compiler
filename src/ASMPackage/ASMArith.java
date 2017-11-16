@@ -18,6 +18,12 @@ public class ASMArith {
     private ArrayList<register> order;
     private int end_index;
 
+    private register eax = new register("eax", null, 0);
+    private register ebx = new register("ebx", null, 0);
+    private register ecx = new register("ecx", null, 0);
+    private register edx = new register("edx", null, 0);
+
+
     public ASMArith(List<QT> qts, ASMGenerater asmGenerater) {
         this.qts = qts;
         this.asmGenerater = asmGenerater;
@@ -92,7 +98,12 @@ public class ASMArith {
             try {
                 String info = getActiveInfo(id);
                 // 经过优化后的四元式的每个结果一定是活跃的，（假设不活跃，可以想到一定这条四元式一定会被优化掉）
-                this.active_index = info.equals("y") ? end_index : Integer.valueOf(info);
+                //todo 不一定啊老哥 .... 如果是块的最后一句四元式 四元式结果那条肯定是n
+                //我先改了下
+                if (info.equals("y")) {
+                    active_index = end_index;
+                } else if (!info.equals("n"))
+                    active_index = Integer.valueOf(info);
             }
             catch (ASMException e) {
                 e.printStackTrace();
@@ -110,16 +121,22 @@ public class ASMArith {
         }
     }
 
-    register eax = new register("eax",null, 0);
-    register ebx = new register("ebx",null, 0);
-    register ecx = new register("ecx",null, 0);
-    register edx = new register("edx",null, 0);
 //    register M = new register("M", null,0);
 
 
 //    void produce(ASMSentence sentence){
 //        asms.add(sentence);
 //    }
+
+    /**
+     * 离开块的时候
+     * 将所有寄存器内容放回内存
+     */
+    public void releaseAllRegisters() {
+        for (register r : registers.values()) {
+            r.release();
+        }
+    }
 
     void produce(String operator,String ...operands) {
         asms.add(new ASMSentence(operator, operands));
@@ -130,6 +147,8 @@ public class ASMArith {
         for (QT qt : qts) {
            dispatch(qt);
         }
+        releaseAllRegisters();
+        // 退出块的时候要把所有寄存器释放掉
         return this.asms;
     }
 
@@ -576,9 +595,9 @@ public class ASMArith {
         produce(ord, true_label);
         assign(new QT("=", "const int_0", null, qt.getResult()));
         produce("jmp", end_label);
-        produce(true_label+":\n");
+        produce(true_label + ":");
         assign(new QT("=", "const int_1", null, qt.getResult()));
-        produce(end_label+":\n");
+        produce(end_label + ":");
 
     }
 
@@ -588,9 +607,9 @@ public class ASMArith {
         produce("jz", true_label);
         assign(new QT("=", "const int_0", null, qt.getResult()));
         produce("jmp", end_label);
-        produce(true_label+":\n");
+        produce(true_label + ":");
         assign(new QT("=", "const int_1", null, qt.getResult()));
-        produce(end_label+":\n");
+        produce(end_label + ":");
     }
 
     private void fge(QT qt) {
@@ -599,9 +618,9 @@ public class ASMArith {
         produce("jc", false_label);
         assign(new QT("=", "const int_1", null, qt.getResult()));
         produce("jmp", end_label);
-        produce(false_label+":\n");
+        produce(false_label + ":");
         assign(new QT("=", "const int_0", null, qt.getResult()));
-        produce(end_label+":\n");
+        produce(end_label + ":");
     }
 
     private void fle(QT qt) {
@@ -611,9 +630,9 @@ public class ASMArith {
         produce("jz", true_label);
         assign(new QT("=", "const int_0", null, qt.getResult()));
         produce("jmp", end_label);
-        produce(true_label+":\n");
+        produce(true_label + ":");
         assign(new QT("=", "const int_1", null, qt.getResult()));
-        produce(end_label+":\n");
+        produce(end_label + ":");
     }
 
 
@@ -624,9 +643,9 @@ public class ASMArith {
         produce("jz", false_label);
         assign(new QT("=", "const int_1", null, qt.getResult()));
         produce("jmp", end_label);
-        produce(false_label+":\n");
+        produce(false_label + ":");
         assign(new QT("=", "const int_0", null, qt.getResult()));
-        produce(end_label+":\n");
+        produce(end_label + ":");
     }
 
     private void flt(QT qt) {
@@ -635,9 +654,9 @@ public class ASMArith {
         produce("jc", true_label);
         assign(new QT("=", "const int_0", null, qt.getResult()));
         produce("jmp", end_label);
-        produce(true_label+":\n");
+        produce(true_label + ":");
         assign(new QT("=", "const int_1", null, qt.getResult()));
-        produce(end_label+":\n");
+        produce(end_label + ":");
     }
 
     private void logicOperation(QT qt) {
@@ -657,7 +676,7 @@ public class ASMArith {
         String end_label  = newLabel();
         produce("jz", end_label);
         produce("mov", r.name, "1");
-        produce(end_label + ":\n");
+        produce(end_label + ":");
     }
 
 

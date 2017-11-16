@@ -318,7 +318,7 @@ public class SymbolTableManager {
                 return offset;
 
             //如果不是基本类型 则需要进行偏移量的寻址
-            FieldTableRow access_field = curr_type.getField(identifier_elems[2]);
+            FieldTableRow access_field = curr_type.getField(may_type_or_field);
             offset += access_field.getOffset();
 
             String curr_field_type_name = access_field.getTypeName();
@@ -350,6 +350,10 @@ public class SymbolTableManager {
     public String getFuncReturnType(String func_name) {
         FunctionTableRow func_info = functionTable.getFuntionInfo(func_name);
         return func_info.getReturnType();
+    }
+
+    public void printAllVariable() {
+        variableTableSetManager.printAllVariable();
     }
 
 

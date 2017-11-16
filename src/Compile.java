@@ -17,7 +17,7 @@ public class Compile {
         StringBuilder input = new StringBuilder("");
         String filename =
                 (args.length == 0) ? "/home/scarecrow/IdeaProjects/Compiler/src/input.txt" : args[0];
-        boolean debug = false;
+        boolean debug = true;
         if (args.length == 1) {
             if (!args[0].startsWith("-")) {
                 filename = args[0];
@@ -60,6 +60,7 @@ public class Compile {
 
                 ASMGenerater asmGenerater = new ASMGenerater(qts, parser.getSymbolTableManager());
                 List<ASMSentence> asmSentences = asmGenerater.generate();
+                System.out.println("\n\n以下是生成的汇编源码: ");
                 for (ASMSentence asm : asmSentences) {
                     System.out.println(asm);
                 }
