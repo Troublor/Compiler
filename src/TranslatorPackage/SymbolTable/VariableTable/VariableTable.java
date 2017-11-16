@@ -66,7 +66,7 @@ public class VariableTable{
     //对原来的接口重新封装了 只需提供类型就够了
     public VariableTableRow addTempVariable(String type_name) throws SemanticException {
         String new_id_name = "$t" + tmpCount++;
-        VariableTableRow new_var = addVariable(type_name, new_id_name, getTableLength());
+        VariableTableRow new_var = addVariable(type_name, new_id_name, 1);
         variables.put(new_id_name, new_var);
         return new_var;
     }
@@ -89,6 +89,17 @@ public class VariableTable{
 
     public int getStartOffset() {
         return startOffset;
+    }
+
+    public void printAllVariable() {
+        System.out.println("at variable table : " + table_id + ": ");
+        System.out.println(String.format("%-12s%-12s%-12s", "var_name:", "offset:", "type:"));
+        for (VariableTableRow each : variables.values()) {
+            String str = String.format("%-12s%-12s%-12s", each.getName_id(), each.getOffset() + startOffset, each.getTypeName());
+            System.out.println(str);
+        }
+
+        System.out.println('\n');
     }
 
 

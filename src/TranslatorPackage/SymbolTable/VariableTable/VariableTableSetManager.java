@@ -13,7 +13,7 @@ import java.util.Map;
  */
 public class VariableTableSetManager {
     //多叉树结构 Manager 在中间语言翻译的时候，需要维护一个当前活跃
-    private VariableTable currActiveTable;
+    private VariableTable currActiveTable, root;
     private TypeTable typeTable;
     //维护一个类型表 查询类型的工作由Manager承包
     private int currOffsetStart;
@@ -25,12 +25,13 @@ public class VariableTableSetManager {
     public VariableTableSetManager(TypeTable typeTable) {
         this.typeTable = typeTable;
         currOffsetStart = 0;
-        idTotal = 1;
+        idTotal = 0;
         idVariableTableMap = new HashMap<>();
 
         //临时变量表号为-1  放在VariableTableManager里统一管理
         //生成四元式的时候也是-1
         currActiveTable = new VariableTable(null, idTotal, currOffsetStart);
+        root = currActiveTable;
         idVariableTableMap.put(idTotal,currActiveTable);
         idTotal ++;
     }
@@ -98,7 +99,11 @@ public class VariableTableSetManager {
 
     }
 
-
+    public void printAllVariable() {
+        for (VariableTable each : idVariableTableMap.values()) {
+            each.printAllVariable();
+        }
+    }
 
     public VariableTable getCurrActiveTable() {
         return currActiveTable;
