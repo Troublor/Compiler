@@ -113,6 +113,7 @@ public class MiddleLangTranslator {
 
         String next_elem_type_name = symbolTableManager.getArrayElemType(prev_type_name);
         String ref_name = symbolTableManager.addReference(next_elem_type_name);
+        semanticStack.push(ref_name);
         QTs.add(new QT("ref", prev_type_name, toRepresent(index), toRepresent(ref_name + ".value")));
     }
 
@@ -300,7 +301,7 @@ public class MiddleLangTranslator {
             }
             return symbolTableManager.accessVariableAndField(item, "value");
         }
-        String[] parts = item.split(".");
+        String[] parts = item.split("\\.");
         String name;
 
         if (parts.length != 0) {

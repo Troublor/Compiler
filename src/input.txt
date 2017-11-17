@@ -3,7 +3,7 @@
 func int hhhhha() {
   var asd [5][5]int;
   var a int ;
-  asd[a][3] = 1;
+  a = asd[a][3];
   return 1;
 }
 
