@@ -150,17 +150,11 @@ public class ASMGenerater {
                 continue;
             }
 
-            //数组寻址部分
-            if (qt.getOperator().equals("seek")) {
-                while (qt.getOperator().equals("seek")) {
-                    cache.add(qt);
-                }
-                cache.add(qt);
-                //调用个啥
-            }
+
 
             //算式表达式运算四元式块
-            if (Optimizer.isArithmeticOperator(qt.getOperator())) {
+            if (Optimizer.isArithmeticOperator(qt.getOperator())
+                    || qt.getOperator().equals("ref")) {
 
                 cache.add(qt);
                 i++;
