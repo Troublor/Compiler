@@ -442,14 +442,14 @@ public class MiddleLangTranslator {
 
 
     public void pushFlagStartMltArrayDeclare() {
-        semanticStack.push("flage_declare_multi_array");
+        semanticStack.push("flag_declare_multi_array");
     }
 
     public void defineArrayType() throws SemanticException{
         checkTypeExist();
         String array_elem_type = semanticStack.pop();
         String arr_tpye_name = array_elem_type;
-        while (!semanticStack.peek().equals("flage_declare_multi_array")) {
+        while (!semanticStack.peek().equals("flag_declare_multi_array")) {
             String[] array_size_raw_format = semanticStack.pop().split("_");
             if (!array_size_raw_format[0].equals("const int")) {
                 throw new SemanticException("must use const int to define array length");

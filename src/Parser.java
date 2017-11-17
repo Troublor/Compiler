@@ -145,11 +145,11 @@ public class Parser extends Lang{
 
         grammar.addDeriver(new Deriver("数组类型声明",
                 new String[]{"_AC_pushFlagStartMltArrayDeclare",
-                        "[", "const int", "_AC_push", "]", "多维数组",
+                        "[", "const int", "_AC_PUSH", "]", "多维数组",
                         "I", "_AC_PUSH", "_AC_defineArrayType"}));
 
         grammar.addDeriver(new Deriver("多维数组",
-                new String[]{"[", "const int", "_AC_push", "]", "多维数组"}));
+                new String[]{"[", "const int", "_AC_PUSH", "]", "多维数组"}));
 
         grammar.addDeriver(new Deriver("多维数组", new String[]{}));
 

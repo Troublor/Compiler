@@ -447,7 +447,7 @@ public class ASMArith {
         }
         produce(operator);
         // fstp:  store the result and pops the register stack.
-        produce("fstp", "dword " + toAddress(result));
+        produce("fstp", toAddress(result));
 
     }
 
@@ -456,7 +456,7 @@ public class ASMArith {
     private void pushFPU(String operand) throws ASMException{
         String type = getType(operand);
         if (isConstant(operand)) {
-            produce("push", "dword " + toASMForm(operand));
+            produce("push", toASMForm(operand));
 //            switch (type) {
 //                case "char": {
 //                    // because toASMForm("const char_a")returns 'a',  'a' -> 97
@@ -478,7 +478,7 @@ public class ASMArith {
         }
         // not constant
         else {
-            produce("push", "dword " + toAddress(operand));
+            produce("push", toAddress(operand));
         }
         switch (type) {
             case "char":
