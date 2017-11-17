@@ -99,7 +99,7 @@ public class MiddleLangTranslator {
             next_ref_name = symbolTableManager.addReference(next_elem_type_name);
             next_ref_name = symbolTableManager.accessVariableAndField(next_ref_name, "value");
 
-            last_ref_qt = new QT("ref", prev_arr_name, toRepresent(index), next_ref_name);
+            last_ref_qt = new QT("ref", toRepresent(prev_arr_name), toRepresent(index), next_ref_name);
 
         } else {
             next_elem_type_name = "";
@@ -296,10 +296,10 @@ public class MiddleLangTranslator {
 
 
     // item: "a.3" "a.b" "const int.4"
-    // "const int.5"-> "const int.5.value"
-    // for id : a -> "tableid.a.value"
-    // for temp, same as id: tmp -> "-1.tmp.value"
-    // for array, a[3] -> "tableid.a.3.value"
+    // "const int.5"-> "const int.5"
+    // for id : a -> "tableid.a.int"
+    // for temp, same as id: tmp -> "-1.tmp.int"
+    // for array, a[3] -> "tableid.a.3.int"
     private String toRepresent(String item) throws SemanticException, OptNotSupportError{
         if (isConstant(lookUpType(item))) return item;
         // if is not constant

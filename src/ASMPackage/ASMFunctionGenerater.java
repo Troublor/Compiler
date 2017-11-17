@@ -30,7 +30,7 @@ public class ASMFunctionGenerater {
             List<ASMSentence> asmSentences = new ArrayList<>();
             asmSentences.add(new ASMSentence("push", "esp"));
             asmSentences.add(new ASMSentence("push", "esi"));
-            asmSentences.add(new ASMSentence("push", "$"));
+            asmSentences.add(new ASMSentence("push", "$+4"));
             asmSentences.add(new ASMSentence("mov", "eax", "esi"));
             //暂存上层函数esi的值
             asmSentences.add(new ASMSentence("mov", "esi", "esp"));

@@ -1,5 +1,4 @@
 
-
 func int hhhhha() {
   var a int ;
   return 1;
@@ -9,6 +8,7 @@ func int hhhhha() {
 func void main() {
   var c double;
   var a,b int;
+  var asd [3][3]int;
   var arr [23][2]int;
   var ch char;
   b = 3 + c;
@@ -21,7 +21,12 @@ func void main() {
   }else{
     while(a+3>c){
     }
-  }
+
+
+   var a int ;
+   a = 1;
+   a = asd[a][2];
+
 }
 
 
