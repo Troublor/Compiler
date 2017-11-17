@@ -82,7 +82,6 @@ public class Optimizer {
         return operator.equals("+") || operator.equals("-") || operator.equals("*") || operator
             .equals("/") || operator.equals("=") || operator.equals(">") || operator.equals(">=")
             || operator.equals("<") || operator.equals("<=") || operator.equals("==") || operator
-            .equals("!=") || operator.equals("!") || operator.equals("||") || operator.equals("&&")
-            || operator.equals("ref");
+                .equals("!=") || operator.equals("!") || operator.equals("||") || operator.equals("&&");
     }
 }

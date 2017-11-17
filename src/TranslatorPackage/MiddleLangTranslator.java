@@ -3,6 +3,7 @@ package TranslatorPackage;
 
 import MiddleDataUtilly.QT;
 
+import TranslatorPackage.SymbolTable.VariableTable.VariableTableRow;
 import TranslatorPackage.TranslatorExceptions.OptNotSupportError;
 
 import TranslatorPackage.TranslatorExceptions.SemanticException;
@@ -79,6 +80,58 @@ public class MiddleLangTranslator {
         semanticStack.push(tmp);
     }
 
+
+    private QT last_ref_qt = null;
+
+
+    public String reference() throws SemanticException, OptNotSupportError {
+        String prev_type_name;
+        String prev_arr_name;
+        String next_elem_type_name;
+        String index = semanticStack.pop();
+        String next_ref_name;
+        if (last_ref_qt == null) {
+            prev_arr_name = semanticStack.pop();
+            prev_type_name = symbolTableManager.lookupVariableType(prev_arr_name);
+            next_elem_type_name = symbolTableManager.getArrayElemType(prev_type_name);
+
+
+            next_ref_name = symbolTableManager.addReference(next_elem_type_name);
+            next_ref_name = symbolTableManager.accessVariableAndField(next_ref_name, "value");
+
+            last_ref_qt = new QT("ref", prev_arr_name, toRepresent(index), next_ref_name);
+
+        } else {
+            next_elem_type_name = "";
+            String prev_ref_name = last_ref_qt.getResult();
+
+            String prev_ref_name_split[] = prev_ref_name.split("\\.")[1].split("_");
+            for (int i = 1; i < prev_ref_name_split.length; i++) {
+                next_elem_type_name += prev_ref_name_split[i];
+                if (i != prev_ref_name_split.length - 1)
+                    next_elem_type_name += "_";
+            }
+            next_ref_name = symbolTableManager.addReference(next_elem_type_name);
+
+            last_ref_qt = new QT(
+                    "ref",
+                    prev_ref_name,
+                    toRepresent(index),
+                    symbolTableManager.accessVariableAndField(next_ref_name, "value"));
+        }
+        QTs.add(last_ref_qt);
+        return next_ref_name;
+    }
+
+    public void referenceEnd() throws SemanticException, OptNotSupportError {
+        String last_ref_name = reference();
+        semanticStack.push(last_ref_name);
+        last_ref_qt = null;
+
+    }
+
+
+
     public void afterArray() throws SemanticException, TypeError, OptNotSupportError{
         String index_item = semanticStack.pop();
         String id_item = semanticStack.pop();
@@ -88,39 +141,55 @@ public class MiddleLangTranslator {
             index_item = index_item.split("_")[1];
         }
 
-            if (index_item.contains(".")) {
-                // 对 a[a[10]]这种情况，本来会生成a.a.10, 现在先生成 t = a.10,  然后生成a.t，防止多层嵌套
-                String tmp = symbolTableManager.addTempVariable(index_type);
-                QTs.add(new QT("=", toRepresent(index_item), null, toRepresent(tmp)));
-                index_item = tmp;
-            }
-            // todo:如果是下标是变量的话 例子：b[a[3]]  b[a]
-            else if (!isNumeric(index_type)) throw new TypeError(index_item, index_type, "numeric");
+        // a[a[5]] = 5 ->   (= a.5 _ tmp),  (= 5 _ a.tmp)
+        if (isNumeric(index_type)) {
+            String element_type = lookUpType(id_item + "." + index_item);
+            // (假设a是int型的数组) 对 a[a[10]]这种情况，本来会生成a.a.10, 现在先生成 t = a.10,  然后生成a.t，防止多层嵌套
+            // todo: 指针类型未声明，需要修改
+            String tmp = symbolTableManager.addTempVariable(element_type + "*");
+            //todo toPresent 有问题
+            QTs.add(new QT("ref", toRepresent(id_item), toRepresent(index_item), toRepresent(tmp)));
+            semanticStack.push(tmp);
+        }
+        else throw new TypeError(index_item, index_type, "numeric");
             semanticStack.push(id_item + "." + index_item);
 
     }
 
-
-    public void afterIndexOpt() {
-
-    }
+//
+//    public void afterIndexOpt() {
+//
+//    }
 
     public void afterStruct() throws SemanticException, OptNotSupportError{
         String field_item = semanticStack.pop();
         String id_item = semanticStack.pop();
         String struct_type = lookUpType(id_item);
+
+        // 如果是指针，取指针指向的类型
+        if (struct_type.endsWith("*")){
+            struct_type = struct_type.replace("*", "");
+        }
         // assert struct has field named field_item
         symbolTableManager.lookupStructFieldType(struct_type, field_item);
-        semanticStack.push(id_item + "." + field_item);
+        String field_type = lookUpType(id_item + "." + field_item);
+        if (!isBasicType(field_type)) {
+            // todo: 指针类型未声明，需要颉哥修改：只要末尾是*的类型都给通过，分配内存为4字节
+            String tmp = symbolTableManager.addTempVariable(field_type+"*");
+            QTs.add(new QT("ref", id_item, field_item, tmp));
+            semanticStack.push(tmp);
+        }
+        else semanticStack.push(id_item + "." + field_item);
     }
 
     public void afterAssign() throws SemanticException, OptNotSupportError{
         String right = semanticStack.pop();
         String left = semanticStack.pop();
 
-        if (!isNumeric(lookUpType(right)) || !isNumeric(lookUpType(left)))
-            throw new SemanticException(lookUpType(left) + " can not assign to " + lookUpType(right));
-        QTs.add(new QT("=", toRepresent(right), null, toRepresent(left)));
+        // todo: 类型检查
+//        if (!isNumeric(lookUpType(right)) || !isNumeric(lookUpType(left)))
+//            throw new SemanticException(lookUpType(left) + " can not assign to " + lookUpType(right));
+        QTs.add(new QT("=", toRepresent(right), "_", toRepresent(left)));
     }
 
     // todo: array support
@@ -160,8 +229,8 @@ public class MiddleLangTranslator {
 
 
     private boolean isBasicType(String type) {
-        return type.equals("int") ||
-                type.equals("double") || type.equals("char");
+        return type.startsWith("int") ||
+                type.startsWith("double") || type.startsWith("char");
     }
 
     private boolean isConstant(String type) {
@@ -180,10 +249,7 @@ public class MiddleLangTranslator {
     // for id: "a" -> a's type
     // for array a: "a.3" -> type of a's element
     //               "a" -> "array_xx_length"
-    //                 "a.x" x is numeric
     // for struct array: "a.3" -> Point
-    //                  "a.3.X" -> int
-    // for struct contain array: "a.X.3" -> int
     private String lookUpType(String item) throws SemanticException, OptNotSupportError{
         String may_const = item.split("_")[0];
         // for constant
@@ -195,8 +261,8 @@ public class MiddleLangTranslator {
         // . 是正则的通配符  得用 \\. 进行转义
 
         String id = item;
-        if (parts.length != 0) {
-            id = parts[0];
+        if (parts.length != 1) {
+            id = parts[1];
         }
         String type = symbolTableManager.lookupVariableType(id);
         int i = 1;
@@ -248,11 +314,16 @@ public class MiddleLangTranslator {
             }
             return symbolTableManager.accessVariableAndField(item, "value");
         }
-        String[] parts = item.split(".");
+        String[] parts = item.split("\\.");
         String name = parts[0];
         int i = 1;
-        while (i < parts.length) {
-            name = symbolTableManager.accessVariableAndField(name, parts[i++]);
+        if (parts.length > 1) {
+            while (i < parts.length) {
+                name = symbolTableManager.accessVariableAndField(name, parts[i++]);
+            }
+        } else {
+            VariableTableRow var = symbolTableManager.lookupVariable(name);
+            name = var.getTable_id() + "." + name + "." + var.getTypeName();
         }
         return name;
 //        System.out.println("方法: toRepresent 因为错误返回了个null");
@@ -334,7 +405,8 @@ public class MiddleLangTranslator {
             is_curr_func_has_ret = true;
             String ret_val = semanticStack.pop();
             QTs.add(new QT("ret", toRepresent(ret_val),
-                    "if needed,assign at", "next qt"));
+                    "if needed," +
+                            " at", "next qt"));
             semanticStack.pop();
             semanticStack.push(ret_val);
         }

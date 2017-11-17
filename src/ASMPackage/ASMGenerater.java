@@ -104,7 +104,7 @@ public class ASMGenerater {
                 sb_left = new StringBuilder(qt.getOperand_left());
                 if (!QT.isConstVariable(qt.getOperand_left())) {
                     sb_left.append("->").append(active_table.get(qt.getOperand_left()));
-                    active_table.put(qt.getOperand_left(), "y");
+                    active_table.put(qt.getOperand_left(), Integer.toString(i));
                 }
             }
             StringBuilder sb_right = null;
@@ -112,7 +112,7 @@ public class ASMGenerater {
                 sb_right = new StringBuilder(qt.getOperand_right());
                 if (!QT.isConstVariable(qt.getOperand_right())) {
                     sb_right.append("->").append(active_table.get(qt.getOperand_right()));
-                    active_table.put(qt.getOperand_right(), "y");
+                    active_table.put(qt.getOperand_left(), Integer.toString(i));
                 }
             }
 
@@ -140,6 +140,7 @@ public class ASMGenerater {
             // 函数调用四元式块
             if (qt.getOperator().equals("push_stk")) {
                 //收集
+                result.add(new ASMSentence("; func calling block start"));
                 while (!qt.getOperator().equals("call")) {
                     cache.add(qt);
                     i++;
@@ -151,12 +152,16 @@ public class ASMGenerater {
                 List<ASMSentence> res = asmFunctionGenerater.generateFunctionCalling(cache);
                 cache.clear();
                 result.addAll(res);
+
+                result.add(new ASMSentence("; func calling block end"));
                 continue;
             }
 
 
+
             //算式表达式运算四元式块
-            if (Optimizer.isArithmeticOperator(qt.getOperator())) {
+            if (Optimizer.isArithmeticOperator(qt.getOperator())
+                    || qt.getOperator().equals("ref")) {
 
                 cache.add(qt);
                 i++;
@@ -174,7 +179,7 @@ public class ASMGenerater {
 
                 initializeActiveTable(cache);
                 addActiveInfomation(cache);
-                ASMArith asmArith = new ASMArith(cache, this);
+                ASMArith asmArith = new ASMArith(cache, this, symbolTableManager);
                 result.addAll(asmArith.produceASM());
                 cache.clear();
             }
@@ -186,9 +191,12 @@ public class ASMGenerater {
                     //与0比较判断真假
                     //查找变量offset并从内存中取到AX中
                     judge_opd = toASMOprd(qt.getOperand_left(), "esi");
+                    result.add(new ASMSentence("; if start position"));
                     result.add(new ASMSentence("mov", "eax", judge_opd));
                     result.add(new ASMSentence("cmp", "eax", "0"));
                     result.add(new ASMSentence("jz", "IF" + Integer.toString(i)));
+                    result.add(new ASMSentence("; if jump judge"));
+
                     //i 是四元式序列序号,不可能撞
                     jumpStack.push("IF" + Integer.toString(i));//等待回填
                     break;

@@ -79,11 +79,12 @@ public class Parser extends Lang{
 
         grammar.addVN(new HashSet<>(Arrays.asList(
                 "bool", "join", "BOOL", "equality", "JOIN", "EQUALITY", "rel", "expr",
-                "expr1", "EXPR", "term", "TERM", "unary", "值", "值成分", "常量", "S", "P", "S", "F",
+                "expr1", "EXPR", "term", "TERM", "unary", "值", "数组寻址", "常量", "S", "P", "S", "F",
                 "structure", "function", "L", "形参列表", "形参列表1", "类型", "proc", "形参",
                 "形参类型", "类型标识符", "复合语句", "声明语句", "标识符表", "类型", "循环", "条件",
                 "顺序", "语句成分", "赋值", "函数", "条件其他", "数组下标", "非负整数", "值列表", "RET_BOOL",
-                "值列表1", "S_L", "寻址", "数组类型声明", "多维数组")));
+                "值列表1", "S_L", "寻址", "数组类型声明", "多维数组", "数组寻址_next",
+                "结构体寻址_next")));
 
         grammar.addVT(new HashSet<>(Arrays.asList(
                 "||", "&&", "==", "!=", "<", ">", "<=", ">=", "+", "-", "*", "/", "=", "!", "I",
@@ -93,6 +94,7 @@ public class Parser extends Lang{
         grammar.setStartVN("P");
 
         //TODO 需要修改，以支持结构体多层访问与数组多层访问
+
 
         grammar.addDeriver(new Deriver("P", new String[]{"S", "F"}));
         grammar.addDeriver(new Deriver("S", new String[]{"structure", "S"}));
@@ -144,9 +146,8 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("类型", new String[]{"数组类型声明"}));
 
         grammar.addDeriver(new Deriver("数组类型声明",
-                new String[]{"_AC_pushFlagStartMltArrayDeclare",
-                        "[", "const int", "_AC_PUSH", "]", "多维数组",
-                        "I", "_AC_PUSH", "_AC_defineArrayType"}));
+                new String[]{"_AC_pushFlagStartMltArrayDeclare", "[", "const int", "_AC_PUSH", "]",
+                        "多维数组", "I", "_AC_PUSH", "_AC_defineArrayType"}));
 
         grammar.addDeriver(new Deriver("多维数组",
                 new String[]{"[", "const int", "_AC_PUSH", "]", "多维数组"}));
@@ -159,11 +160,14 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("复合语句", new String[]{"顺序", "复合语句"}));
         grammar.addDeriver(new Deriver("复合语句", new String[]{}));
 
+
         grammar.addDeriver(new Deriver("顺序", new String[]{"I","_AC_PUSH" , "语句成分", ";"}));
 
         grammar.addDeriver(new Deriver("语句成分", new String[]{"赋值"}));
         grammar.addDeriver(new Deriver("语句成分", new String[]{"函数"}));
-
+        grammar.addDeriver(new Deriver("函数",
+                new String[]{"_AC_receiveCallingFuncName", "(", "_AC_funcParamStartFlag", "值列表", ")"
+                        , "_AC_startFuncCalling"}));
 
         //函数返回值
         grammar.addDeriver(new Deriver("顺序", new String[]{"return", "_AC_pushMayRetValFlag", "RET_BOOL"}));
@@ -191,27 +195,27 @@ public class Parser extends Lang{
 
 
         // 只返回单个常数和变量时
-        grammar.addDeriver(new Deriver("值", new String[]{"I", "_AC_PUSH", "值成分"}));
+        grammar.addDeriver(new Deriver("值", new String[]{"I", "_AC_PUSH", "寻址"}));
         grammar.addDeriver(new Deriver("值", new String[]{"常量"}));
-
-        grammar.addDeriver(new Deriver("值成分", new String[]{"函数"}));
-        grammar.addDeriver(new Deriver("值成分", new String[]{"[", "非负整数", "]", "_AC_afterArray"}));
-        grammar.addDeriver(new Deriver("值成分", new String[]{".", "I", "_AC_PUSH", "_AC_afterStruct"}));
-        grammar.addDeriver(new Deriver("值成分", new String[]{}));
-
-
-        grammar.addDeriver(new Deriver("寻址", new String[]{"[", "bool", "]", "_AC_afterArray"}));
-        grammar.addDeriver(new Deriver("寻址", new String[]{".", "I", "_AC_PUSH", "_AC_afterStruct"}));
-        grammar.addDeriver(new Deriver("寻址", new String[]{}));
 
         grammar.addDeriver(new Deriver("非负整数", new String[]{"const int", "_AC_PUSH"}));
         grammar.addDeriver(new Deriver("非负整数", new String[]{"I", "_AC_PUSH"}));
+
+
         grammar.addDeriver(new Deriver("赋值", new String[]{"寻址", "=", "bool", "_AC_afterAssign"}));
+        grammar.addDeriver(new Deriver("寻址", new String[]{"[", "bool", "]", "数组寻址"}));
+
+        grammar.addDeriver(new Deriver("数组寻址", new String[]{"_AC_referenceEnd"}));
+        grammar.addDeriver(new Deriver("数组寻址", new String[]{"_AC_reference", "[", "bool", "]", "数组寻址"}));
+
+        grammar.addDeriver(new Deriver("寻址", new String[]{".", "I", "_AC_PUSH", "_AC_afterStruct", "结构体寻址"}));
+        grammar.addDeriver(new Deriver("寻址", new String[]{}));
+
+
         grammar.addDeriver(new Deriver("常量", new String[]{"const int", "_AC_PUSH"}));
         grammar.addDeriver(new Deriver("常量", new String[]{"const double", "_AC_PUSH"}));
         grammar.addDeriver(new Deriver("常量", new String[]{"const char", "_AC_PUSH"}));
-        grammar.addDeriver(new Deriver("函数", new String[]{"_AC_receiveCallingFuncName", "(", "_AC_funcParamStartFlag", "值列表"
-                , ")", "_AC_startFuncCalling"}));
+
         // 到达这一步函数 函数名已经传入  可以push进参数进行传参
         grammar.addDeriver(new Deriver("值列表", new String[]{"值", "值列表1"}));
         grammar.addDeriver(new Deriver("值列表", new String[]{}));
@@ -288,7 +292,7 @@ public class Parser extends Lang{
                     if (!w.getLabel().equals(x.getLabel())) {
                         //如果与input不匹配
                         throw new GrammarException(
-                            "GrammarException: unexpected word \"" + w.getWord() + "\"");
+                                "GrammarException: unexpected word \"" + w.getWord() + "\"");
                     }
                     //如果匹配则input取下一个
                     w = next();
@@ -299,7 +303,7 @@ public class Parser extends Lang{
                     if (index == null) {
                         //如果没找到对应的产生式
                         throw new GrammarException(
-                            "GrammarException: unexpected word \"" + w.getWord() + "\"");
+                                "GrammarException: unexpected word \"" + w.getWord() + "\"");
                     }
                     //产生式逆序压栈
                     for (Token t : this.reverse(grammar.getDeriver(index).getDestination())) {
@@ -314,11 +318,11 @@ public class Parser extends Lang{
                 //如果栈空了，符号串还没读完
                 //错误
                 throw new GrammarException(
-                    "GrammarException: redundant words after \"" + w.getWord() + "\"");
+                        "GrammarException: redundant words after \"" + w.getWord() + "\"");
             }
 
         } catch (Exception e) {
-            throw new CompileException("GrammarException: At Line " + lexer.getLine() + " - " + e.getMessage());
+            throw new CompileException("GrammarException: At Line " + lexer.getLine() + " - " + e);
         } catch (Throwable throwable) {
             throw new CompileException("GrammarException: At Line " + lexer.getLine() + " - Unknown error");
         }
@@ -365,17 +369,17 @@ public class Parser extends Lang{
                     break;
                 case 3:
                     method = cls.getDeclaredMethod(split[2], String.class, String.class,
-                        String.class);
+                            String.class);
                     method.invoke(translator, split[3], split[4], split[5]);
                     break;
                 case 4:
                     method = cls.getDeclaredMethod(split[2], String.class, String.class,
-                        String.class, String.class);
+                            String.class, String.class);
                     method.invoke(translator, split[3], split[4], split[5], split[6]);
                     break;
                 case 5:
                     method = cls.getDeclaredMethod(split[2], String.class, String.class,
-                        String.class, String.class, String.class);
+                            String.class, String.class, String.class);
                     method.invoke(translator, split[3], split[4], split[5], split[6], split[7]);
                     break;
             }

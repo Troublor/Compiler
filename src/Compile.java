@@ -16,7 +16,7 @@ public class Compile {
 
         StringBuilder input = new StringBuilder("");
         String filename =
-                (args.length == 0) ? "/home/scarecrow/IdeaProjects/Compiler/src/input.txt" : args[0];
+                (args.length == 0) ? "/Users/gexinjie/IdeaProjects/Compiler/src/input.txt" : args[0];
         boolean debug = true;
         if (args.length == 1) {
             if (!args[0].startsWith("-")) {
@@ -45,11 +45,11 @@ public class Compile {
         parser.setSourceCode(input.toString());
 
         try {
-            parser.setDebug(debug);
+//            parser.setDebug(debug);
             parser.LL1Analyze();
             Optimizer optimizer = new Optimizer(parser.getAllQTs());
             ArrayList<QT> qts = optimizer.optimize();
-            if (debug) {
+            if (true) {
                 System.out
                         .println("\n\n优化后的所有四元式:\n" + parser.getAllQTs().size() + " => " + qts.size());
                 System.out.println(String.format("%-11s%-25s%-25s%-25s", "oprt:", "left_oprd:", "right_oprd:", "result_target:"));
@@ -66,7 +66,7 @@ public class Compile {
             }
             System.out.println("编译成功！");
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.out.println(e);
             e.printStackTrace();
         }
     }
