@@ -22,7 +22,7 @@ public class TypeTable {
 
         for (String type_name : basic_type_names) {
             TypeTableRow basicType = new TypeTableRow(type_name);
-            basicType.addField("value", 1, "basic");
+            basicType.addField("value", 4, "basic");
             //basic 是最最基本的类型了 在生成目标代码的时候就直接分配内存大小了 不再递归沿着type往下查
             tableRowMap.put(type_name, basicType);
         }

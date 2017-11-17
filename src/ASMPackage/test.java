@@ -19,18 +19,20 @@ public class test {
         qts.add(new QT("<", "x.double", "c.int", "$t6.int"));
 
 
-        try {
-            ASMGenerater generater = new ASMGenerater(qts,null);
-            generater.generate();
-            ASMArith arith = new ASMArith(qts,null);
-            ArrayList<ASMSentence> asms = arith.produceASM();
-            for (ASMSentence asm : asms) {
-                System.out.println(asm);
-            }
-        }
-        catch  (Exception e) {
-            e.printStackTrace();
-        }
+        // ASMGenerater generater = new ASMGenerater(qts);
+        //generater.generate();
+
+//        try {
+//            ASMArith arith = new ASMArith(qts,generater);
+//            ArrayList<ASMSentence> asms = arith.getResult();
+//            for (ASMSentence asm : asms) {
+//                System.out.println(asm);
+//            }
+//        }
+//        catch  (ASMException e) {
+//            e.printStackTrace();
+//        }
+
     }
 
 }

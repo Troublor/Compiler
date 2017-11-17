@@ -35,9 +35,15 @@ public class ASMSentence {
 
     @Override
     public String toString() {
-        return "ASMSentence{" +
-                "operator='" + operator + '\'' +
-                ", operands=" + operands +
-                '}';
+        switch (operands.size()) {
+            case 0:
+                return operator;
+            case 1:
+                return operator + " " + operands.get(0);
+            case 2:
+                return operator + " " + operands.get(0) + "," + operands.get(1);
+            default:
+                return operator + operands.toString();
+        }
     }
 }

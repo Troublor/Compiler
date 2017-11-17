@@ -12,7 +12,8 @@ import java.util.regex.Pattern;
 public class ASMArith {
     // represent 4 general registers: eax, ebx, ecx, edx
     private Map<String, register> registers = new HashMap<>();
-    //    private ASMArith arith;
+    private ASMGenerater asmGenerater;
+
     private int cur_index = 0;
     private List<QT> qts;
     private ArrayList<ASMSentence> asms = new ArrayList<>();
@@ -26,8 +27,10 @@ public class ASMArith {
     register edx = new register("edx", null, 0);
     private register address_register = new register("edi",null, 0 );
 
-    public ASMArith(List<QT> qts, SymbolTableManager symbolTableManager) {
+    public ASMArith(List<QT> qts, ASMGenerater asmGenerater, SymbolTableManager symbolTableManager) {
+
         this.qts = qts;
+        this.asmGenerater = asmGenerater;
         end_index = qts.size();
         this.symbol_table_manager = symbolTableManager;
         registers.put("eax", eax);
@@ -52,6 +55,7 @@ public class ASMArith {
             r.release();
         }
         produce("pop", address_register.name);
+
         return this.asms;
     }
 
@@ -148,7 +152,10 @@ public class ASMArith {
             // 将下标大小放入eax
             produce("mov", eax.name, toASMForm(right_operand));
             // 乘以元素大小
-            produce("imul", symbol_table_manager.getArrayElementLength(elementType));
+            String elementType = getArrayElemType(left_operand);
+            produce("imul", String.valueOf(
+                    symbol_table_manager.getArrayElemLength(elementType)
+            ));
             // todo: getAddress单单返回偏移地址，和toAddress()不同
             produce("add", address_register.name);
             // 现在我们得到了 偏移地址
@@ -157,12 +164,19 @@ public class ASMArith {
         else {
             String typeofstruct = getStructType(left_operand);
             String fieldname = right_operand;
-            produce("mov", eax.name, symbol_table_manager.getFieldOffsetStruct(typeofstruct, fieldname));
+            produce("mov", eax.name, String.valueOf(
+                    symbol_table_manager.getFieldOffsetInStruct(typeofstruct, fieldname)
+            ));
             produce("add", address_register.name);
         }
         // 将得到的地址放入 address_register
         produce("mov", address_register.name, eax.name);
 
+    }
+
+    private String getArrayElemType(String qt_id_array) {
+        assert isArrayType(qt_id_array);
+        return qt_id_array.split("\\.")[2].split("_")[1];
     }
 
     private String getStructType(String qt_identifier) {
@@ -181,6 +195,7 @@ public class ASMArith {
             // result is pointer type
             // todo 这边内存到内存可能会有些问题
             produce("mov", "["+address_register.name+"]", toASMForm(left_operand));
+
         }
         else {
             r.occupyWith(result);
@@ -275,7 +290,7 @@ public class ASMArith {
         }
         produce(operator);
         // fstp:  store the result and pops the register stack.
-        produce("fstp", "dword [" + toAddress(result) + "]");
+        produce("fstp", toAddress(result));
 
     }
 
@@ -295,7 +310,7 @@ public class ASMArith {
         }
         // 一般的变量
         else {
-            produce("push", "dword [" + toAddress(operand) + "]");
+            produce("push", toAddress(operand));
         }
         switch (type) {
             case "char":
@@ -311,8 +326,8 @@ public class ASMArith {
                 break;
             }
         }
-        // todo: pop 回来的 数据不再需要， 定义一个null来存没用的数据（不然会占用一个寄存器）
-        produce("pop", "[null]");
+        //  pop 回来的 数据不再需要， 定义一个trash(32bit)来存没用的数据（不然会占用一个寄存器）
+        produce("pop", "dword [trash]");
 
     }
 
@@ -416,10 +431,9 @@ public class ASMArith {
         produce(ord, true_label);
         assign(new QT("=", "const int_0", null, qt.getResult()));
         produce("jmp", end_label);
-        produce(true_label + ":\n");
+        produce(true_label + ":");
         assign(new QT("=", "const int_1", null, qt.getResult()));
-        produce(end_label + ":\n");
-
+        produce(end_label + ":");
     }
 
     private void feq(QT qt) {
@@ -428,9 +442,9 @@ public class ASMArith {
         produce("jz", true_label);
         assign(new QT("=", "const int_0", null, qt.getResult()));
         produce("jmp", end_label);
-        produce(true_label + ":\n");
+        produce(true_label + ":");
         assign(new QT("=", "const int_1", null, qt.getResult()));
-        produce(end_label + ":\n");
+        produce(end_label + ":");
     }
 
     private void fge(QT qt) {
@@ -439,9 +453,9 @@ public class ASMArith {
         produce("jc", false_label);
         assign(new QT("=", "const int_1", null, qt.getResult()));
         produce("jmp", end_label);
-        produce(false_label + ":\n");
+        produce(false_label + ":");
         assign(new QT("=", "const int_0", null, qt.getResult()));
-        produce(end_label + ":\n");
+        produce(end_label + ":");
     }
 
     private void fle(QT qt) {
@@ -451,9 +465,9 @@ public class ASMArith {
         produce("jz", true_label);
         assign(new QT("=", "const int_0", null, qt.getResult()));
         produce("jmp", end_label);
-        produce(true_label + ":\n");
+        produce(true_label + ":");
         assign(new QT("=", "const int_1", null, qt.getResult()));
-        produce(end_label + ":\n");
+        produce(end_label + ":");
     }
 
 
@@ -464,9 +478,9 @@ public class ASMArith {
         produce("jz", false_label);
         assign(new QT("=", "const int_1", null, qt.getResult()));
         produce("jmp", end_label);
-        produce(false_label + ":\n");
+        produce(false_label + ":");
         assign(new QT("=", "const int_0", null, qt.getResult()));
-        produce(end_label + ":\n");
+        produce(end_label + ":");
     }
 
     private void flt(QT qt) {
@@ -475,9 +489,9 @@ public class ASMArith {
         produce("jc", true_label);
         assign(new QT("=", "const int_0", null, qt.getResult()));
         produce("jmp", end_label);
-        produce(true_label + ":\n");
+        produce(true_label + ":");
         assign(new QT("=", "const int_1", null, qt.getResult()));
-        produce(end_label + ":\n");
+        produce(end_label + ":");
     }
 
     private void logicOperation(QT qt) {
@@ -497,7 +511,7 @@ public class ASMArith {
         String end_label = newLabel();
         produce("jz", end_label);
         produce("mov", r.name, "1");
-        produce(end_label + ":\n");
+        produce(end_label + ":");
     }
 
 
