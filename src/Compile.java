@@ -16,7 +16,7 @@ public class Compile {
 
         StringBuilder input = new StringBuilder("");
         String filename =
-                (args.length == 0) ? "/home/scarecrow/IdeaProjects/Compiler/src/input.txt" : args[0];
+                (args.length == 0) ? "/Users/gexinjie/IdeaProjects/Compiler/src/input.txt" : args[0];
         boolean debug = true;
         if (args.length == 1) {
             if (!args[0].startsWith("-")) {
@@ -45,7 +45,7 @@ public class Compile {
         parser.setSourceCode(input.toString());
 
         try {
-            parser.setDebug(debug);
+//            parser.setDebug(debug);
             parser.LL1Analyze();
             Optimizer optimizer = new Optimizer(parser.getAllQTs());
             ArrayList<QT> qts = optimizer.optimize();

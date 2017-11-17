@@ -171,6 +171,8 @@ public class ASMArith {
         }
         // 将得到的地址放入 address_register
         produce("mov", address_register.name, eax.name);
+        // @颉哥，这里把地址存入指针了
+        produce("mov", toASMForm(result), address_register.name);
 
     }
 
@@ -193,8 +195,10 @@ public class ASMArith {
         if (r == null) r = arrangeRegister();
         if (result.endsWith("*")) {
             // result is pointer type
-            // todo 这边内存到内存可能会有些问题
-            produce("mov", "["+address_register.name+"]", toASMForm(left_operand));
+//          left_operand也许会在内存里，以防万一将left_operand放到eax中再写到[edi]中
+            eax.release();
+            produce("mov", eax.name, toASMForm(left_operand));
+            produce("mov", "["+address_register.name+"]", eax.name);
 
         }
         else {
@@ -665,7 +669,8 @@ public class ASMArith {
 
     // todo: mov ri, 1.b.int -> mov ri, b.offset
     private String toAddress(String id) {
-        return id;
+        id = id.split("->")[0];
+        return asmGenerater.toASMOprd(id, "esi");
     }
 
 
@@ -764,6 +769,10 @@ public class ASMArith {
             try {
                 String info = getActiveInfo(id);
                 // 经过优化后的四元式的每个结果一定是活跃的，（假设不活跃，可以想到一定这条四元式一定会被优化掉）
+                // todo 暂缓之计，把传进来的不活跃的id看成活跃的 n->y
+//                if (info.equals("n")) throw new ASMException("optimize error");
+                if (info.equals("n")) info = "y";
+
                 this.active_index = info.equals("y") ? end_index : Integer.valueOf(info);
             } catch (ASMException e) {
                 e.printStackTrace();
