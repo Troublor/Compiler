@@ -213,6 +213,10 @@ public class ASMGenerater {
                 case "func_label":
                     result.add(new ASMSentence(qt.getOperand_left() + ":"));
                     //函数定义的时候添加标号
+                    break;
+                default:
+                    //其他情况不处理，回退一个，留给下次处理
+                    i--;
             }
 
 
