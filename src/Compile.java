@@ -12,7 +12,7 @@ public class Compile {
         Parser parser = new Parser();
 
         StringBuilder input = new StringBuilder("");
-        String filename = "C:\\JavaProject\\Compiler\\src\\input.txt";
+        String filename = "/Users/gexinjie/IdeaProjects/Compiler/src/input.txt";
         boolean debug = false;
         if (args.length == 1) {
             if (!args[0].startsWith("-")) {
@@ -46,7 +46,7 @@ public class Compile {
             parser.LL1Analyze();
             Optimizer optimizer = new Optimizer(parser.getAllQTs());
             ArrayList<QT> qts = optimizer.optimize();
-            if (debug) {
+            if (true) {
                 System.out
                     .println("\n\n优化后的所有四元式:\n" + parser.getAllQTs().size() + " => " + qts.size());
                 System.out.println(String.format("%-11s%-25s%-25s%-25s", "oprt:", "left_oprd:", "right_oprd:", "result_target:"));

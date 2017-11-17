@@ -1,3 +1,7 @@
+struct Point {
+  var x int;
+  var y int;
+}
 
 
 struct A {
@@ -35,6 +39,9 @@ func void main() {
   var array [10] int;
   var a,b int;
   var ch char;
+  var ps [10] Point;
+  a = 5;
+  ps[5].x = 6;
   array[b] = a;
   c = array[b];
   b = 3 + c;

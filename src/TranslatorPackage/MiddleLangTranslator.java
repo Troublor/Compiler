@@ -88,38 +88,53 @@ public class MiddleLangTranslator {
             index_item = index_item.split("_")[1];
         }
 
-            if (index_item.contains(".")) {
-                // 对 a[a[10]]这种情况，本来会生成a.a.10, 现在先生成 t = a.10,  然后生成a.t，防止多层嵌套
-                String tmp = symbolTableManager.addTempVariable(index_type);
-                QTs.add(new QT("=", toRepresent(index_item), "_", toRepresent(tmp)));
-                index_item = tmp;
-            }
-            // todo:如果是下标是变量的话 例子：b[a[3]]  b[a]
-            else if (!isNumeric(index_type)) throw new TypeError(index_item, index_type, "numeric");
+        // a[a[5]] = 5 ->   (= a.5 _ tmp),  (= 5 _ a.tmp)
+        if (isNumeric(index_type)) {
+            String element_type = lookUpType(id_item + "." + index_item);
+            // (假设a是int型的数组) 对 a[a[10]]这种情况，本来会生成a.a.10, 现在先生成 t = a.10,  然后生成a.t，防止多层嵌套
+            // todo: 指针类型未声明，需要修改
+            String tmp = symbolTableManager.addTempVariable(index_type+"*");
+            QTs.add(new QT("ref", toRepresent(id_item), toRepresent(index_item), toRepresent(tmp)));
+            semanticStack.push(tmp);
+        }
+        else throw new TypeError(index_item, index_type, "numeric");
             semanticStack.push(id_item + "." + index_item);
 
     }
 
-
-    public void afterIndexOpt() {
-
-    }
+//
+//    public void afterIndexOpt() {
+//
+//    }
 
     public void afterStruct() throws SemanticException, OptNotSupportError{
         String field_item = semanticStack.pop();
         String id_item = semanticStack.pop();
         String struct_type = lookUpType(id_item);
+
+        // 如果是指针，取指针指向的类型
+        if (struct_type.endsWith("*")){
+            struct_type = struct_type.replace("*", "");
+        }
         // assert struct has field named field_item
         symbolTableManager.lookupStructFieldType(struct_type, field_item);
-        semanticStack.push(id_item + "." + field_item);
+        String field_type = lookUpType(id_item + "." + field_item);
+        if (!isBasicType(field_type)) {
+            // todo: 指针类型未声明，需要颉哥修改：只要末尾是*的类型都给通过，分配内存为4字节
+            String tmp = symbolTableManager.addTempVariable(field_type+"*");
+            QTs.add(new QT("ref", id_item, field_item, tmp));
+            semanticStack.push(tmp);
+        }
+        else semanticStack.push(id_item + "." + field_item);
     }
 
     public void afterAssign() throws SemanticException, OptNotSupportError{
         String right = semanticStack.pop();
         String left = semanticStack.pop();
 
-        if (!isNumeric(lookUpType(right)) || !isNumeric(lookUpType(left)))
-            throw new SemanticException(lookUpType(left) + " can not assign to " + lookUpType(right));
+        // todo: 类型检查
+//        if (!isNumeric(lookUpType(right)) || !isNumeric(lookUpType(left)))
+//            throw new SemanticException(lookUpType(left) + " can not assign to " + lookUpType(right));
         QTs.add(new QT("=", toRepresent(right), "_", toRepresent(left)));
     }
 
@@ -160,8 +175,8 @@ public class MiddleLangTranslator {
 
 
     private boolean isBasicType(String type) {
-        return type.equals("int") ||
-                type.equals("double") || type.equals("char");
+        return type.startsWith("int") ||
+                type.startsWith("double") || type.startsWith("char");
     }
 
     private boolean isConstant(String type) {
@@ -180,10 +195,7 @@ public class MiddleLangTranslator {
     // for id: "a" -> a's type
     // for array a: "a.3" -> type of a's element
     //               "a" -> "array_xx_length"
-    //                 "a.x" x is numeric
     // for struct array: "a.3" -> Point
-    //                  "a.3.X" -> int
-    // for struct contain array: "a.X.3" -> int
     private String lookUpType(String item) throws SemanticException, OptNotSupportError{
         String may_const = item.split("_")[0];
         // for constant
@@ -334,7 +346,8 @@ public class MiddleLangTranslator {
             is_curr_func_has_ret = true;
             String ret_val = semanticStack.pop();
             QTs.add(new QT("ret", toRepresent(ret_val),
-                    "if needed,assign at", "next qt"));
+                    "if needed," +
+                            " at", "next qt"));
             semanticStack.pop();
             semanticStack.push(ret_val);
         }
