@@ -97,7 +97,7 @@ public class ASMGenerater {
                 sb_left = new StringBuilder(qt.getOperand_left());
                 if (!QT.isConstVariable(qt.getOperand_left())) {
                     sb_left.append("->").append(active_table.get(qt.getOperand_left()));
-                    active_table.put(qt.getOperand_left(), "y");
+                    active_table.put(qt.getOperand_left(), Integer.toString(i));
                 }
             }
             StringBuilder sb_right = null;
@@ -105,7 +105,7 @@ public class ASMGenerater {
                 sb_right = new StringBuilder(qt.getOperand_right());
                 if (!QT.isConstVariable(qt.getOperand_right())) {
                     sb_right.append("->").append(active_table.get(qt.getOperand_right()));
-                    active_table.put(qt.getOperand_right(), "y");
+                    active_table.put(qt.getOperand_left(), Integer.toString(i));
                 }
             }
 
