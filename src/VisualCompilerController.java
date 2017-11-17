@@ -1,5 +1,6 @@
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -48,13 +49,37 @@ public class VisualCompilerController implements Initializable {
 
     @FXML
     public void Compile(ActionEvent event) {
-        path=output_textArea.getText();
+        path=file_path_textField.getText();
         output_textArea.clear();
         if (debug_checkBox.isSelected()) {
-            Compile.main(new String[]{"-d", "C:\\JavaProject\\Compiler\\src\\input.txt"});
+            Compile.main(new String[]{"-d", path});
         } else {
             Compile.main(new String[]{path});
         }
+        output_textArea.setText(Compile.msg.toString());
+    }
+
+    @FXML
+    public void OutputASM(ActionEvent event){
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("导出汇编代码...");
+        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("NASM files (*.asm)", "*.asm");
+        fileChooser.getExtensionFilters().add(extFilter);
+        File file = fileChooser.showSaveDialog(root.getScene().getWindow());
+        if (file == null) {
+            return;
+        }
+        String output_path=file.getAbsolutePath();
+        try {
+            OutputStream output = new FileOutputStream(file);
+            String msg = Compile.asms.toString();
+            byte data[] = msg.getBytes();
+            output.write(data);
+            output.close();
+        }catch (Exception e){
+            output_textArea.appendText("\nOutput Error: "+e);
+        }
+
     }
 
     @FXML
