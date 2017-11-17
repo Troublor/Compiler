@@ -13,7 +13,7 @@ func void main() {
   var ch char;
   b = 3 + c;
   b = 5;
-  b = hhhhha() + arr[2][3] +665;
+  b = hhhhha() + arr[a+b][5+a] +665;
   c = 5.5;
   if(a>c){
     b = (a + c)/a;
@@ -22,11 +22,9 @@ func void main() {
     while(a+3>c){
     }
 
-
-   var a int ;
    a = 1;
    a = asd[a][2];
-
+    }
 }
 
 

@@ -190,7 +190,7 @@ public class ASMArith {
 //        }
 //        // 将得到的地址放入 address_register
         produce("mov", address_register.name, eax.name);
-        produce("mov", toASMForm(result), address_register.name);
+        produce("mov", toAddress(result), address_register.name);
 
 
     }
