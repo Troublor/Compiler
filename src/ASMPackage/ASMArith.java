@@ -492,7 +492,7 @@ public class ASMArith {
             }
         }
         //  pop 回来的 数据不再需要， 定义一个trash(32bit)来存没用的数据（不然会占用一个寄存器）
-        produce("pop", "dword trash");
+        produce("pop", "dword [trash]");
 
     }
 

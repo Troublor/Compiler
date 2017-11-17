@@ -235,7 +235,7 @@ public class ASMGenerater {
 
         //数据段
         result.add(new ASMSentence("section", ".data"));
-        result.add(new ASMSentence("trash", "DD ?"));
+        result.add(new ASMSentence("trash", "DD 0"));
         return result;
     }
 
