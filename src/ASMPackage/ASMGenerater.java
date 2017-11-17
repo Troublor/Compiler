@@ -123,6 +123,9 @@ public class ASMGenerater {
         Stack<String> jumpStack = new Stack<>();
         System.out.println("下面输出各变量的相对偏移");
         symbolTableManager.printAllVariable();
+        //NASM头部
+        result.add(new ASMSentence("section", ".text"));
+        result.add(new ASMSentence("global", "_start"));
         QT qt;
         for (int i = 0; i < qts.size(); i++) {
             qt = qts.get(i);
@@ -211,6 +214,13 @@ public class ASMGenerater {
                     result.addAll(res);
                     break;
                 case "func_label":
+                    //main函数处为函数入口
+                    if (qt.getOperand_left().equals("main")) {
+                        result.add(new ASMSentence("_start"));
+                        //将SS和DS变成相同
+                        result.add(new ASMSentence("mov", "eax", "ds"));
+                        result.add(new ASMSentence("mov", "ss", "eax"));
+                    }
                     result.add(new ASMSentence(qt.getOperand_left() + ":"));
                     //函数定义的时候添加标号
                     break;
