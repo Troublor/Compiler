@@ -292,7 +292,7 @@ public class Parser extends Lang{
                     if (!w.getLabel().equals(x.getLabel())) {
                         //如果与input不匹配
                         throw new GrammarException(
-                            "GrammarException: unexpected word \"" + w.getWord() + "\"");
+                                "GrammarException: unexpected word \"" + w.getWord() + "\"");
                     }
                     //如果匹配则input取下一个
                     w = next();
@@ -303,7 +303,7 @@ public class Parser extends Lang{
                     if (index == null) {
                         //如果没找到对应的产生式
                         throw new GrammarException(
-                            "GrammarException: unexpected word \"" + w.getWord() + "\"");
+                                "GrammarException: unexpected word \"" + w.getWord() + "\"");
                     }
                     //产生式逆序压栈
                     for (Token t : this.reverse(grammar.getDeriver(index).getDestination())) {
@@ -318,7 +318,7 @@ public class Parser extends Lang{
                 //如果栈空了，符号串还没读完
                 //错误
                 throw new GrammarException(
-                    "GrammarException: redundant words after \"" + w.getWord() + "\"");
+                        "GrammarException: redundant words after \"" + w.getWord() + "\"");
             }
 
         } catch (Exception e) {
@@ -369,17 +369,17 @@ public class Parser extends Lang{
                     break;
                 case 3:
                     method = cls.getDeclaredMethod(split[2], String.class, String.class,
-                        String.class);
+                            String.class);
                     method.invoke(translator, split[3], split[4], split[5]);
                     break;
                 case 4:
                     method = cls.getDeclaredMethod(split[2], String.class, String.class,
-                        String.class, String.class);
+                            String.class, String.class);
                     method.invoke(translator, split[3], split[4], split[5], split[6]);
                     break;
                 case 5:
                     method = cls.getDeclaredMethod(split[2], String.class, String.class,
-                        String.class, String.class, String.class);
+                            String.class, String.class, String.class);
                     method.invoke(translator, split[3], split[4], split[5], split[6], split[7]);
                     break;
             }

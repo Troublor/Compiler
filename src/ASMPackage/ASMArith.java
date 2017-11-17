@@ -26,6 +26,7 @@ public class ASMArith {
     register ecx = new register("ecx", null, 0);
     register edx = new register("edx", null, 0);
     private register address_register = new register("edi",null, 0 );
+    private boolean switch_side = true; // 这个变量是为引用指向内容交错mov到eax,ebx准备的
 
     public ASMArith(List<QT> qts, ASMGenerater asmGenerater, SymbolTableManager symbolTableManager) {
 
@@ -63,74 +64,90 @@ public class ASMArith {
         String operator = qt.getOperator();
         String type = getTypeOfBasic(qt.getResult());
 
-        switch (type) {
-            // char 也是32位的，所以操作和int操作完全一样
-            case "char":
-            case "int": {
-                switch (operator) {
-                    case "=": {
-                        assign(qt);
-                        break;
-                    }
-                    case "+": {
-                        iadd(qt);
-                        break;
-                    }
-                    case "-": {
-                        isub(qt);
-                        break;
-                    }
-                    case "*": {
-                        imul(qt);
-                        break;
-                    }
-                    case "/": {
-                        idiv(qt);
-                        break;
-                    }
-                    case "<":
-                    case ">":
-                    case "<=":
-                    case ">=":
-                    case "==": {
-                        compare(qt);
-                        break;
-                    }
-                    case "&&":
-                    case "||": {
-                        logicOperation(qt);
-                    }
+        if (operator.equals("ref")) {
+            switch (operator) {
+                case "ref": {
+                    ref(qt);
+                    break;
                 }
-                break;
             }
-            case "double": {
-                switch (operator) {
-                    case "=": {
-                        assign(qt);
-                        break;
+        }
+        // 剩下的是算术、逻辑运算
+        else {
+            switch (type) {
+                // char 也是32位的，所以操作和int操作完全一样
+                case "char":
+                case "int": {
+                    switch (operator) {
+                        case "=": {
+                            assign(qt);
+                            break;
+                        }
+                        case "+": {
+                            iadd(qt);
+                            break;
+                        }
+                        case "-": {
+                            isub(qt);
+                            break;
+                        }
+                        case "*": {
+                            imul(qt);
+                            break;
+                        }
+                        case "/": {
+                            idiv(qt);
+                            break;
+                        }
+                        case "<":
+                        case ">":
+                        case "<=":
+                        case ">=":
+                        case "==": {
+                            compare(qt);
+                            break;
+                        }
+                        case "&&":
+                        case "||": {
+                            logicOperation(qt);
+                        }
                     }
-                    case "+": {
-                        fadd(qt);
-                        break;
-                    }
-                    case "-": {
-                        fsub(qt);
-                        break;
-                    }
-                    case "*": {
-                        fmul(qt);
-                        break;
-                    }
-                    case "/": {
-                        fdiv(qt);
-                        break;
-                    }
+                    break;
                 }
-                break;
-            }
-            // ref qt: about pointer
-            default:
+                case "double": {
+                    switch (operator) {
+                        case "=": {
+                            assign(qt);
+                            break;
+                        }
+                        case "+": {
+                            fadd(qt);
+                            break;
+                        }
+                        case "-": {
+                            fsub(qt);
+                            break;
+                        }
+                        case "*": {
+                            fmul(qt);
+                            break;
+                        }
+                        case "/": {
+                            fdiv(qt);
+                            break;
+                        }
+                    }
+                    break;
+                }
+                // ref qt: about pointer
+                default: {
+//                if (type.endsWith("*")) {
+//                    if (operator.equals("ref")) ref(qt);
+//                }
+//                else
                     throw new ASMException("no matching operation");
+                }
+            }
         }
         ++cur_index;
     }
@@ -138,34 +155,42 @@ public class ASMArith {
     private void ref(QT qt) throws SemanticException{
         String left_operand = qt.getOperand_left(), right_operand = qt.getOperand_right(), result = qt.getResult();
         eax.release();edx.release();
-        if (!left_operand.endsWith("*")) {
-            // 如果左操作数不是指针类型，取出地址放入 address_register
+
+
+        if (!left_operand.contains("ref")) {
+            // 如果左操作数不是 引用 类型，取出地址放入 address_register
             produce("mov", address_register.name, String.valueOf(symbol_table_manager.lookUpVariableOffset(left_operand)));
+        }
+        else {
+            // 如果是引用类型，就从内存取取值
+            produce("mov", address_register.name, toASMForm(left_operand));
         }
          //求array的偏移地址
         if (isArrayType(left_operand)) {
             // 将下标大小放入eax
             produce("mov", eax.name, toASMForm(right_operand));
             // 乘以元素大小
-            String elementType = getArrayElemType(left_operand);
+//            String elementType = getArrayElemType(left_operand);
+            String elementType = result.split("\\.")[2];
             produce("imul", String.valueOf(
                     symbol_table_manager.getArrayElemLength(elementType)
             ));
-            // todo: getAddress单单返回偏移地址，和toAddress()不同
             produce("add", address_register.name);
             // 现在我们得到了 偏移地址
         }
-        // struct偏移地址
-        else {
-            String typeofstruct = getStructType(left_operand);
-            String fieldname = right_operand;
-            produce("mov", eax.name, String.valueOf(
-                    symbol_table_manager.getFieldOffsetInStruct(typeofstruct, fieldname)
-            ));
-            produce("add", address_register.name);
-        }
-        // 将得到的地址放入 address_register
+//        // struct偏移地址
+//        else {
+//            String typeofstruct = getStructType(left_operand);
+//            String fieldname = right_operand;
+//            produce("mov", eax.name, String.valueOf(
+//                    symbol_table_manager.getFieldOffsetInStruct(typeofstruct, fieldname)
+//            ));
+//            produce("add", address_register.name);
+//        }
+//        // 将得到的地址放入 address_register
         produce("mov", address_register.name, eax.name);
+        produce("mov", toASMForm(result), address_register.name);
+
 
     }
 
@@ -186,10 +211,14 @@ public class ASMArith {
         String left_operand = qt.getOperand_left(), result = qt.getResult();
         register r = inWhichRegister(result);
         if (r == null) r = arrangeRegister();
-        if (result.endsWith("*")) {
-            // result is pointer type
-            // todo 这边内存到内存可能会有些问题
-            produce("mov", "["+address_register.name+"]", toASMForm(left_operand));
+        if (result.contains("*ref")) {
+            // 先取左操作数
+            eax.release();
+            produce("mov", eax.name, toASMForm(left_operand));
+            // 取地址
+            produce("mov", address_register.name, toAddress(result));
+            // 赋值
+            produce("mov", "["+address_register.name+"]", eax.name);
 
         }
         else {
@@ -621,10 +650,19 @@ public class ASMArith {
     private String toASMForm(String item) {
         // if not constant, directly use locate()
         if (!isConstant(item)) {
-            if (item.endsWith("*")) {
-                eax.release();
-                produce("mov", eax.name, "["+address_register+"]");
-                return eax.name;
+            if (item.contains("*ref")) {
+                produce("mov", address_register.name, toAddress(item));
+                switch_side = !switch_side;
+                if (switch_side) {
+                    eax.release();
+                    produce("mov", eax.name, "[" + address_register + "]");
+                    return eax.name;
+                }
+                else {
+                    ebx.release();;
+                    produce("mov", eax.name, "[" + address_register + "]");
+                    return ebx.name;
+                }
             } else {
                 return locate(item);
             }
@@ -660,7 +698,8 @@ public class ASMArith {
 
     // todo: mov ri, 1.b.int -> mov ri, b.offset
     private String toAddress(String id) {
-        return id;
+        id = id.split("->")[0];
+        return asmGenerater.toASMOprd(id, "esi");
     }
 
 
@@ -759,6 +798,9 @@ public class ASMArith {
             try {
                 String info = getActiveInfo(id);
                 // 经过优化后的四元式的每个结果一定是活跃的，（假设不活跃，可以想到一定这条四元式一定会被优化掉）
+                // todo 暂缓之计，把传进来的不活跃的id看成活跃的 n->y
+//                if (info.equals("n")) throw new ASMException("optimize error");
+//                if (info.equals("n")) info = "y";
                 this.active_index = info.equals("y") ? end_index : Integer.valueOf(info);
             } catch (ASMException e) {
                 e.printStackTrace();

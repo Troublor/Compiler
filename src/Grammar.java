@@ -542,6 +542,8 @@ public class Grammar {
         //循环找到第一个不是动作的标号（终结符或非终结符）
 
         String s = this.getFirst(a);
+        if (s.startsWith("_AC_"))
+            s = this.getNext(a, 0);
         if (s == null) {
             //如果没有第一个（为空）
             return firstCollection;
