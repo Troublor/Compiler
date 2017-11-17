@@ -1,11 +1,19 @@
+/*sdf
 
+*/
 func int hhhhha() {
-  var a int ;
+  //var a int ;
   return 1;
 }
 
 
 func void main() {
+/*
+sadklfjasdkl;gjasdlk;
+]asdgijwaegko;lj34tgio234u]
+234go3o4ujiguioueahg
+ssadfjhasddklgvn
+*/
   var c double;
   var a,b int;
   var asd [3][3]int;
