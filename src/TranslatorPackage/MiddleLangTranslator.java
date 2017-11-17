@@ -79,6 +79,45 @@ public class MiddleLangTranslator {
         semanticStack.push(tmp);
     }
 
+
+    public void seek() throws SemanticException, OptNotSupportError {
+        QT prev_qt = QTs.get(QTs.size() - 1);
+        String index = semanticStack.pop();
+
+        String prev_type_name;
+        if (prev_qt.getOperator().equals("seek")) {
+            prev_type_name = prev_qt.getResult();
+
+        } else {
+            String prev_arr_name = semanticStack.pop();
+            prev_type_name = symbolTableManager.lookupVariableType(prev_arr_name);
+        }
+
+        String next_elem_type_name = symbolTableManager.getArrayElemType(prev_type_name);
+        QTs.add(new QT("seek", prev_type_name, toRepresent(index), next_elem_type_name));
+
+    }
+
+    public void reference() throws SemanticException, OptNotSupportError {
+        QT prev_qt = QTs.get(QTs.size() - 1);
+        String index = semanticStack.pop();
+
+        String prev_type_name;
+        if (prev_qt.getOperator().equals("seek")) {
+            prev_type_name = prev_qt.getResult();
+
+        } else {
+            String prev_arr_name = semanticStack.pop();
+            prev_type_name = symbolTableManager.lookupVariableType(prev_arr_name);
+        }
+
+        String next_elem_type_name = symbolTableManager.getArrayElemType(prev_type_name);
+        String ref_name = symbolTableManager.addReference(next_elem_type_name);
+        QTs.add(new QT("ref", prev_type_name, toRepresent(index), toRepresent(ref_name + ".value")));
+    }
+
+
+
     public void afterArray() throws SemanticException, TypeError, OptNotSupportError{
         String index_item = semanticStack.pop();
         String id_item = semanticStack.pop();
@@ -93,7 +132,8 @@ public class MiddleLangTranslator {
             String element_type = lookUpType(id_item + "." + index_item);
             // (假设a是int型的数组) 对 a[a[10]]这种情况，本来会生成a.a.10, 现在先生成 t = a.10,  然后生成a.t，防止多层嵌套
             // todo: 指针类型未声明，需要修改
-            String tmp = symbolTableManager.addTempVariable(index_type+"*");
+            String tmp = symbolTableManager.addTempVariable(element_type + "*");
+            //todo toPresent 有问题
             QTs.add(new QT("ref", toRepresent(id_item), toRepresent(index_item), toRepresent(tmp)));
             semanticStack.push(tmp);
         }
@@ -261,10 +301,16 @@ public class MiddleLangTranslator {
             return symbolTableManager.accessVariableAndField(item, "value");
         }
         String[] parts = item.split(".");
-        String name = parts[0];
-        int i = 1;
-        while (i < parts.length) {
-            name = symbolTableManager.accessVariableAndField(name, parts[i++]);
+        String name;
+
+        if (parts.length != 0) {
+            name = parts[0];
+            int i = 1;
+            while (i < parts.length) {
+                name = symbolTableManager.accessVariableAndField(name, parts[i++]);
+            }
+        } else {
+            name = symbolTableManager.accessVariableAndField(item, "value");
         }
         return name;
 //        System.out.println("方法: toRepresent 因为错误返回了个null");

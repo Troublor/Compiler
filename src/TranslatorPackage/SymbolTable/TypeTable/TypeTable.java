@@ -12,7 +12,7 @@ import java.util.Map;
 public class TypeTable {
     private Map<String,TypeTableRow> tableRowMap;
     private String[] basic_type_names = new String[]{
-            "int", "double", "char"
+            "int", "double", "char", "ref"
     };
     //类型名到具体类型info的map
 
@@ -26,6 +26,7 @@ public class TypeTable {
             //basic 是最最基本的类型了 在生成目标代码的时候就直接分配内存大小了 不再递归沿着type往下查
             tableRowMap.put(type_name, basicType);
         }
+
 
     }
 

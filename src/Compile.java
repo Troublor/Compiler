@@ -66,7 +66,7 @@ public class Compile {
             }
             System.out.println("编译成功！");
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.out.println(e);
             e.printStackTrace();
         }
     }

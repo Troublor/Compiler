@@ -66,8 +66,14 @@ public class VariableTable{
     //对原来的接口重新封装了 只需提供类型就够了
     public VariableTableRow addTempVariable(String type_name) throws SemanticException {
         String new_id_name = "$t" + tmpCount++;
-        VariableTableRow new_var = addVariable(type_name, new_id_name, 1);
+        VariableTableRow new_var = addVariable(type_name, new_id_name, 4);
         variables.put(new_id_name, new_var);
+        return new_var;
+    }
+
+    public VariableTableRow addReference(String type_name) throws SemanticException {
+        String new_name_id = "*ref" + tmpCount + "_" + type_name;
+        VariableTableRow new_var = addVariable("int", new_name_id, 4);
         return new_var;
     }
 
