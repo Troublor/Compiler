@@ -320,10 +320,17 @@ public class SymbolTableManager {
             offset = this_var.getOffset();
             TypeTableRow curr_type = typeTable.getTypeInfo(this_var.getTypeName());
 
+
+
             //如果是基本类型 直接返回变量的offset即可
-            if (may_type_or_field.equals("int") || may_type_or_field.equals("double")
-                    || may_type_or_field.equals("char"))
+            try {
+                typeTable.getTypeInfo(may_type_or_field);
                 return offset;
+            }catch (Exception ee){
+
+            }
+
+
 
             //如果不是基本类型 则需要进行偏移量的寻址
             FieldTableRow access_field = curr_type.getField(may_type_or_field);
@@ -337,8 +344,9 @@ public class SymbolTableManager {
                 curr_field_type_name = next_field.getTypeName();
             }
             return offset;
-        } catch (Exception ee) {
+        } catch (SemanticException ee) {
             ee.printStackTrace();
+            System.exit(-1);
         }
         return 1;
     }
