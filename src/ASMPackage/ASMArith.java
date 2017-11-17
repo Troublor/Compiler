@@ -129,13 +129,8 @@ public class ASMArith {
                 break;
             }
             // ref qt: about pointer
-            default: {
-                if (type.endsWith("*")) {
-                    if (operator.equals("ref")) ref(qt);
-                }
-                else
+            default:
                     throw new ASMException("no matching operation");
-            }
         }
         ++cur_index;
     }

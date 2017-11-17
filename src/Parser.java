@@ -169,7 +169,6 @@ public class Parser extends Lang{
                 new String[]{"_AC_receiveCallingFuncName", "(", "_AC_funcParamStartFlag", "值列表", ")"
                         , "_AC_startFuncCalling"}));
 
-
         //函数返回值
         grammar.addDeriver(new Deriver("顺序", new String[]{"return", "_AC_pushMayRetValFlag", "RET_BOOL"}));
 
@@ -206,8 +205,8 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("赋值", new String[]{"寻址", "=", "bool", "_AC_afterAssign"}));
         grammar.addDeriver(new Deriver("寻址", new String[]{"[", "bool", "]", "数组寻址"}));
 
-        grammar.addDeriver(new Deriver("数组寻址", new String[]{"_AC_reference"}));
-        grammar.addDeriver(new Deriver("数组寻址", new String[]{"_AC_seek", "[", "bool", "]", "数组寻址"}));
+        grammar.addDeriver(new Deriver("数组寻址", new String[]{"_AC_referenceEnd"}));
+        grammar.addDeriver(new Deriver("数组寻址", new String[]{"_AC_reference", "[", "bool", "]", "数组寻址"}));
 
         grammar.addDeriver(new Deriver("寻址", new String[]{".", "I", "_AC_PUSH", "_AC_afterStruct", "结构体寻址"}));
         grammar.addDeriver(new Deriver("寻址", new String[]{}));

@@ -3,6 +3,7 @@ package TranslatorPackage;
 
 import MiddleDataUtilly.QT;
 
+import TranslatorPackage.SymbolTable.VariableTable.VariableTableRow;
 import TranslatorPackage.TranslatorExceptions.OptNotSupportError;
 
 import TranslatorPackage.TranslatorExceptions.SemanticException;
@@ -80,41 +81,53 @@ public class MiddleLangTranslator {
     }
 
 
-    public void seek() throws SemanticException, OptNotSupportError {
-        QT prev_qt = QTs.get(QTs.size() - 1);
-        String index = semanticStack.pop();
+    private QT last_ref_qt = null;
 
+
+    public String reference() throws SemanticException, OptNotSupportError {
         String prev_type_name;
-        if (prev_qt.getOperator().equals("seek")) {
-            prev_type_name = prev_qt.getResult();
+        String prev_arr_name;
+        String next_elem_type_name;
+        String index = semanticStack.pop();
+        String next_ref_name;
+        if (last_ref_qt == null) {
+            prev_arr_name = semanticStack.pop();
+            prev_type_name = symbolTableManager.lookupVariableType(prev_arr_name);
+            next_elem_type_name = symbolTableManager.getArrayElemType(prev_type_name);
+
+
+            next_ref_name = symbolTableManager.addReference(next_elem_type_name);
+            next_ref_name = symbolTableManager.accessVariableAndField(next_ref_name, "value");
+
+            last_ref_qt = new QT("ref", prev_arr_name, toRepresent(index), next_ref_name);
 
         } else {
-            String prev_arr_name = semanticStack.pop();
-            prev_type_name = symbolTableManager.lookupVariableType(prev_arr_name);
+            next_elem_type_name = "";
+            String prev_ref_name = last_ref_qt.getResult();
+
+            String prev_ref_name_split[] = prev_ref_name.split("\\.")[1].split("_");
+            for (int i = 1; i < prev_ref_name_split.length; i++) {
+                next_elem_type_name += prev_ref_name_split[i];
+                if (i != prev_ref_name_split.length - 1)
+                    next_elem_type_name += "_";
+            }
+            next_ref_name = symbolTableManager.addReference(next_elem_type_name);
+
+            last_ref_qt = new QT(
+                    "ref",
+                    prev_ref_name,
+                    toRepresent(index),
+                    symbolTableManager.accessVariableAndField(next_ref_name, "value"));
         }
-
-        String next_elem_type_name = symbolTableManager.getArrayElemType(prev_type_name);
-        QTs.add(new QT("seek", prev_type_name, toRepresent(index), next_elem_type_name));
-
+        QTs.add(last_ref_qt);
+        return next_ref_name;
     }
 
-    public void reference() throws SemanticException, OptNotSupportError {
-        QT prev_qt = QTs.get(QTs.size() - 1);
-        String index = semanticStack.pop();
+    public void referenceEnd() throws SemanticException, OptNotSupportError {
+        String last_ref_name = reference();
+        semanticStack.push(last_ref_name);
+        last_ref_qt = null;
 
-        String prev_type_name;
-        if (prev_qt.getOperator().equals("seek")) {
-            prev_type_name = prev_qt.getResult();
-
-        } else {
-            String prev_arr_name = semanticStack.pop();
-            prev_type_name = symbolTableManager.lookupVariableType(prev_arr_name);
-        }
-
-        String next_elem_type_name = symbolTableManager.getArrayElemType(prev_type_name);
-        String ref_name = symbolTableManager.addReference(next_elem_type_name);
-        semanticStack.push(ref_name);
-        QTs.add(new QT("ref", prev_type_name, toRepresent(index), toRepresent(ref_name + ".value")));
     }
 
 
@@ -248,8 +261,8 @@ public class MiddleLangTranslator {
         // . 是正则的通配符  得用 \\. 进行转义
 
         String id = item;
-        if (parts.length != 0) {
-            id = parts[0];
+        if (parts.length != 1) {
+            id = parts[1];
         }
         String type = symbolTableManager.lookupVariableType(id);
         int i = 1;
@@ -302,16 +315,15 @@ public class MiddleLangTranslator {
             return symbolTableManager.accessVariableAndField(item, "value");
         }
         String[] parts = item.split("\\.");
-        String name;
-
-        if (parts.length != 0) {
-            name = parts[0];
-            int i = 1;
+        String name = parts[0];
+        int i = 1;
+        if (parts.length > 1) {
             while (i < parts.length) {
                 name = symbolTableManager.accessVariableAndField(name, parts[i++]);
             }
         } else {
-            name = symbolTableManager.accessVariableAndField(item, "value");
+            VariableTableRow var = symbolTableManager.lookupVariable(name);
+            name = var.getTable_id() + "." + name + "." + var.getTypeName();
         }
         return name;
 //        System.out.println("方法: toRepresent 因为错误返回了个null");

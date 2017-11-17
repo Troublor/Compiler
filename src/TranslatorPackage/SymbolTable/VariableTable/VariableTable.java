@@ -72,7 +72,7 @@ public class VariableTable{
     }
 
     public VariableTableRow addReference(String type_name) throws SemanticException {
-        String new_name_id = "*ref" + tmpCount + "_" + type_name;
+        String new_name_id = "*ref" + tmpCount++ + "_" + type_name;
         VariableTableRow new_var = addVariable("int", new_name_id, 4);
         return new_var;
     }
