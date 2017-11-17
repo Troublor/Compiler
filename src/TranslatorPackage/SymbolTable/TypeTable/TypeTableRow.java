@@ -30,6 +30,14 @@ public class TypeTableRow {
         return fields.getField(field_name);
     }
 
+    public String getElemType() {
+        if (name.startsWith("array")) {
+            return getField("0").getFieldName();
+        }
+        return null;
+
+    }
+
     public int getLength() {
         return lenth;
     }

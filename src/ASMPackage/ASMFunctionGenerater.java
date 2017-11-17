@@ -41,7 +41,7 @@ public class ASMFunctionGenerater {
             //获取运行栈大小
 
             //构建栈
-            asmSentences.add(new ASMSentence("add", "sp", String.valueOf(length)));
+            asmSentences.add(new ASMSentence("add", "esp", String.valueOf(length)));
             //传参
 
             for (int i = 1; qts.get(i).getOperator().equals("pass_param"); i++) {

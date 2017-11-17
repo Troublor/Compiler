@@ -1,10 +1,7 @@
 
 
-func int hhhhha(int jhgjh,double k) {
-  var h,b int;
-  h = 1;
-  b = 5;
-  k = 5.5;
+func int hhhhha() {
+  var asd [5][5]int;
   return 1;
 }
 
@@ -16,7 +13,7 @@ func void main() {
   b = 3 + c;
   b = 5;
   c = 5.5;
-  a = hhhhha(a,b);
+  a = hhhhha();
   if(a>c){
     b = (a + c)/a;
     a = a + b;

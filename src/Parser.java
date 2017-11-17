@@ -83,7 +83,7 @@ public class Parser extends Lang{
                 "structure", "function", "L", "形参列表", "形参列表1", "类型", "proc", "形参",
                 "形参类型", "类型标识符", "复合语句", "声明语句", "标识符表", "类型", "循环", "条件",
                 "顺序", "语句成分", "赋值", "函数", "条件其他", "数组下标", "非负整数", "值列表", "RET_BOOL",
-                "值列表1", "S_L", "寻址")));
+                "值列表1", "S_L", "寻址", "数组类型声明", "多维数组")));
 
         grammar.addVT(new HashSet<>(Arrays.asList(
                 "||", "&&", "==", "!=", "<", ">", "<=", ">=", "+", "-", "*", "/", "=", "!", "I",
@@ -141,8 +141,17 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("标识符表", new String[]{",", "I", "_AC_PUSH", "标识符表"}));
         grammar.addDeriver(new Deriver("标识符表", new String[]{}));
         grammar.addDeriver(new Deriver("类型", new String[]{"I", "_AC_PUSH", "_AC_checkTypeExist"}));
-        grammar.addDeriver(new Deriver("类型",
-                new String[]{"[", "const int", "_AC_PUSH", "]", "I", "_AC_PUSH", "_AC_defineArrayType"}));
+        grammar.addDeriver(new Deriver("类型", new String[]{"数组类型声明"}));
+
+        grammar.addDeriver(new Deriver("数组类型声明",
+                new String[]{"_AC_pushFlagStartMltArrayDeclare",
+                        "[", "const int", "_AC_PUSH", "]", "多维数组",
+                        "I", "_AC_PUSH", "_AC_defineArrayType"}));
+
+        grammar.addDeriver(new Deriver("多维数组",
+                new String[]{"[", "const int", "_AC_PUSH", "]", "多维数组"}));
+
+        grammar.addDeriver(new Deriver("多维数组", new String[]{}));
 
 
         grammar.addDeriver(new Deriver("复合语句", new String[]{"循环", "复合语句"}));

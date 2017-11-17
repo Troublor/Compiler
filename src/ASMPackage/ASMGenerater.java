@@ -260,7 +260,7 @@ public class ASMGenerater {
                 ASM_form_opd = "__float32__(" + val + ")";
         } else {
             //反之则是从上层函数(eax)向当前函数栈层(esi)传参
-            ASM_form_opd = toAddress(register, symbolTableManager.lookUpVariableOffset(qt_form_opd));
+            ASM_form_opd = "dword " + toAddress(register, symbolTableManager.lookUpVariableOffset(qt_form_opd));
         }
         return ASM_form_opd;
     }
