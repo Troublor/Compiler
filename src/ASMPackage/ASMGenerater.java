@@ -199,7 +199,7 @@ public class ASMGenerater {
                     break;
                 case "whl_sta":
                     result.add(new ASMSentence("while_start" + Integer.toString(i) + ":"));
-                    jumpStack.push("WHILE" + Integer.toString(i));
+                    jumpStack.push("while_start" + Integer.toString(i));
                     break;
                 case "whl_end":
                     String temp = jumpStack.pop();

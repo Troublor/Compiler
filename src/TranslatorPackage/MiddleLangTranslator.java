@@ -406,7 +406,7 @@ public class MiddleLangTranslator {
         int end_index = real_vars.size() - 1;
         for (int i = 0; i < real_vars.size(); i++) {
             //进行传参  实际上是一个跨表的传参
-            QTs.add(new QT("=", real_vars.get(end_index - i), null, params.get(i)));
+            QTs.add(new QT("pass_param", real_vars.get(end_index - i), null, params.get(i)));
         }
 
             //传参完成后进行执行指令的跳转
