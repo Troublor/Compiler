@@ -79,11 +79,11 @@ public class Parser extends Lang{
 
         grammar.addVN(new HashSet<>(Arrays.asList(
                 "bool", "join", "BOOL", "equality", "JOIN", "EQUALITY", "rel", "expr",
-                "expr1", "EXPR", "term", "TERM", "unary", "值", "值成分", "常量", "S", "P", "S", "F",
+                "expr1", "EXPR", "term", "TERM", "unary", "值", "数组寻址", "常量", "S", "P", "S", "F",
                 "structure", "function", "L", "形参列表", "形参列表1", "类型", "proc", "形参",
                 "形参类型", "类型标识符", "复合语句", "声明语句", "标识符表", "类型", "循环", "条件",
                 "顺序", "语句成分", "赋值", "函数", "条件其他", "数组下标", "非负整数", "值列表", "RET_BOOL",
-                "值列表1", "S_L", "寻址", "数组类型声明", "多维数组")));
+                "值列表1", "S_L", "寻址", "数组寻址", "数组类型声明", "多维数组")));
 
         grammar.addVT(new HashSet<>(Arrays.asList(
                 "||", "&&", "==", "!=", "<", ">", "<=", ">=", "+", "-", "*", "/", "=", "!", "I",
@@ -144,9 +144,8 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("类型", new String[]{"数组类型声明"}));
 
         grammar.addDeriver(new Deriver("数组类型声明",
-                new String[]{"_AC_pushFlagStartMltArrayDeclare",
-                        "[", "const int", "_AC_PUSH", "]", "多维数组",
-                        "I", "_AC_PUSH", "_AC_defineArrayType"}));
+                new String[]{"_AC_pushFlagStartMltArrayDeclare", "[", "const int", "_AC_PUSH", "]",
+                        "多维数组", "I", "_AC_PUSH", "_AC_defineArrayType"}));
 
         grammar.addDeriver(new Deriver("多维数组",
                 new String[]{"[", "const int", "_AC_PUSH", "]", "多维数组"}));
@@ -191,17 +190,15 @@ public class Parser extends Lang{
 
 
         // 只返回单个常数和变量时
-        grammar.addDeriver(new Deriver("值", new String[]{"I", "_AC_PUSH", "值成分"}));
+        grammar.addDeriver(new Deriver("值", new String[]{"I", "_AC_PUSH", "寻址"}));
         grammar.addDeriver(new Deriver("值", new String[]{"常量"}));
 
-        grammar.addDeriver(new Deriver("值成分", new String[]{"函数"}));
-        grammar.addDeriver(new Deriver("值成分", new String[]{"[", "非负整数", "]", "_AC_afterArray"}));
-        grammar.addDeriver(new Deriver("值成分", new String[]{".", "I", "_AC_PUSH", "_AC_afterStruct"}));
-        grammar.addDeriver(new Deriver("值成分", new String[]{}));
 
+        grammar.addDeriver(new Deriver("寻址", new String[]{"[", "bool", "]", "数组寻址"}));
+        grammar.addDeriver(new Deriver("数组寻址", new String[]{"_AC_seek", "[", "bool", "]", "数组寻址"}));
+        grammar.addDeriver(new Deriver("数组寻址", new String[]{"_AC_reference"}));
 
-        grammar.addDeriver(new Deriver("寻址", new String[]{"[", "bool", "]", "_AC_afterArray"}));
-        grammar.addDeriver(new Deriver("寻址", new String[]{".", "I", "_AC_PUSH", "_AC_afterStruct"}));
+        grammar.addDeriver(new Deriver("寻址", new String[]{".", "I", "_AC_PUSH", "_AC_afterStruct", "寻址"}));
         grammar.addDeriver(new Deriver("寻址", new String[]{}));
 
         grammar.addDeriver(new Deriver("非负整数", new String[]{"const int", "_AC_PUSH"}));
@@ -318,7 +315,7 @@ public class Parser extends Lang{
             }
 
         } catch (Exception e) {
-            throw new CompileException("GrammarException: At Line " + lexer.getLine() + " - " + e.getMessage());
+            throw new CompileException("GrammarException: At Line " + lexer.getLine() + " - " + e);
         } catch (Throwable throwable) {
             throw new CompileException("GrammarException: At Line " + lexer.getLine() + " - Unknown error");
         }

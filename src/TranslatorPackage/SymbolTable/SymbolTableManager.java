@@ -57,6 +57,7 @@ public class SymbolTableManager {
         return field_res.getTypeName();
     }
 
+
     /**
      * 一个能够递归查询变量域的函数
      * 作用域仅限当前区域
@@ -71,7 +72,8 @@ public class SymbolTableManager {
      *                   例子:
      *                   查询int a的value域  a是第一次被扫入
      *                   调用 accessVariableAndField("a","value")
-     *                   return "table_id.a.value.basic"
+     *                   如果a是基本类型了
+     *                   return "table_id.a.type"
      * @param field_name 访问的变量名的域名
      * @return 新的变量名
      * @throws SemanticException
@@ -179,8 +181,14 @@ public class SymbolTableManager {
      * @throws SemanticException //
      */
     public String addTempVariable(String type_name) throws SemanticException {
+        lookupType(type_name);
         VariableTableRow res = variableTableSetManager.addTempVariable(type_name);
         return res.getName_id();
+    }
+
+    public String addReference(String ref_type) throws SemanticException {
+        VariableTableRow new_ref = variableTableSetManager.addReference(ref_type);
+        return new_ref.getName_id();
     }
 
 
@@ -356,10 +364,22 @@ public class SymbolTableManager {
         TypeTableRow type_info = typeTable.getTypeInfo(array_type_name);
         String elem_type = type_info.getElemType();
         if (elem_type == null)
-            throw new SemanticException("can not get non array type's elem type");
+            throw new SemanticException("can not get non array type's elem length");
         TypeTableRow elem_type_info = typeTable.getTypeInfo(elem_type);
         return elem_type_info.getLength();
     }
+
+
+    public String getArrayElemType(String array_type_name) throws SemanticException {
+        TypeTableRow type_info = typeTable.getTypeInfo(array_type_name);
+        String elem_type = type_info.getElemType();
+        if (elem_type == null)
+            throw new SemanticException("can not get non array type's elem type");
+        TypeTableRow elem_type_info = typeTable.getTypeInfo(elem_type);
+        return elem_type_info.getName();
+    }
+
+
 
     public int getFieldOffsetInStruct(String struct_type_name, String field_name) throws SemanticException {
         TypeTableRow type_info = typeTable.getTypeInfo(struct_type_name);

@@ -85,7 +85,7 @@ class DAG {
                 }
                 defined.addLabel(qt.getResult());
 
-            } else if (QT.isConstVariable(qt.getOperand_left()) && (qt.getOperand_right().equals("_")
+            } else if (QT.isConstVariable(qt.getOperand_left()) && (qt.getOperand_right() == null
                 || QT.isConstVariable(qt.getOperand_right()))) {
                 //如果是常值表达式
                 // 查找之前定义的A（作为附加标号的）并删除， 如果是主标记，则不删除
@@ -114,7 +114,7 @@ class DAG {
                 Node public_expression = getExpression(qt);
                 if (public_expression == null) {
                     Node left_node = null;
-                    if (!qt.getOperand_left().equals("_")) {
+                    if (qt.getOperand_left() != null) {
                         left_node = getFirstDefindNode(qt.getOperand_left());
                         if (left_node == null) {
                             left_node = new Node(qt.getOperand_left(), null, null,
@@ -123,7 +123,7 @@ class DAG {
                         }
                     }
                     Node right_node = null;
-                    if (!qt.getOperand_right().equals("_")) {
+                    if (qt.getOperand_right() != null) {
                         right_node = getFirstDefindNode(qt.getOperand_right());
                         if (right_node == null) {
                             right_node = new Node(qt.getOperand_right(), null, null,
@@ -218,7 +218,7 @@ class DAG {
      * @return String 常值结果（标识符形式）
      */
     private String calculateConstExpression(String operator, String operand_left, String operand_right) throws QtException {
-        if (operand_right.equals("_")) {
+        if (operand_right == null) {
             return operand_left;
         }
         StringBuilder result = new StringBuilder("");

@@ -73,6 +73,12 @@ public class VariableTableSetManager {
     public VariableTableRow addTempVariable(String type_name) throws SemanticException {
         return currActiveTable.addTempVariable(type_name);
     }
+
+    public VariableTableRow addReference(String type_name) throws SemanticException {
+        return currActiveTable.addReference(type_name);
+    }
+
+
     /**
      * 有新块产生的 需要添加一个表
      */
