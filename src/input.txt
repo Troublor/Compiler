@@ -1,9 +1,8 @@
 
 func void main() {
- var asd [3][3]int;
-   var a int ;
-   a = 1;
-   a = asd[a][2];
+   var asd [3][3]int;
+   var a int;
+   a = asd[2][2];
 
 }
 
