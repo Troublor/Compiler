@@ -1,26 +1,4 @@
-
-
-func int hhhhha() {
-  var asd [5][5]int;
-  return 1;
+func void main(){
+  var c int;
+  c=1;
 }
-
-
-func void main() {
-  var c double;
-  var a,b int;
-  var ch char;
-  b = 3 + c;
-  b = 5;
-  c = 5.5;
-  a = hhhhha();
-  if(a>c){
-    b = (a + c)/a;
-    a = a + b;
-  }else{
-    while(a+3>c){
-    }
-  }
-}
-
-

@@ -57,6 +57,10 @@ public class ASMGenerater {
      */
     private void initializeActiveTable(List<QT> qts_block) {
         for (QT qt : qts_block) {
+            if (qt.getOperator().equals("ref")) {
+                //如果是引用ref跳过
+                continue;
+            }
             if (qt.getOperand_left() != null && !QT.isConstVariable(qt.getOperand_left())) {
                 active_table
                         .put(qt.getOperand_left(),
@@ -86,6 +90,9 @@ public class ASMGenerater {
         QT qt;
         for (int i = qts_block.size() - 1; i >= 0; i--) {
             qt = qts_block.get(i);
+            if (qt.getOperator().equals("ref")){
+                continue;
+            }
             StringBuilder sb_result = null;
             if (qt.getResult() != null) {
                 sb_result = new StringBuilder(qt.getResult());
@@ -214,14 +221,6 @@ public class ASMGenerater {
                     result.addAll(res);
                     break;
                 case "func_label":
-                    //main函数处为函数入口
-                    if (qt.getOperand_left().equals("main")) {
-                        result.add(new ASMSentence("_start:"));
-                        //将SS和DS变成相同
-                        result.add(new ASMSentence("mov", "eax", "ds"));
-                        result.add(new ASMSentence("add", "eax", "4"));
-                        result.add(new ASMSentence("mov", "ss", "eax"));
-                    }
                     result.add(new ASMSentence(qt.getOperand_left() + ":"));
                     //函数定义的时候添加标号
                     break;
@@ -232,6 +231,21 @@ public class ASMGenerater {
 
 
         }
+
+        //程序入口
+        result.add(new ASMSentence("_start:"));
+        //将SS和DS变成相同
+        result.add(new ASMSentence("mov", "eax", "ds"));
+        result.add(new ASMSentence("add", "eax", "4"));
+        result.add(new ASMSentence("mov", "ss", "eax"));
+        //调用main函数
+        ArrayList<QT> call_main = new ArrayList<>();
+        call_main.add(new QT("push_stack", "main", "_", "_"));
+        call_main.add(new QT("call", "main", "_", "_"));
+        List<ASMSentence> res = asmFunctionGenerater.generateFunctionCalling(call_main);
+        result.addAll(res);
+        result.add(new ASMSentence("mov", "eax", "1"));
+        result.add(new ASMSentence("int", "0x80"));
 
         //数据段
         result.add(new ASMSentence("section", ".data"));
