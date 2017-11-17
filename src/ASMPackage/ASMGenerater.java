@@ -216,7 +216,7 @@ public class ASMGenerater {
                 case "func_label":
                     //main函数处为函数入口
                     if (qt.getOperand_left().equals("main")) {
-                        result.add(new ASMSentence("_start"));
+                        result.add(new ASMSentence("_start:"));
                         //将SS和DS变成相同
                         result.add(new ASMSentence("mov", "eax", "ds"));
                         result.add(new ASMSentence("mov", "ss", "eax"));
