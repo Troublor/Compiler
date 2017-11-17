@@ -45,7 +45,6 @@ public class Compile {
         parser.setSourceCode(input.toString());
 
         try {
-            //TODO 赋值似乎没有进行类型检查
             parser.setDebug(debug);
             parser.LL1Analyze();
             Optimizer optimizer = new Optimizer(parser.getAllQTs());
@@ -65,7 +64,6 @@ public class Compile {
                     System.out.println(asm);
                 }
             }
-            //TODO 进行优化
             System.out.println("编译成功！");
         } catch (Exception e) {
             System.out.println(e.getMessage());
