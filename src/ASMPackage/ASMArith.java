@@ -447,7 +447,7 @@ public class ASMArith {
         }
         produce(operator);
         // fstp:  store the result and pops the register stack.
-        produce("fstp", "dword [" + toAddress(result) + "]");
+        produce("fstp", "dword " + toAddress(result) + "");
 
     }
 
@@ -478,7 +478,7 @@ public class ASMArith {
         }
         // not constant
         else {
-            produce("push", "dword [" + toAddress(operand) + "]");
+            produce("push", "dword " + toAddress(operand) + "");
         }
         switch (type) {
             case "char":
@@ -491,8 +491,8 @@ public class ASMArith {
                 break;
             }
         }
-        // todo: pop 回来的 数据不再需要， 定义一个null来存没用的数据（不然会占用一个寄存器）
-        produce("pop", "[null]");
+        //  pop 回来的 数据不再需要， 定义一个trash(32bit)来存没用的数据（不然会占用一个寄存器）
+        produce("pop", "dword trash");
 
     }
 

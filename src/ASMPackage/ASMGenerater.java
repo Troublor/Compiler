@@ -186,7 +186,7 @@ public class ASMGenerater {
                     jumpStack.push("IF" + Integer.toString(i));//等待回填
                     break;
                 case "el_sta":
-                    result.add(new ASMSentence("jmp", "ELSE" + Integer.toString(i) + ":"));
+                    result.add(new ASMSentence("jmp", "ELSE" + Integer.toString(i)));
                     result.add(new ASMSentence(jumpStack.pop() + ":"));//回填Label
                     jumpStack.push("ELSE" + Integer.toString(i));//等待回填
                     break;
@@ -219,6 +219,7 @@ public class ASMGenerater {
                         result.add(new ASMSentence("_start:"));
                         //将SS和DS变成相同
                         result.add(new ASMSentence("mov", "eax", "ds"));
+                        result.add(new ASMSentence("add", "eax", "4"));
                         result.add(new ASMSentence("mov", "ss", "eax"));
                     }
                     result.add(new ASMSentence(qt.getOperand_left() + ":"));
@@ -231,6 +232,10 @@ public class ASMGenerater {
 
 
         }
+
+        //数据段
+        result.add(new ASMSentence("section", ".data"));
+        result.add(new ASMSentence("trash", "DD ?"));
         return result;
     }
 
@@ -260,7 +265,7 @@ public class ASMGenerater {
                 ASM_form_opd = "__float32__(" + val + ")";
         } else {
             //反之则是从上层函数(eax)向当前函数栈层(esi)传参
-            ASM_form_opd = toAddress(register, symbolTableManager.lookUpVariableOffset(qt_form_opd));
+            ASM_form_opd =  toAddress(register, symbolTableManager.lookUpVariableOffset(qt_form_opd));
         }
         return ASM_form_opd;
     }
