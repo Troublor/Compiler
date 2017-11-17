@@ -1,9 +1,30 @@
 
-func void main() {
-   var asd [3][3]int;
-   var a int;
-   a = asd[2][2];
+func int hhhhha() {
+  var a int ;
+  return 1;
+}
 
+
+func void main() {
+  var c double;
+  var a,b int;
+  var asd [3][3]int;
+  var arr [23][2]int;
+  var ch char;
+  b = 3 + c;
+  b = 5;
+  b = hhhhha() + arr[a+b][5+a] +665;
+  c = 5.5;
+  if(a>c){
+    b = (a + c)/a;
+    a = a + b;
+  }else{
+    while(a+3>c){
+    }
+
+   a = 1;
+   a = asd[a][2];
+    }
 }
 
 

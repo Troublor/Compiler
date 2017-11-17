@@ -804,7 +804,7 @@ public class ASMArith {
                 String info = getActiveInfo(id);
                 // 经过优化后的四元式的每个结果一定是活跃的，（假设不活跃，可以想到一定这条四元式一定会被优化掉）
 //                if (info.equals("n")) throw new ASMException("optimize error");
-//                if (info.equals("n")) info = "y";
+
                 // todo:暂缓之计
                 if (info.equals("n")) info = "y";
                 this.active_index = info.equals("y") ? end_index : Integer.valueOf(info);

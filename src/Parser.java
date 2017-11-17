@@ -83,7 +83,7 @@ public class Parser extends Lang{
                 "structure", "function", "L", "形参列表", "形参列表1", "类型", "proc", "形参",
                 "形参类型", "类型标识符", "复合语句", "声明语句", "标识符表", "类型", "循环", "条件",
                 "顺序", "语句成分", "赋值", "函数", "条件其他", "数组下标", "非负整数", "值列表", "RET_BOOL",
-                "值列表1", "S_L", "寻址", "数组类型声明", "多维数组", "数组寻址_next",
+                "值列表1", "S_L", "寻址", "数组类型声明", "多维数组", "数组寻址_next", "值成分",
                 "结构体寻址_next")));
 
         grammar.addVT(new HashSet<>(Arrays.asList(
@@ -195,8 +195,12 @@ public class Parser extends Lang{
 
 
         // 只返回单个常数和变量时
-        grammar.addDeriver(new Deriver("值", new String[]{"I", "_AC_PUSH", "寻址"}));
+        grammar.addDeriver(new Deriver("值", new String[]{"I", "_AC_PUSH", "值成分"}));
         grammar.addDeriver(new Deriver("值", new String[]{"常量"}));
+
+        grammar.addDeriver(new Deriver("值成分", new String[]{"函数"}));
+        grammar.addDeriver(new Deriver("值成分", new String[]{"寻址"}));
+
 
         grammar.addDeriver(new Deriver("非负整数", new String[]{"const int", "_AC_PUSH"}));
         grammar.addDeriver(new Deriver("非负整数", new String[]{"I", "_AC_PUSH"}));
