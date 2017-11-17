@@ -1,11 +1,9 @@
-struct Point {
-  var x int;
-  var y int;
-}
 
 
 func int hhhhha() {
   var asd [5][5]int;
+  var a int ;
+  asd[a][3] = 1;
   return 1;
 }
 

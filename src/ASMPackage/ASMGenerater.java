@@ -133,6 +133,7 @@ public class ASMGenerater {
             // 函数调用四元式块
             if (qt.getOperator().equals("push_stk")) {
                 //收集
+                result.add(new ASMSentence("; func calling block start"));
                 while (!qt.getOperator().equals("call")) {
                     cache.add(qt);
                     i++;
@@ -144,6 +145,8 @@ public class ASMGenerater {
                 List<ASMSentence> res = asmFunctionGenerater.generateFunctionCalling(cache);
                 cache.clear();
                 result.addAll(res);
+
+                result.add(new ASMSentence("; func calling block end"));
                 continue;
             }
 
@@ -178,9 +181,12 @@ public class ASMGenerater {
                     //与0比较判断真假
                     //查找变量offset并从内存中取到AX中
                     judge_opd = toASMOprd(qt.getOperand_left(), "esi");
+                    result.add(new ASMSentence("; if start position"));
                     result.add(new ASMSentence("mov", "eax", judge_opd));
                     result.add(new ASMSentence("cmp", "eax", "0"));
                     result.add(new ASMSentence("jz", "IF" + Integer.toString(i)));
+                    result.add(new ASMSentence("; if jump judge"));
+
                     //i 是四元式序列序号,不可能撞
                     jumpStack.push("IF" + Integer.toString(i));//等待回填
                     break;

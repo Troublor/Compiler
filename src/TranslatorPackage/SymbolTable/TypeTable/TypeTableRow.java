@@ -32,7 +32,7 @@ public class TypeTableRow {
 
     public String getElemType() {
         if (name.startsWith("array")) {
-            return getField("0").getFieldName();
+            return getField("0").getTypeName();
         }
         return null;
 
