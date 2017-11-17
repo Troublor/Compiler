@@ -361,6 +361,11 @@ public class SymbolTableManager {
         return elem_type_info.getLength();
     }
 
+    public int getFieldOffsetInStruct(String struct_type_name, String field_name) throws SemanticException {
+        TypeTableRow type_info = typeTable.getTypeInfo(struct_type_name);
+        FieldTableRow field_info = type_info.getField(field_name);
+        return field_info.getOffset();
+    }
 
     public void printAllVariable() {
         variableTableSetManager.printAllVariable();
