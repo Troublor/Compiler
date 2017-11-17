@@ -352,6 +352,21 @@ public class SymbolTableManager {
         return func_info.getReturnType();
     }
 
+    public int getArrayElemLength(String array_type_name) throws SemanticException {
+        TypeTableRow type_info = typeTable.getTypeInfo(array_type_name);
+        String elem_type = type_info.getElemType();
+        if (elem_type == null)
+            throw new SemanticException("can not get non array type's elem type");
+        TypeTableRow elem_type_info = typeTable.getTypeInfo(elem_type);
+        return elem_type_info.getLength();
+    }
+
+    public int getFieldOffsetInStruct(String struct_type_name, String field_name) throws SemanticException {
+        TypeTableRow type_info = typeTable.getTypeInfo(struct_type_name);
+        FieldTableRow field_info = type_info.getField(field_name);
+        return field_info.getOffset();
+    }
+
     public void printAllVariable() {
         variableTableSetManager.printAllVariable();
     }
