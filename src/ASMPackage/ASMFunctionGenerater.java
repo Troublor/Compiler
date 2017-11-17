@@ -30,7 +30,7 @@ public class ASMFunctionGenerater {
             List<ASMSentence> asmSentences = new ArrayList<>();
             asmSentences.add(new ASMSentence("push", "esp"));
             asmSentences.add(new ASMSentence("push", "esi"));
-            asmSentences.add(new ASMSentence("push", "eip"));
+            asmSentences.add(new ASMSentence("push", "$"));
             asmSentences.add(new ASMSentence("mov", "eax", "esi"));
             //暂存上层函数esi的值
             asmSentences.add(new ASMSentence("mov", "esi", "esp"));
@@ -53,7 +53,8 @@ public class ASMFunctionGenerater {
 
                 int form_param_offset = symbolTableManager.lookUpVariableOffset(form_param_qtform);
                 String form_param_opd = asmGenerater.toAddress("esi", form_param_offset);
-                asmSentences.add(new ASMSentence("mov", form_param_opd, real_param_opd));
+                asmSentences.add(new ASMSentence("mov", "edx", real_param_opd));
+                asmSentences.add(new ASMSentence("mov", form_param_opd, "edx"));
             }
 
             //在装载函数时 以函数名作为标号

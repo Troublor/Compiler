@@ -123,6 +123,9 @@ public class ASMGenerater {
         Stack<String> jumpStack = new Stack<>();
         System.out.println("下面输出各变量的相对偏移");
         symbolTableManager.printAllVariable();
+        //NASM头部
+        result.add(new ASMSentence("section", ".text"));
+        result.add(new ASMSentence("global", "_start"));
         QT qt;
         for (int i = 0; i < qts.size(); i++) {
             qt = qts.get(i);
@@ -147,7 +150,6 @@ public class ASMGenerater {
                 continue;
             }
 
-
             //算式表达式运算四元式块
             if (Optimizer.isArithmeticOperator(qt.getOperator())) {
 
@@ -167,7 +169,7 @@ public class ASMGenerater {
 
                 initializeActiveTable(cache);
                 addActiveInfomation(cache);
-                ASMArith asmArith = new ASMArith(cache, this);
+                ASMArith asmArith = new ASMArith(cache, this, symbolTableManager);
                 result.addAll(asmArith.produceASM());
                 cache.clear();
             }
@@ -189,7 +191,7 @@ public class ASMGenerater {
                     jumpStack.push("IF" + Integer.toString(i));//等待回填
                     break;
                 case "el_sta":
-                    result.add(new ASMSentence("jmp", "ELSE" + Integer.toString(i) + ":"));
+                    result.add(new ASMSentence("jmp", "ELSE" + Integer.toString(i)));
                     result.add(new ASMSentence(jumpStack.pop() + ":"));//回填Label
                     jumpStack.push("ELSE" + Integer.toString(i));//等待回填
                     break;
@@ -217,6 +219,14 @@ public class ASMGenerater {
                     result.addAll(res);
                     break;
                 case "func_label":
+                    //main函数处为函数入口
+                    if (qt.getOperand_left().equals("main")) {
+                        result.add(new ASMSentence("_start:"));
+                        //将SS和DS变成相同
+                        result.add(new ASMSentence("mov", "eax", "ds"));
+                        result.add(new ASMSentence("add", "eax", "4"));
+                        result.add(new ASMSentence("mov", "ss", "eax"));
+                    }
                     result.add(new ASMSentence(qt.getOperand_left() + ":"));
                     //函数定义的时候添加标号
                     break;
@@ -227,6 +237,10 @@ public class ASMGenerater {
 
 
         }
+
+        //数据段
+        result.add(new ASMSentence("section", ".data"));
+        result.add(new ASMSentence("trash", "DD 0"));
         return result;
     }
 
