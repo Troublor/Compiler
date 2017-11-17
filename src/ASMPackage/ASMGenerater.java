@@ -147,7 +147,6 @@ public class ASMGenerater {
                 continue;
             }
 
-
             //算式表达式运算四元式块
             if (Optimizer.isArithmeticOperator(qt.getOperator())) {
 
@@ -167,7 +166,7 @@ public class ASMGenerater {
 
                 initializeActiveTable(cache);
                 addActiveInfomation(cache);
-                ASMArith asmArith = new ASMArith(cache, this);
+                ASMArith asmArith = new ASMArith(cache, this, symbolTableManager);
                 result.addAll(asmArith.produceASM());
                 cache.clear();
             }

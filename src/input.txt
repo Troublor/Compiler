@@ -1,3 +1,7 @@
+struct Point {
+  var x int;
+  var y int;
+}
 
 
 func int hhhhha() {
@@ -10,6 +14,7 @@ func void main() {
   var c double;
   var a,b int;
   var ch char;
+
   b = 3 + c;
   b = 5;
   c = 5.5;
