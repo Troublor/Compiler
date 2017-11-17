@@ -447,7 +447,7 @@ public class ASMArith {
         }
         produce(operator);
         // fstp:  store the result and pops the register stack.
-        produce("fstp", "dword [" + toAddress(result) + "]");
+        produce("fstp", "dword " + toAddress(result));
 
     }
 
@@ -478,7 +478,7 @@ public class ASMArith {
         }
         // not constant
         else {
-            produce("push", "dword [" + toAddress(operand) + "]");
+            produce("push", "dword " + toAddress(operand));
         }
         switch (type) {
             case "char":

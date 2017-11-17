@@ -441,17 +441,29 @@ public class MiddleLangTranslator {
     }
 
 
+    public void pushFlagStartMltArrayDeclare() {
+        semanticStack.push("flage_declare_multi_array");
+    }
+
     public void defineArrayType() throws SemanticException{
         checkTypeExist();
         String array_elem_type = semanticStack.pop();
-        String[] array_size_raw_format = semanticStack.pop().split("_");
-        if (!array_size_raw_format[0].equals("const int")) {
-            throw new SemanticException("must use const int to define array length");
+        String arr_tpye_name = array_elem_type;
+        while (!semanticStack.peek().equals("flage_declare_multi_array")) {
+            String[] array_size_raw_format = semanticStack.pop().split("_");
+            if (!array_size_raw_format[0].equals("const int")) {
+                throw new SemanticException("must use const int to define array length");
+            }
+            int array_length = Integer.valueOf(array_size_raw_format[1]);
+            arr_tpye_name = symbolTableManager.defineArrayType(array_elem_type, array_length);
+            //可能是下个数组的元素类型
+            array_elem_type = arr_tpye_name;
         }
+        semanticStack.pop();
+        semanticStack.push(arr_tpye_name);
+
         //reformat
 
-        int array_length = Integer.valueOf(array_size_raw_format[1]);
-        semanticStack.push(symbolTableManager.defineArrayType(array_elem_type, array_length));
     }
 
     public void defineStashedVariables() throws SemanticException{
