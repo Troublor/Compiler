@@ -800,7 +800,8 @@ public class ASMArith {
                 // 经过优化后的四元式的每个结果一定是活跃的，（假设不活跃，可以想到一定这条四元式一定会被优化掉）
                 // todo 暂缓之计，把传进来的不活跃的id看成活跃的 n->y
 //                if (info.equals("n")) throw new ASMException("optimize error");
-//                if (info.equals("n")) info = "y";
+                if (info.equals("n")) info = "y";
+
                 this.active_index = info.equals("y") ? end_index : Integer.valueOf(info);
             } catch (ASMException e) {
                 e.printStackTrace();
