@@ -157,9 +157,10 @@ public class ASMArith {
         eax.release();edx.release();
 
 
-        if (!left_operand.contains("ref")) {
+        if (!left_operand.contains("*ref")) {
             // 如果左操作数不是 引用 类型，取出地址放入 address_register
-            produce("mov", address_register.name, String.valueOf(symbol_table_manager.lookUpVariableOffset(left_operand)));
+            produce("mov", address_register.name,
+                    String.valueOf(symbol_table_manager.lookUpVariableOffset(left_operand)));
         }
         else {
             // 如果是引用类型，就从内存取取值
@@ -171,9 +172,9 @@ public class ASMArith {
             produce("mov", eax.name, toASMForm(right_operand));
             // 乘以元素大小
 //            String elementType = getArrayElemType(left_operand);
-            String elementType = result.split("\\.")[2];
+            String array_type = left_operand.split("\\.")[2];
             produce("imul", String.valueOf(
-                    symbol_table_manager.getArrayElemLength(elementType)
+                    symbol_table_manager.getArrayElemLength(array_type)
             ));
             produce("add", address_register.name);
             // 现在我们得到了 偏移地址
@@ -204,7 +205,7 @@ public class ASMArith {
     }
 
     private boolean isArrayType(String qt_identifier) {
-        return qt_identifier.split("\\.")[3].contains("array");
+        return qt_identifier.split("\\.")[2].contains("array");
     }
 
     private void assign(QT qt) {
@@ -655,12 +656,12 @@ public class ASMArith {
                 switch_side = !switch_side;
                 if (switch_side) {
                     eax.release();
-                    produce("mov", eax.name, "[" + address_register + "]");
+                    produce("mov", eax.name, "[" + address_register.name + "]");
                     return eax.name;
                 }
                 else {
                     ebx.release();;
-                    produce("mov", eax.name, "[" + address_register + "]");
+                    produce("mov", eax.name, "[" + address_register.name + "]");
                     return ebx.name;
                 }
             } else {
@@ -794,13 +795,18 @@ public class ASMArith {
         public void occupyWith(String id) {
             assert !id.startsWith("const");
             if (!available() && !this.content.equals(id)) release();
+            if (id.contains("*rel")) {
+                this.content = id;
+                active_index = end_index;
+            }
             this.content = id;
             try {
                 String info = getActiveInfo(id);
                 // 经过优化后的四元式的每个结果一定是活跃的，（假设不活跃，可以想到一定这条四元式一定会被优化掉）
-                // todo 暂缓之计，把传进来的不活跃的id看成活跃的 n->y
 //                if (info.equals("n")) throw new ASMException("optimize error");
 //                if (info.equals("n")) info = "y";
+                // todo:暂缓之计
+                if (info.equals("n")) info = "y";
                 this.active_index = info.equals("y") ? end_index : Integer.valueOf(info);
             } catch (ASMException e) {
                 e.printStackTrace();

@@ -1,27 +1,10 @@
 
-
-func int hhhhha() {
-  var asd [5][5][5][5]int;
-  var a int ;
-  a = asd[a][3][a+4][2];
-  return 1;
-}
-
-
 func void main() {
-  var c double;
-  var a,b int;
-  var ch char;
-  b = 3 + c;
-  b = 5;
-  c = 5.5;
-  if(a>c){
-    b = (a + c)/a;
-    a = a + b;
-  }else{
-    while(a+3>c){
-    }
-  }
+ var asd [3][3]int;
+   var a int ;
+   a = 1;
+   a = asd[a][2];
+
 }
 
 
