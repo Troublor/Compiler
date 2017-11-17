@@ -191,7 +191,7 @@ public class Parser extends Lang{
 
 
         // 只返回单个常数和变量时
-        grammar.addDeriver(new Deriver("值", new String[]{"I", "_AC_PUSH", "值成分"}));
+        grammar.addDeriver(new Deriver("值", new String[]{"I", "_AC_PUSH", "寻址"}));
         grammar.addDeriver(new Deriver("值", new String[]{"常量"}));
 
         grammar.addDeriver(new Deriver("值成分", new String[]{"函数"}));
@@ -200,8 +200,8 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("值成分", new String[]{}));
 
 
-        grammar.addDeriver(new Deriver("寻址", new String[]{"[", "bool", "]", "_AC_afterArray"}));
-        grammar.addDeriver(new Deriver("寻址", new String[]{".", "I", "_AC_PUSH", "_AC_afterStruct"}));
+        grammar.addDeriver(new Deriver("寻址", new String[]{"[", "bool", "]", "_AC_afterArray", "寻址"}));
+        grammar.addDeriver(new Deriver("寻址", new String[]{".", "I", "_AC_PUSH", "_AC_afterStruct", "寻址"}));
         grammar.addDeriver(new Deriver("寻址", new String[]{}));
 
         grammar.addDeriver(new Deriver("非负整数", new String[]{"const int", "_AC_PUSH"}));
