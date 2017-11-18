@@ -635,13 +635,15 @@ public class MiddleLangTranslator {
     }
 
 
-    public void printAllQTs() {
+    public String printAllQTs() {
 
-        System.out.println("\n\nCurrent QTs:");
-        System.out.println(String.format("%-11s%-25s%-25s%-25s", "oprt:", "left_oprd:", "right_oprd:", "result_target:"));
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n\nCurrent QTs:");
+        sb.append(String.format("%-11s%-25s%-25s%-25s", "oprt:", "left_oprd:", "right_oprd:", "result_target:"));
         for (QT qt : QTs) {
-            System.out.println(qt);
+            sb.append(qt).append("\n");
         }
+        return sb.toString();
 
     }
 

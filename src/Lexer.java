@@ -316,6 +316,8 @@ public class Lexer extends Lang{
         super();
         //构造DFA
         dfa=new LexerDFA();
+        LexerDFA.index=0;
+        LexerDFA.line=1;
     }
 
     /**

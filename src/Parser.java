@@ -337,9 +337,12 @@ public class Parser extends Lang{
         }
 
         analyseStack.clear();
-        if (debug) {
-            translator.printAllQTs();
-        }
+
+    }
+
+
+    public  MiddleLangTranslator getTranslator(){
+        return translator;
     }
 
     /**

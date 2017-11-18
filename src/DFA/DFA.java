@@ -44,12 +44,12 @@ public class DFA {
     /**
      * 扫描字符串指针
      */
-    private static int index = 0;
+    public static int index = 0;
 
     /**
      * 记录行号
      */
-    private static int line = 1;
+    public static int line = 1;
 
     public DFA(){
         states=new ArrayList<>();
