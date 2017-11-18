@@ -61,7 +61,6 @@ public class Compile {
                 for (QT qt : qts) {
                     System.out.println(qt);
                     msg.append(qt).append("\n");
-
                 }
 
                 SymbolTableManager symbolTableManager = parser.getSymbolTableManager();
@@ -84,7 +83,7 @@ public class Compile {
             System.out.println(e.getMessage());
             msg.append(e.getMessage());
             e.printStackTrace();
-        }
+         }
     }
 
 

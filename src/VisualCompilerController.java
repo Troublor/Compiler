@@ -44,8 +44,8 @@ public class VisualCompilerController implements Initializable {
                 appendText(String.valueOf((char) b));
             }
         };
-        System.setOut(new PrintStream(out, true));
-        System.setErr(new PrintStream(out, true));
+       /* System.setOut(new PrintStream(out, true));
+        System.setErr(new PrintStream(out, true));*/
     }
 
     @FXML
