@@ -1,0 +1,49 @@
+
+struct A{
+    var aa int;
+    var ds double;
+    var arrin [2][2]int;
+}
+
+func int hhhhha(int f,char dd,int s) {
+  var a int ;
+  var structA A;
+  structA.aa = 5;
+  a = f + (dd *s)/51 - (58 /(12 + 5)*s );
+  return 1;
+}
+
+
+func void main() {
+/*
+sadklfjasdkl;gjasdlk;
+]asdgijwaegko;lj34tgio234u]
+234go3o4ujiguioueahg
+ssadfjhasddklgvn
+*/
+  var c double;
+  var a,b int;
+  var asd [3][3]int;
+  var arr [23][2]int;
+  var ch char;
+  b = 3 + c;
+  b = 5;
+  b = hhhhha(a,b,5) + arr[a+b][5+a] +665;
+  c = 5.5;
+  if(a>c){
+    b = (a + c)/a;
+    a = a + b;
+  }else{
+    a = 1;
+    while(a < c){
+        b = asd[2][a];
+        a = a + 1;
+
+    }
+
+   a = 1;
+   a = asd[a][2];
+    }
+}
+
+

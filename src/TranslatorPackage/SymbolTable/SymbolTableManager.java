@@ -54,6 +54,9 @@ public class SymbolTableManager {
     public String lookupStructFieldType(String struct_type_name, String field_name) throws SemanticException {
         TypeTableRow type_res = typeTable.getTypeInfo(struct_type_name);
         FieldTableRow field_res = type_res.getField(field_name);
+        if (field_res == null) {
+            throw new SemanticException(String.format("no such field: %s in type: %s", field_name, struct_type_name));
+        }
         return field_res.getTypeName();
     }
 
@@ -339,9 +342,14 @@ public class SymbolTableManager {
             String curr_field_type_name = access_field.getTypeName();
             for (int i = 2; i < identifier_elems.length - 1; i++) {
                 TypeTableRow curr_field_type = typeTable.getTypeInfo(curr_field_type_name);
-                FieldTableRow next_field = curr_field_type.getField(identifier_elems[i]);
-                offset += next_field.getOffset();
-                curr_field_type_name = next_field.getTypeName();
+                if (!isBasicType(curr_field_type.getName())) {
+                    FieldTableRow next_field = curr_field_type.getField(identifier_elems[i]);
+                    offset += next_field.getOffset();
+                    curr_field_type_name = next_field.getTypeName();
+                } else
+                    break;
+
+
             }
             return offset;
         } catch (SemanticException ee) {
