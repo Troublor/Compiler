@@ -11,10 +11,10 @@ public class VisualCompiler extends Application {
     }
 
     @Override
-    public void start(Stage primaryStage) throws Exception{
+    public void start(Stage primaryStage) throws Exception {
         primaryStage.setTitle("Visual Compiler");
         Pane myPane = (Pane) FXMLLoader.load(getClass().getResource
-            ("VisualCompiler.fxml"));
+                ("VisualCompiler.fxml"));
         Scene myScene = new Scene(myPane);
         primaryStage.setScene(myScene);
         primaryStage.show();

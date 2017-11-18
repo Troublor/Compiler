@@ -105,10 +105,12 @@ public class VariableTableSetManager {
 
     }
 
-    public void printAllVariable() {
+    public String printAllVariable() {
+        StringBuilder sb = new StringBuilder();
         for (VariableTable each : idVariableTableMap.values()) {
-            each.printAllVariable();
+            sb.append(each.printAllVariable());
         }
+        return sb.toString();
     }
 
     public VariableTable getCurrActiveTable() {

@@ -395,8 +395,10 @@ public class SymbolTableManager {
         return field_info.getOffset();
     }
 
-    public void printAllVariable() {
-        variableTableSetManager.printAllVariable();
+    public String printAllVariable() {
+        String res = "output all variables' offset info :\n";
+        res += variableTableSetManager.printAllVariable();
+        return res;
     }
 
 
