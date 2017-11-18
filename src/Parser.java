@@ -164,7 +164,7 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("顺序", new String[]{"I","_AC_PUSH" , "语句成分", ";"}));
 
         grammar.addDeriver(new Deriver("语句成分", new String[]{"赋值"}));
-        grammar.addDeriver(new Deriver("语句成分", new String[]{"函数"}));
+        grammar.addDeriver(new Deriver("语句成分", new String[]{"函数", "_AC_funcRetNoNeed"}));
         grammar.addDeriver(new Deriver("函数",
                 new String[]{"_AC_receiveCallingFuncName", "(", "_AC_funcParamStartFlag", "值列表", ")"
                         , "_AC_startFuncCalling"}));

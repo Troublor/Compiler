@@ -494,8 +494,11 @@ public class MiddleLangTranslator {
             //传参完成后进行执行指令的跳转
         QTs.add(new QT("call", calling_func_name, null, null));
             semanticStack.push("#ret_val");
+    }
 
 
+    public void funcRetNoNeed() {
+        semanticStack.pop();
     }
 
     /**
