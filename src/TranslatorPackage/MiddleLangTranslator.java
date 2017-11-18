@@ -90,6 +90,14 @@ public class MiddleLangTranslator {
         String next_elem_type_name;
         String index = semanticStack.pop();
         String next_ref_name;
+        String index_type_name;
+        if (index.startsWith("const")) {
+            index_type_name = index.split("_")[0].split(" ")[1];
+        } else
+            index_type_name = lookUpType(index);
+
+        if (!index_type_name.equals("int"))
+            throw new SemanticException("array index must be a integer");
         if (last_ref_qt == null) {
             prev_arr_name = semanticStack.pop();
             prev_type_name = symbolTableManager.lookupVariableType(prev_arr_name);
@@ -521,16 +529,25 @@ public class MiddleLangTranslator {
         checkTypeExist();
         String array_elem_type = semanticStack.pop();
         String arr_tpye_name = array_elem_type;
+
+        Stack<Integer> arr_len_stash = new Stack<>();
         while (!semanticStack.peek().equals("flag_declare_multi_array")) {
             String[] array_size_raw_format = semanticStack.pop().split("_");
             if (!array_size_raw_format[0].equals("const int")) {
                 throw new SemanticException("must use const int to define array length");
             }
+
             int array_length = Integer.valueOf(array_size_raw_format[1]);
-            arr_tpye_name = symbolTableManager.defineArrayType(array_elem_type, array_length);
+            arr_len_stash.push(array_length);
+
+        }
+        while (!arr_len_stash.empty()) {
+            arr_tpye_name = symbolTableManager.defineArrayType(array_elem_type, arr_len_stash.pop());
             //可能是下个数组的元素类型
             array_elem_type = arr_tpye_name;
         }
+
+
         semanticStack.pop();
         semanticStack.push(arr_tpye_name);
 
