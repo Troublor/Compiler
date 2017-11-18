@@ -81,7 +81,7 @@ public class Compile {
                 SymbolTableManager symbolTableManager = parser.getSymbolTableManager();
                 String variable_table_output = symbolTableManager.printAllVariable();
                 System.out.println(variable_table_output);
-                msg.append(variable_table_output).append("\n");
+                msg.append("\n").append(variable_table_output).append("\n");
             }
             asmGenerater = new ASMGenerater(qts, parser.getSymbolTableManager());
             List<ASMSentence> asmSentences = asmGenerater.generate();
