@@ -14,6 +14,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 
 public class VisualCompilerController implements Initializable {
@@ -49,12 +50,18 @@ public class VisualCompilerController implements Initializable {
 
     @FXML
     public void Compile(ActionEvent event) {
+        output_textArea.setFont(new Font(20));
         path=file_path_textField.getText();
         output_textArea.setText("");
-        if (debug_checkBox.isSelected()) {
-            Compile.main(new String[]{"-d", path});
-        } else {
-            Compile.main(new String[]{path});
+        try {
+            if (debug_checkBox.isSelected()) {
+                Compile.main(new String[]{"-d", path});
+            } else {
+                Compile.main(new String[]{path});
+            }
+        }catch (Exception e){
+            output_textArea.setText("Compile Failed - file path invalid\n");
+            return;
         }
         output_textArea.setText(Compile.msg.toString());
     }

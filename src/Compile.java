@@ -2,6 +2,8 @@ import ASMPackage.ASMGenerater;
 import ASMPackage.ASMSentence;
 import MiddleDataUtilly.QT;
 import OptimizePackage.Optimizer;
+import TranslatorPackage.MiddleLangTranslator;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -16,7 +18,7 @@ public class Compile {
     private static StringBuilder input;
     private static Optimizer optimizer;
     private static ASMGenerater asmGenerater;
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception{
         msg = new StringBuilder("");
         asms = new StringBuilder("");
 
@@ -24,8 +26,8 @@ public class Compile {
 
         input = new StringBuilder("");
         String filename =
-                (args.length == 0) ? "/home/scarecrow/IdeaProjects/Compiler/src/input.txt" : args[0];
-        boolean debug = true;
+                (args.length == 0) ? "/media/troublor/OS/JavaProject/Compiler/test1" : args[0];
+        boolean debug = false;
         if (args.length == 1) {
             if (!args[0].startsWith("-")) {
                 filename = args[0];
@@ -48,6 +50,7 @@ public class Compile {
             reader.close();
         } catch (IOException e) {
             e.printStackTrace();
+            throw e;
         }
 
         parser.setSourceCode(input.toString());
@@ -55,6 +58,12 @@ public class Compile {
         try {
             parser.setDebug(debug);
             parser.LL1Analyze();
+            MiddleLangTranslator translator = parser.getTranslator();
+            if (debug) {
+                String all_qts = translator.printAllQTs();
+                System.out.println(all_qts);
+                msg.append(all_qts).append("\n");
+            }
             optimizer = new Optimizer(parser.getAllQTs());
             ArrayList<QT> qts = optimizer.optimize();
             if (debug) {
@@ -67,16 +76,15 @@ public class Compile {
                     System.out.println(qt);
                     msg.append(qt).append("\n");
                 }
-
-                asmGenerater = new ASMGenerater(qts, parser.getSymbolTableManager());
-                List<ASMSentence> asmSentences = asmGenerater.generate();
-                System.out.println("\n\n以下是生成的汇编源码: ");
-                msg.append("\n\nASM codes are as follows: ").append("\n");
-                for (ASMSentence asm : asmSentences) {
-                    System.out.println(asm);
-                    msg.append(asm).append("\n");
-                    asms.append(asm).append("\n");
-                }
+            }
+            asmGenerater = new ASMGenerater(qts, parser.getSymbolTableManager());
+            List<ASMSentence> asmSentences = asmGenerater.generate();
+            System.out.println("\n\n以下是生成的汇编源码: ");
+            msg.append("\n\nASM codes are as follows: ").append("\n");
+            for (ASMSentence asm : asmSentences) {
+                System.out.println(asm);
+                msg.append(asm).append("\n");
+                asms.append(asm).append("\n");
             }
             System.out.println("编译成功！");
             msg.append("Compile Success！").append("\n");
@@ -85,6 +93,7 @@ public class Compile {
             System.out.println(e.getMessage());
             msg.append(e.getMessage());
             e.printStackTrace();
+            throw e;
          }
     }
 }
