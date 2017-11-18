@@ -3,6 +3,7 @@ import ASMPackage.ASMSentence;
 import MiddleDataUtilly.QT;
 import OptimizePackage.Optimizer;
 import TranslatorPackage.MiddleLangTranslator;
+import TranslatorPackage.SymbolTable.SymbolTableManager;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -69,13 +70,18 @@ public class Compile {
             if (debug) {
                 System.out
                         .println("\n\n优化后的所有四元式:\n" + parser.getAllQTs().size() + " => " + qts.size());
-                msg.append("\n\nQTs after optimization:\n").append( parser.getAllQTs().size() ).append( " => " ).append( qts.size()).append("\n");
+                msg.append("\n\nQTs after optimization:\n").append(parser.getAllQTs().size()).append(" => ").append(qts.size()).append("\n");
                 System.out.println(String.format("%-11s%-25s%-25s%-25s", "oprt:", "left_oprd:", "right_oprd:", "result_target:"));
                 msg.append(String.format("%-11s%-25s%-25s%-25s", "oprt:", "left_oprd:", "right_oprd:", "result_target:")).append("\n");
                 for (QT qt : qts) {
                     System.out.println(qt);
                     msg.append(qt).append("\n");
                 }
+
+                SymbolTableManager symbolTableManager = parser.getSymbolTableManager();
+                String variable_table_output = symbolTableManager.printAllVariable();
+                System.out.println(variable_table_output);
+                msg.append(variable_table_output).append("\n");
             }
             asmGenerater = new ASMGenerater(qts, parser.getSymbolTableManager());
             List<ASMSentence> asmSentences = asmGenerater.generate();
@@ -96,4 +102,6 @@ public class Compile {
             throw e;
          }
     }
+
+
 }

@@ -97,15 +97,17 @@ public class VariableTable{
         return startOffset;
     }
 
-    public void printAllVariable() {
-        System.out.println("at variable table : " + table_id + ": ");
-        System.out.println(String.format("%-20s%-12s%-12s", "var_name:", "offset:", "type:"));
+    public String printAllVariable() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("at variable table : " + table_id + ": \n");
+        sb.append((String.format("%-20s%-12s%-12s\n", "var_name:", "offset:", "type:")));
         for (VariableTableRow each : variables.values()) {
-            String str = String.format("%-20s%-12s%-12s", each.getName_id(), each.getOffset() + startOffset, each.getTypeName());
-            System.out.println(str);
+            String str = String.format("%-20s%-12s%-12s\n", each.getName_id(), each.getOffset() + startOffset, each.getTypeName());
+            sb.append(str);
         }
 
-        System.out.println('\n');
+        sb.append('\n');
+        return sb.toString();
     }
 
 
