@@ -59,7 +59,6 @@ public class Compile {
                 for (QT qt : qts) {
                     System.out.println(qt);
                     msg.append(qt).append("\n");
-
                 }
 
                 ASMGenerater asmGenerater = new ASMGenerater(qts, parser.getSymbolTableManager());
@@ -79,7 +78,7 @@ public class Compile {
             System.out.println(e.getMessage());
             msg.append(e.getMessage());
             e.printStackTrace();
-        }
+         }
     }
 
 
