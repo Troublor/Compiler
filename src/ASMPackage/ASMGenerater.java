@@ -128,8 +128,6 @@ public class ASMGenerater {
         ArrayList<ASMSentence> result = new ArrayList<>();
         ArrayList<QT> cache = new ArrayList<>();
         Stack<String> jumpStack = new Stack<>();
-        System.out.println("下面输出各变量的相对偏移");
-        symbolTableManager.printAllVariable();
         //NASM头部
         result.add(new ASMSentence("section", ".text"));
         result.add(new ASMSentence("global", "_start"));

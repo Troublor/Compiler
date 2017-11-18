@@ -2,6 +2,8 @@ import ASMPackage.ASMGenerater;
 import ASMPackage.ASMSentence;
 import MiddleDataUtilly.QT;
 import OptimizePackage.Optimizer;
+import TranslatorPackage.SymbolTable.SymbolTableManager;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -53,7 +55,7 @@ public class Compile {
             if (true) {
                 System.out
                         .println("\n\n优化后的所有四元式:\n" + parser.getAllQTs().size() + " => " + qts.size());
-                msg.append("\n\nQTs after optimization:\n").append( parser.getAllQTs().size() ).append( " => " ).append( qts.size()).append("\n");
+                msg.append("\n\nQTs after optimization:\n").append(parser.getAllQTs().size()).append(" => ").append(qts.size()).append("\n");
                 System.out.println(String.format("%-11s%-25s%-25s%-25s", "oprt:", "left_oprd:", "right_oprd:", "result_target:"));
                 msg.append(String.format("%-11s%-25s%-25s%-25s", "oprt:", "left_oprd:", "right_oprd:", "result_target:")).append("\n");
                 for (QT qt : qts) {
@@ -61,7 +63,10 @@ public class Compile {
                     msg.append(qt).append("\n");
                 }
 
-                ASMGenerater asmGenerater = new ASMGenerater(qts, parser.getSymbolTableManager());
+                SymbolTableManager symbolTableManager = parser.getSymbolTableManager();
+                String variable_table_output = symbolTableManager.printAllVariable();
+                System.out.println(variable_table_output);
+                ASMGenerater asmGenerater = new ASMGenerater(qts, symbolTableManager);
                 List<ASMSentence> asmSentences = asmGenerater.generate();
                 System.out.println("\n\n以下是生成的汇编源码: ");
                 msg.append("\n\nASM codes are as follows: ").append("\n");

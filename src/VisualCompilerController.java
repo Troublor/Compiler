@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.net.URL;
 import java.util.ResourceBundle;
+
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -40,7 +41,7 @@ public class VisualCompilerController implements Initializable {
         OutputStream out = new OutputStream() {
             @Override
             public void write(int b) throws IOException {
-                appendText(String.valueOf((char)b));
+                appendText(String.valueOf((char) b));
             }
         };
        /* System.setOut(new PrintStream(out, true));
@@ -49,7 +50,7 @@ public class VisualCompilerController implements Initializable {
 
     @FXML
     public void Compile(ActionEvent event) {
-        path=file_path_textField.getText();
+        path = file_path_textField.getText();
         output_textArea.clear();
         if (debug_checkBox.isSelected()) {
             Compile.main(new String[]{"-d", path});
@@ -60,7 +61,7 @@ public class VisualCompilerController implements Initializable {
     }
 
     @FXML
-    public void OutputASM(ActionEvent event){
+    public void OutputASM(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("导出汇编代码...");
         FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("NASM files (*.asm)", "*.asm");
@@ -69,15 +70,15 @@ public class VisualCompilerController implements Initializable {
         if (file == null) {
             return;
         }
-        String output_path=file.getAbsolutePath();
+        String output_path = file.getAbsolutePath();
         try {
             OutputStream output = new FileOutputStream(file);
             String msg = Compile.asms.toString();
             byte data[] = msg.getBytes();
             output.write(data);
             output.close();
-        }catch (Exception e){
-            output_textArea.appendText("\nOutput Error: "+e);
+        } catch (Exception e) {
+            output_textArea.appendText("\nOutput Error: " + e);
         }
 
     }
