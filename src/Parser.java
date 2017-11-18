@@ -213,6 +213,11 @@ public class Parser extends Lang{
         grammar.addDeriver(new Deriver("数组寻址", new String[]{"_AC_reference", "[", "bool", "]", "数组寻址"}));
 
         grammar.addDeriver(new Deriver("寻址", new String[]{".", "I", "_AC_PUSH", "_AC_afterStruct", "结构体寻址"}));
+        grammar.addDeriver(new Deriver("结构体寻址", new String[]{".", "I", "_AC_PUSH", "_AC_afterStruct", "结构体寻址"}));
+        grammar.addDeriver(new Deriver("结构体寻址", new String[]{}));
+
+
+
         grammar.addDeriver(new Deriver("寻址", new String[]{}));
 
 

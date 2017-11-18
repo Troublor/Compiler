@@ -1,7 +1,14 @@
-/*sdf
+
+struct A{
+    var aa int;
+    var ds double;
+    var arrin [2][2]int;
+}
 
 func int hhhhha(int f,char dd,int s) {
   var a int ;
+  var structA A;
+  //structA.aa = 5;
   a = f + (dd *s)/51 - (58 /(12 + 5)*s );
   return 1;
 }

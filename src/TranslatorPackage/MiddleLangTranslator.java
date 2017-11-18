@@ -180,14 +180,16 @@ public class MiddleLangTranslator {
         }
         // assert struct has field named field_item
         symbolTableManager.lookupStructFieldType(struct_type, field_item);
-        String field_type = lookUpType(id_item + "." + field_item);
+        String get_field = symbolTableManager.accessVariableAndField(id_item, field_item);
+        /*
         if (!isBasicType(field_type)) {
             // todo: 指针类型未声明，需要颉哥修改：只要末尾是*的类型都给通过，分配内存为4字节
             String tmp = symbolTableManager.addTempVariable(field_type+"*");
             QTs.add(new QT("ref", id_item, field_item, tmp));
             semanticStack.push(tmp);
         }
-        else semanticStack.push(id_item + "." + field_item);
+        else*/
+        semanticStack.push(id_item + "." + field_item);
     }
 
     public void afterAssign() throws SemanticException, OptNotSupportError{
@@ -197,7 +199,7 @@ public class MiddleLangTranslator {
         // todo: 类型检查
 //        if (!isNumeric(lookUpType(right)) || !isNumeric(lookUpType(left)))
 //            throw new SemanticException(lookUpType(left) + " can not assign to " + lookUpType(right));
-        QTs.add(new QT("=", toRepresent(right), "_", toRepresent(left)));
+        QTs.add(new QT("=", toRepresent(right), null, toRepresent(left)));
     }
 
     // todo: array support
@@ -269,8 +271,8 @@ public class MiddleLangTranslator {
         // . 是正则的通配符  得用 \\. 进行转义
 
         String id = item;
-        if (parts.length != 1) {
-            id = parts[1];
+        if (parts.length > 1) {
+            id = parts[0];
         }
         String type = symbolTableManager.lookupVariableType(id);
         int i = 1;
@@ -309,7 +311,7 @@ public class MiddleLangTranslator {
     // for temp, same as id: tmp -> "-1.tmp.int"
     // for array, a[3] -> "tableid.a.3.int"
     private String toRepresent(String item) throws SemanticException, OptNotSupportError{
-        if (isConstant(lookUpType(item))) return item;
+        if (item.startsWith("const")) return item;
         // if is not constant
         // ( a is int id)  a -> tableid.a.int
         // (a is int array) a.3 -> tableid.a.3.int
