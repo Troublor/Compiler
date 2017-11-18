@@ -293,7 +293,7 @@ public class ASMGenerater {
     }
 
     public String toAddress(String register, int offset) {
-        return "[" + register + "+" + offset + "]";
+        return "[" + register + "-" + offset + "]";
     }
 
 }

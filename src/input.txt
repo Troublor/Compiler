@@ -1,8 +1,8 @@
 /*sdf
 
-*/
-func int hhhhha() {
-  //var a int ;
+func int hhhhha(int f,char dd,int s) {
+  var a int ;
+  a = f + (dd *s)/51 - (58 /(12 + 5)*s );
   return 1;
 }
 
@@ -21,7 +21,7 @@ ssadfjhasddklgvn
   var ch char;
   b = 3 + c;
   b = 5;
-  b = hhhhha() + arr[a+b][5+a] +665;
+  b = hhhhha(a,b,5) + arr[a+b][5+a] +665;
   c = 5.5;
   if(a>c){
     b = (a + c)/a;
