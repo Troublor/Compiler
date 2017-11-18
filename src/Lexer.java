@@ -67,7 +67,8 @@ public class Lexer extends Lang{
             //lang=l;
             //keyWordTable=lang.getKeyWordTable();
             //delimiterTable=lang.getDelimiterTable();
-            String[] ss={"q1","q2","q3","q4","q5","q6","q7","q8","q9","q10","q11","q12","q13","q14","q15","q16","q17","q18","qe"};
+            String[] ss = {"q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8", "q9", "q10", "q11",
+                "q12", "q13", "q14", "q15", "q16", "q17", "q18", "q19", "q20", "q21", "q22", "qe"};
             super.addStates(ss);
             for (char c='0';c<='9';c++){
                 super.addLetter(new String(new char[]{c}));
@@ -159,7 +160,7 @@ public class Lexer extends Lang{
             addDefaultTransform("q19", "q1");
             addTransform("q17", "*", "q20");
             addDefaultTransform("q20", "q20");
-            addTransform("q20", "*", "21");
+            addTransform("q20", "*", "q21");
             addDefaultTransform("q21", "q20");
             addTransform("q21", "/", "q22");
             addDefaultTransform("q22", "q1");
@@ -286,6 +287,7 @@ public class Lexer extends Lang{
                 delimiter += input;
             } else if (currState.equals("q18") || currState.equals("q20")) {
                 //进入注释分支
+                delimiter="";
                 type = Token.WordType.ANNOTATION;
                 annotation = true;
             } else if (currState.equals("q1") && type == Token.WordType.ANNOTATION) {

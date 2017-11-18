@@ -10,7 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Compile {
-
+    public static StringBuilder msg = new StringBuilder("");
+    public static StringBuilder asms = new StringBuilder("");
     public static void main(String[] args) {
         Parser parser = new Parser();
 
@@ -47,27 +48,36 @@ public class Compile {
         try {
             parser.setDebug(debug);
             parser.LL1Analyze();
-
             Optimizer optimizer = new Optimizer(parser.getAllQTs());
             ArrayList<QT> qts = optimizer.optimize();
             if (true) {
                 System.out
                         .println("\n\n优化后的所有四元式:\n" + parser.getAllQTs().size() + " => " + qts.size());
+                msg.append("\n\nQTs after optimization:\n").append( parser.getAllQTs().size() ).append( " => " ).append( qts.size()).append("\n");
                 System.out.println(String.format("%-11s%-25s%-25s%-25s", "oprt:", "left_oprd:", "right_oprd:", "result_target:"));
+                msg.append(String.format("%-11s%-25s%-25s%-25s", "oprt:", "left_oprd:", "right_oprd:", "result_target:")).append("\n");
                 for (QT qt : qts) {
                     System.out.println(qt);
+                    msg.append(qt).append("\n");
+
                 }
 
                 ASMGenerater asmGenerater = new ASMGenerater(qts, parser.getSymbolTableManager());
                 List<ASMSentence> asmSentences = asmGenerater.generate();
                 System.out.println("\n\n以下是生成的汇编源码: ");
+                msg.append("\n\nASM codes are as follows: ").append("\n");
                 for (ASMSentence asm : asmSentences) {
                     System.out.println(asm);
+                    msg.append(asm).append("\n");
+                    asms.append(asm).append("\n");
                 }
             }
             System.out.println("编译成功！");
+            msg.append("Compile Success！").append("\n");
         } catch (Exception e) {
-            System.out.println(e);
+            msg.append("Compile Failed！\n");
+            System.out.println(e.getMessage());
+            msg.append(e.getMessage());
             e.printStackTrace();
         }
     }

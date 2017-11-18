@@ -632,7 +632,7 @@ public class MiddleLangTranslator {
 
     public void printAllQTs() {
 
-        System.out.println("\n\n当前所有的四元式:");
+        System.out.println("\n\nCurrent QTs:");
         System.out.println(String.format("%-11s%-25s%-25s%-25s", "oprt:", "left_oprd:", "right_oprd:", "result_target:"));
         for (QT qt : QTs) {
             System.out.println(qt);

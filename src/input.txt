@@ -1,11 +1,19 @@
+/*sdf
 
 func int hhhhha(int f,char dd,int s) {
   var a int ;
+  a = f + (dd *s)/51 - (58 /(12 + 5)*s );
   return 1;
 }
 
 
 func void main() {
+/*
+sadklfjasdkl;gjasdlk;
+]asdgijwaegko;lj34tgio234u]
+234go3o4ujiguioueahg
+ssadfjhasddklgvn
+*/
   var c double;
   var a,b int;
   var asd [3][3]int;
