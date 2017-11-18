@@ -10,12 +10,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Compile {
-    public static StringBuilder msg = new StringBuilder("");
-    public static StringBuilder asms = new StringBuilder("");
+    public static StringBuilder msg;
+    public static StringBuilder asms;
+    private static Parser parser;
+    private static StringBuilder input;
+    private static Optimizer optimizer;
+    private static ASMGenerater asmGenerater;
     public static void main(String[] args) {
-        Parser parser = new Parser();
+        msg = new StringBuilder("");
+        asms = new StringBuilder("");
 
-        StringBuilder input = new StringBuilder("");
+        parser = new Parser();
+
+        input = new StringBuilder("");
         String filename =
                 (args.length == 0) ? "/home/scarecrow/IdeaProjects/Compiler/src/input.txt" : args[0];
         boolean debug = true;
@@ -48,9 +55,9 @@ public class Compile {
         try {
             parser.setDebug(debug);
             parser.LL1Analyze();
-            Optimizer optimizer = new Optimizer(parser.getAllQTs());
+            optimizer = new Optimizer(parser.getAllQTs());
             ArrayList<QT> qts = optimizer.optimize();
-            if (true) {
+            if (debug) {
                 System.out
                         .println("\n\n优化后的所有四元式:\n" + parser.getAllQTs().size() + " => " + qts.size());
                 msg.append("\n\nQTs after optimization:\n").append( parser.getAllQTs().size() ).append( " => " ).append( qts.size()).append("\n");
@@ -61,7 +68,7 @@ public class Compile {
                     msg.append(qt).append("\n");
                 }
 
-                ASMGenerater asmGenerater = new ASMGenerater(qts, parser.getSymbolTableManager());
+                asmGenerater = new ASMGenerater(qts, parser.getSymbolTableManager());
                 List<ASMSentence> asmSentences = asmGenerater.generate();
                 System.out.println("\n\n以下是生成的汇编源码: ");
                 msg.append("\n\nASM codes are as follows: ").append("\n");
@@ -80,6 +87,4 @@ public class Compile {
             e.printStackTrace();
          }
     }
-
-
 }

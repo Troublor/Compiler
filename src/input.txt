@@ -1,4 +1,4 @@
-/*sdf
+
 
 func int hhhhha(int f,char dd,int s) {
   var a int ;

@@ -50,7 +50,7 @@ public class VisualCompilerController implements Initializable {
     @FXML
     public void Compile(ActionEvent event) {
         path=file_path_textField.getText();
-        output_textArea.clear();
+        output_textArea.setText("");
         if (debug_checkBox.isSelected()) {
             Compile.main(new String[]{"-d", path});
         } else {
