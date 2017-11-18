@@ -44,7 +44,7 @@ public class ASMArith {
 
 
     private void produce(String operator, String... operands) {
-        asms.add(new ASMSentence(operator, operands));
+        asms.add(new ASMSentence("    " + operator, operands));
     }
 
     ArrayList<ASMSentence> produceASM() throws ASMException, SemanticException {
@@ -52,11 +52,15 @@ public class ASMArith {
         for (QT qt : qts) {
             dispatch(qt);
         }
+
+        asms.add(new ASMSentence("; release register block start "));
         for (register r : registers.values()) {
             r.release();
         }
         produce("pop", address_register.name);
 
+        asms.add(new ASMSentence("; release register block end"));
+        asms.add(new ASMSentence(" "));
         return this.asms;
     }
 
@@ -67,7 +71,10 @@ public class ASMArith {
         if (operator.equals("ref")) {
             switch (operator) {
                 case "ref": {
+                    asms.add(new ASMSentence(";ref block start "));
                     ref(qt);
+                    asms.add(new ASMSentence(";ref block end "));
+                    asms.add(new ASMSentence(" "));
                     break;
                 }
             }
@@ -80,23 +87,38 @@ public class ASMArith {
                 case "int": {
                     switch (operator) {
                         case "=": {
+                            asms.add(new ASMSentence(";assign block start "));
                             assign(qt);
+                            asms.add(new ASMSentence(";assign block end "));
+                            asms.add(new ASMSentence(" "));
                             break;
                         }
                         case "+": {
+                            asms.add(new ASMSentence(";arith add block start "));
                             iadd(qt);
+                            asms.add(new ASMSentence(";arith add block end "));
+                            asms.add(new ASMSentence(" "));
                             break;
                         }
                         case "-": {
+                            asms.add(new ASMSentence(";arith sub block start "));
                             isub(qt);
+                            asms.add(new ASMSentence(";arith sub block end "));
+                            asms.add(new ASMSentence(" "));
                             break;
                         }
                         case "*": {
+                            asms.add(new ASMSentence(";arith multi block start"));
                             imul(qt);
+                            asms.add(new ASMSentence(";arith multi block end "));
+                            asms.add(new ASMSentence(" "));
                             break;
                         }
                         case "/": {
+                            asms.add(new ASMSentence(";arith div block start "));
                             idiv(qt);
+                            asms.add(new ASMSentence(";arith div block end "));
+                            asms.add(new ASMSentence(" "));
                             break;
                         }
                         case "<":
@@ -116,24 +138,40 @@ public class ASMArith {
                 }
                 case "double": {
                     switch (operator) {
+
                         case "=": {
+                            asms.add(new ASMSentence(";float assign block start "));
                             assign(qt);
+                            asms.add(new ASMSentence(";float assign block end "));
+                            asms.add(new ASMSentence(" "));
                             break;
                         }
                         case "+": {
+                            asms.add(new ASMSentence(";float add block start "));
                             fadd(qt);
+                            asms.add(new ASMSentence(";float add block end"));
+                            asms.add(new ASMSentence(" "));
                             break;
                         }
                         case "-": {
+                            asms.add(new ASMSentence(";float sub block start "));
                             fsub(qt);
+                            asms.add(new ASMSentence(";float sub block end"));
+                            asms.add(new ASMSentence(" "));
                             break;
                         }
                         case "*": {
+                            asms.add(new ASMSentence(";float mul block start "));
                             fmul(qt);
+                            asms.add(new ASMSentence(";float mul block end"));
+                            asms.add(new ASMSentence(" "));
                             break;
                         }
                         case "/": {
+                            asms.add(new ASMSentence(";float div block start "));
                             fdiv(qt);
+                            asms.add(new ASMSentence(";float div block start "));
+                            asms.add(new ASMSentence(" "));
                             break;
                         }
                     }
@@ -375,23 +413,38 @@ public class ASMArith {
                 produce("cmp", r.name, toASMForm(right_operand));
                 switch (operation) {
                     case "<": {
+                        asms.add(new ASMSentence(";cmp int lower block start "));
                         ilt(qt);
+                        asms.add(new ASMSentence(";cmp int lower block end "));
+                        asms.add(new ASMSentence(" "));
                         break;
                     }
                     case ">": {
+                        asms.add(new ASMSentence(";cmp int greater block start"));
                         igt(qt);
+                        asms.add(new ASMSentence(";cmp int greater block end "));
+                        asms.add(new ASMSentence(" "));
                         break;
                     }
                     case "<=": {
+                        asms.add(new ASMSentence(";cmp int lower_equal block start"));
                         ile(qt);
+                        asms.add(new ASMSentence(";cmp int lower_equal block end "));
+                        asms.add(new ASMSentence(" "));
                         break;
                     }
                     case ">=": {
+                        asms.add(new ASMSentence(";cmp int greater_eql block start "));
                         ige(qt);
+                        asms.add(new ASMSentence(";cmp int greater_eql block end "));
+                        asms.add(new ASMSentence(" "));
                         break;
                     }
                     case "==": {
+                        asms.add(new ASMSentence(";cmp int equal block start "));
                         ieq(qt);
+                        asms.add(new ASMSentence(";cmp int equal block end "));
+                        asms.add(new ASMSentence(" "));
                         break;
                     }
                 }
@@ -404,23 +457,38 @@ public class ASMArith {
                 produce("fcomip");
                 switch (operation) {
                     case "<": {
+                        asms.add(new ASMSentence(";cmp float lower block start "));
                         flt(qt);
+                        asms.add(new ASMSentence(";cmp float lower block end "));
+                        asms.add(new ASMSentence(" "));
                         break;
                     }
                     case ">": {
+                        asms.add(new ASMSentence(";cmp float greater block start "));
                         fgt(qt);
+                        asms.add(new ASMSentence(";cmp float greater block end "));
+                        asms.add(new ASMSentence(" "));
                         break;
                     }
                     case "<=": {
+                        asms.add(new ASMSentence(";cmp float lower_eql block start "));
                         fle(qt);
+                        asms.add(new ASMSentence(";cmp float lower_eql block end"));
+                        asms.add(new ASMSentence(" "));
                         break;
                     }
                     case ">=": {
+                        asms.add(new ASMSentence(";cmp float greater_eql block start "));
                         fge(qt);
+                        asms.add(new ASMSentence(";cmp float greater_eql lower block end "));
+                        asms.add(new ASMSentence(" "));
                         break;
                     }
                     case "==": {
+                        asms.add(new ASMSentence(";cmp float equal block start "));
                         feq(qt);
+                        asms.add(new ASMSentence(";cmp float equal block end"));
+                        asms.add(new ASMSentence(" "));
                         break;
                     }
                 }

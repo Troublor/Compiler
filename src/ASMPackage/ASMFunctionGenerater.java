@@ -66,10 +66,8 @@ public class ASMFunctionGenerater {
                     .getCallingFuncVariableTableID(func_name) + ".#ret_val.double";
             int ret_val_offset = symbolTableManager.lookUpVariableOffset(ret_var);
             asmSentences.add(new ASMSentence(
-                    "mov", asmGenerater.toAddress("esi", ret_val_offset), "bx"));
+                    "mov", asmGenerater.toAddress("esi", ret_val_offset), "ebx"));
             //设定返回值
-
-
 
             return asmSentences;
         } catch (Exception ee) {

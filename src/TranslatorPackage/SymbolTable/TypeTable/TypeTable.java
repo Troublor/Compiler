@@ -90,7 +90,11 @@ public class TypeTable {
      */
 
     public String declareArrayType(String arr_elem_type_name, int array_len) throws SemanticException {
-        String array_type_name = "array_" + arr_elem_type_name + "_" + array_len;
+        String array_type_name;
+        if (!arr_elem_type_name.startsWith("array"))
+            array_type_name = "array_" + arr_elem_type_name + "_" + array_len;
+        else
+            array_type_name = arr_elem_type_name + "_" + array_len;
         //数组类型的类型名有这样的格式 ： array_元素类型_长度
         TypeTableRow selectedType = tableRowMap.get(array_type_name);
         if (selectedType != null)

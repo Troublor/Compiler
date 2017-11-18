@@ -343,9 +343,6 @@ public class Parser extends Lang{
      * @throws InvalidLabelException 非法符号异常
      */
     private void action(String a) throws InvalidLabelException, SemanticException, Throwable{
-        if (debug) {
-            translator.printAllQTs();
-        }
         String[] split = a.split("_");
         if (split.length < 3 || !split[1].equals("AC")) {
             throw new InvalidLabelException("InvalidLabelException: " + a + " is not an action\n");
